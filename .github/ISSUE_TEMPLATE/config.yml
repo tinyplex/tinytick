@@ -1,0 +1,7 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🤔 Feature Requests & Questions 
+    url: https://github.com/tinyplex/tinytick/discussions
+    about: Please ask and answer questions here.
+  # - name: 💬 Community Chat {Discord, Slack etc..} Channel 
+  #   url: ...

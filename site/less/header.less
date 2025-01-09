@@ -1,0 +1,39 @@
+body > header {
+  > a {
+    white-space: nowrap;
+    &:hover {
+      text-decoration: none;
+    }
+    img {
+      width: 3rem;
+      height: 3rem;
+      vertical-align: top;
+      margin-right: 0.5rem;
+    }
+    span {
+      font-weight: 800;
+      font-size: 2.8rem;
+      line-height: 1em;
+      color: @text2Color;
+      em {
+        color: oklch(70% .1 100);
+      }
+    }
+  }
+  > nav {
+    justify-content: flex-end;
+    ul {
+      display: inline-block;
+      li {
+        display: inline;
+        margin-right: 2rem;
+      }
+    }
+  }
+  > #dark {
+    vertical-align: text-bottom;
+    height: 1rem;
+    cursor: pointer;
+    user-select: none;
+  }
+}

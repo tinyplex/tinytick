@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strict": true,
+    "removeComments": true,
+    "target": "ESNext",
+    "module": "NodeNext",
+    "jsx": "react",
+    "moduleResolution": "NodeNext",
+    "allowSyntheticDefaultImports": true,
+    "types": ["node"],
+    "composite": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  }
+}
