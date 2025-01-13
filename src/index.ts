@@ -67,8 +67,10 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       ifNotUndefined(
         mapGet(taskMap, taskRunInfo.taskId),
         ([task, _taskConfig]) => {
-          taskRunInfo.started = Date.now();
-          task(taskRunInfo, manager);
+          if (isUndefined(taskRunInfo.started)) {
+            taskRunInfo.started = Date.now();
+            task(taskRunInfo, manager).then(() => unscheduleTaskRun(taskRunId));
+          }
         },
         () => {
           unscheduleTaskRun(taskRunId);

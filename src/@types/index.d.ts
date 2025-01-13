@@ -11,7 +11,7 @@ export type TaskRunInfo = {
   readonly started?: Timestamp;
 };
 
-export type Task = (runInfo: TaskRunInfo, tasks: Manager) => void;
+export type Task = (runInfo: TaskRunInfo, tasks: Manager) => Promise<void>;
 
 export type TaskConfig = {
   readonly categoryId?: Id;

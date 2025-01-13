@@ -1,7 +1,7 @@
 import {type Manager, createManager} from 'tinytick';
 
 let manager: Manager;
-const task = () => {};
+const task = async () => {};
 
 const pause = async (s = 0.05): Promise<void> =>
   new Promise<void>((resolve) => setTimeout(resolve, s * 1000));
@@ -347,7 +347,9 @@ describe('ticks', () => {
 
   test('start & stop', async () => {
     let ticks = 0;
-    manager.setTask('task1', () => ticks++);
+    manager.setTask('task1', async () => {
+      ticks++;
+    });
     expect(ticks).toBe(0);
     manager.scheduleTaskRun('task1');
     expect(ticks).toBe(0);
@@ -361,23 +363,44 @@ describe('ticks', () => {
     expect(ticks).toBe(1);
   });
 
-  test('started timestamp', async () => {
-    manager.setTask('task1', () => {});
+  test('started once, then deleted', async () => {
+    manager.setTask('task1', async () => {
+      await pause(0.02);
+    });
     const taskRunId = manager.scheduleTaskRun('task1');
     expect(manager.getTaskRunInfo(taskRunId!)?.started).toBeUndefined();
     manager.start();
     await pause(0.01);
-    expect(manager.getTaskRunInfo(taskRunId!)?.started).not.toBeUndefined();
+    const started = manager.getTaskRunInfo(taskRunId!)?.started;
+    expect(started).not.toBeUndefined();
+    await pause(0.01);
+    expect(manager.getTaskRunInfo(taskRunId!)?.started).toEqual(started);
+    await pause(0.01);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
     manager.stop();
   });
 
   test('ignore invalid scheduled task', async () => {
-    manager.setTask('task1', () => {});
+    manager.setTask('task1', async () => {});
     const taskRunId = manager.scheduleTaskRun('task2');
     expect(manager.getTaskRunInfo(taskRunId!)).not.toBeUndefined();
     manager.start();
     await pause(0.01);
     expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    manager.stop();
+  });
+
+  test('run once', async () => {
+    let ticks = 0;
+    manager.setTask('task1', async () => {
+      ticks++;
+    });
+    manager.scheduleTaskRun('task1');
+    manager.start();
+    await pause(0.01);
+    expect(ticks).toBe(1);
+    await pause(0.01);
+    expect(ticks).toBe(1);
     manager.stop();
   });
 });
