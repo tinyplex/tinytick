@@ -7,27 +7,37 @@ import type {
   Seconds,
   Task,
   TaskConfig,
-  TaskRunInfo,
   Timestamp,
   createManager as createManagerDecl,
 } from './@types/index.js';
-import {EMPTY_STRING, id} from './common/strings.ts';
 import {IdMap, mapGet, mapKeys, mapNew, mapSet} from './common/map.ts';
-import {getUniqueId, ifNotUndefined} from './common/other.ts';
+import {
+  getUniqueId,
+  ifNotUndefined,
+  isPositiveNumber,
+  isUndefined,
+} from './common/other.ts';
+import {id, isString} from './common/strings.ts';
 import {objFreeze, objMerge, objValidate} from './common/obj.ts';
 import {arrayMap} from './common/array.ts';
 
+type TaskRunInfo = {
+  readonly taskId: Id;
+  readonly arg?: string;
+  started?: Timestamp;
+};
+
 const RETRY_PATTERN = /^\d+(,\d+)*$/;
 
-const DEFAULT_CONFIG: CategoryConfig = {
+const DEFAULT_MANAGER_CONFIG: ManagerConfig = {
+  tickInterval: 1,
+};
+
+const DEFAULT_TASK_CONFIG: CategoryConfig = {
   maxDuration: 1,
   maxRetries: 2,
   retryDelay: 3,
 };
-
-const isString = (child: any) => typeof child == 'string';
-
-const isPositiveNumber = (child: any) => typeof child == 'number' && child > 0;
 
 const managerConfigValidators: {[id: string]: (child: any) => boolean} = {
   tickInterval: isPositiveNumber,
@@ -37,8 +47,7 @@ const categoryConfigValidators: {[id: string]: (child: any) => boolean} = {
   maxDuration: isPositiveNumber,
   maxRetries: isPositiveNumber,
   retryDelay: (child: any) =>
-    isPositiveNumber(child) ||
-    (typeof child == 'string' && RETRY_PATTERN.test(child)),
+    isPositiveNumber(child) || (isString(child) && RETRY_PATTERN.test(child)),
 };
 
 const taskConfigValidators: {[id: string]: (child: any) => boolean} = {
@@ -47,10 +56,27 @@ const taskConfigValidators: {[id: string]: (child: any) => boolean} = {
 };
 
 export const createManager: typeof createManagerDecl = (): Manager => {
-  let validConfig: ManagerConfig = {};
+  let config: ManagerConfig = {};
+  let tickHandle: NodeJS.Timeout;
   const categoryMap: IdMap<CategoryConfig> = mapNew();
   const taskMap: IdMap<[Task, TaskConfig]> = mapNew();
   const taskRunMap: IdMap<TaskRunInfo> = mapNew();
+
+  const tick = () => {
+    taskRunMap.forEach((taskRunInfo, taskRunId) =>
+      ifNotUndefined(
+        mapGet(taskMap, taskRunInfo.taskId),
+        ([task, _taskConfig]) => {
+          taskRunInfo.started = Date.now();
+          task(taskRunInfo, manager);
+        },
+        () => {
+          unscheduleTaskRun(taskRunId);
+        },
+      ),
+    );
+    start();
+  };
 
   const fluent = (
     actions: (...idArgs: Id[]) => unknown,
@@ -67,11 +93,12 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       objValidate(managerConfig, (child, id) =>
         managerConfigValidators[id]?.(child),
       )
-        ? (validConfig = managerConfig)
+        ? (config = managerConfig)
         : 0,
     );
 
-  const getManagerConfig = (): ManagerConfig => objMerge(validConfig);
+  const getManagerConfig = (withDefaults = false): ManagerConfig =>
+    objMerge(withDefaults ? DEFAULT_MANAGER_CONFIG : {}, config);
 
   const setTask = (taskId: Id, task: Task, taskConfig: TaskConfig = {}) =>
     fluent((taskId) => mapSet(taskMap, taskId, [task, taskConfig]), taskId);
@@ -96,7 +123,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
           ? ifNotUndefined(
               taskConfig.categoryId,
               (categoryId) => getCategoryConfig(categoryId, true),
-              () => DEFAULT_CONFIG,
+              () => DEFAULT_TASK_CONFIG,
             )
           : {},
         taskConfig,
@@ -111,11 +138,8 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const setCategoryConfig = (categoryId: Id, config?: CategoryConfig) =>
     fluent(
       (categoryId) =>
-        objValidate(
-          config,
-          (child, id) => categoryConfigValidators[id]?.(child),
-          undefined,
-          1,
+        objValidate(config, (child, id) =>
+          categoryConfigValidators[id]?.(child),
         )
           ? mapSet(categoryMap, categoryId, config)
           : 0,
@@ -124,7 +148,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const getCategoryConfig = (categoryId: Id, withDefaults = false) =>
     ifNotUndefined(mapGet(categoryMap, id(categoryId)), (categoryConfig) =>
-      objMerge(withDefaults ? DEFAULT_CONFIG : {}, categoryConfig),
+      objMerge(withDefaults ? DEFAULT_TASK_CONFIG : {}, categoryConfig),
     );
 
   const getCategoryIds = (): Ids => mapKeys(categoryMap);
@@ -134,12 +158,15 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const scheduleTaskRun = (
     taskId: Id,
-    arg: string = EMPTY_STRING,
+    arg?: string,
     _after: Seconds | Timestamp = 0,
     _before: Seconds | Timestamp = Infinity,
   ) => {
     const taskRunId = getUniqueId();
-    mapSet(taskRunMap, taskRunId, {taskId, arg, started: null});
+    mapSet(taskRunMap, taskRunId, {
+      taskId,
+      ...(arg !== undefined ? {arg} : {}),
+    });
     return taskRunId;
   };
 
@@ -147,6 +174,18 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const unscheduleTaskRun = (taskRunId: Id) =>
     fluent((taskRunId) => mapSet(taskRunMap, taskRunId), taskRunId);
+
+  const start = () =>
+    fluent(() => {
+      stop();
+      tickHandle = setTimeout(
+        tick,
+        getManagerConfig(true).tickInterval! * 1000,
+      );
+    });
+
+  const stop = () =>
+    fluent(() => (isUndefined(tickHandle) ? 0 : clearTimeout(tickHandle)));
 
   const manager: Manager = {
     setManagerConfig,
@@ -166,6 +205,9 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     scheduleTaskRun,
     getTaskRunInfo,
     unscheduleTaskRun,
+
+    start,
+    stop,
   };
 
   return objFreeze(manager);

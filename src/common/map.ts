@@ -20,6 +20,4 @@ export const mapGet = <Key, Value>(
   key: Key,
 ): Value | undefined => map?.get(key);
 
-export const mapKeys = <Key>(map: Map<Key, unknown> | undefined): Key[] => [
-  ...(map?.keys() ?? []),
-];
+export const mapKeys = <Key>(map: Map<Key, unknown>): Key[] => [...map.keys()];

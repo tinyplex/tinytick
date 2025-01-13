@@ -41,7 +41,6 @@
       '',
     );
   const encode = (num) => ENCODE[num & MASK6];
-  const size = (arrayOrString) => arrayOrString.length;
 
   const mapNew = (entries) => new Map(entries);
   const mapSet = (map, key, value) =>
@@ -64,36 +63,31 @@
       /* istanbul ignore next */
       () => true,
     );
-  const objIds = object.keys;
   const objFreeze = object.freeze;
-  const objSize = (obj) => size(objIds(obj));
   const objForEach = (obj, cb) =>
     arrayForEach(objEntries(obj), ([id, value]) => cb(value, id));
   const objMerge = (...objs) => object.assign({}, ...objs);
-  const objIsEmpty = (obj) => isObject(obj) && objSize(obj) == 0;
   const objDel = (obj, id) => {
     delete obj[id];
     return obj;
   };
-  const objValidate = (obj, validateChild, onInvalidObj, emptyIsValid = 0) => {
-    if (
-      isUndefined(obj) ||
-      !isObject(obj) ||
-      (!emptyIsValid && objIsEmpty(obj)) ||
-      objFrozen(obj)
-    ) {
-      return false;
+  const objValidate = (obj, validateChild) => {
+    if (isUndefined(obj) || !isObject(obj) || objFrozen(obj)) {
+      return 0;
     }
     objForEach(obj, (child, id) => {
       if (!validateChild(child, id)) {
         objDel(obj, id);
       }
     });
-    return emptyIsValid ? true : !objIsEmpty(obj);
+    return 1;
   };
 
   const RETRY_PATTERN = /^\d+(,\d+)*$/;
-  const DEFAULT_CONFIG = {
+  const DEFAULT_MANAGER_CONFIG = {
+    tickInterval: 1,
+  };
+  const DEFAULT_TASK_CONFIG = {
     maxDuration: 1,
     maxRetries: 2,
     retryDelay: 3,
@@ -115,23 +109,35 @@
     ...categoryConfigValidators,
   };
   const createManager = () => {
-    let validConfig = {};
+    let config = {};
+    let tickHandle;
     const categoryMap = mapNew();
     const taskMap = mapNew();
     const taskRunMap = mapNew();
+    const tick = () => {
+      tickHandle = setTimeout(tick, 0);
+    };
     const fluent = (actions, ...args) => {
       actions(...arrayMap(args, id));
       return manager;
     };
     const setManagerConfig = (managerConfig) =>
-      fluent(() =>
-        objValidate(managerConfig, (child, id2) =>
-          managerConfigValidators[id2]?.(child),
-        )
-          ? (validConfig = managerConfig)
-          : 0,
-      );
-    const getManagerConfig = () => objMerge(validConfig);
+      fluent(() => {
+        if (
+          objValidate(managerConfig, (child, id2) =>
+            managerConfigValidators[id2]?.(child),
+          )
+        ) {
+          config = managerConfig;
+          clearTimeout(tickHandle);
+          tickHandle = setTimeout(
+            tick,
+            getManagerConfig(true).tickInterval * 1e3,
+          );
+        }
+      });
+    const getManagerConfig = (withDefaults = false) =>
+      objMerge(withDefaults ? DEFAULT_MANAGER_CONFIG : {}, config);
     const setTask = (taskId, task, taskConfig = {}) =>
       fluent((taskId2) => mapSet(taskMap, taskId2, [task, taskConfig]), taskId);
     const setTaskConfig = (taskId, taskConfig) =>
@@ -153,7 +159,7 @@
             ? ifNotUndefined(
                 taskConfig.categoryId,
                 (categoryId) => getCategoryConfig(categoryId, true),
-                () => DEFAULT_CONFIG,
+                () => DEFAULT_TASK_CONFIG,
               )
             : {},
           taskConfig,
@@ -162,22 +168,19 @@
     const getTaskIds = () => mapKeys(taskMap);
     const delTask = (taskId) =>
       fluent((taskId2) => mapSet(taskMap, taskId2), taskId);
-    const setCategoryConfig = (categoryId, config) =>
+    const setCategoryConfig = (categoryId, config2) =>
       fluent(
         (categoryId2) =>
-          objValidate(
-            config,
-            (child, id2) => categoryConfigValidators[id2]?.(child),
-            undefined,
-            1,
+          objValidate(config2, (child, id2) =>
+            categoryConfigValidators[id2]?.(child),
           )
-            ? mapSet(categoryMap, categoryId2, config)
+            ? mapSet(categoryMap, categoryId2, config2)
             : 0,
         categoryId,
       );
     const getCategoryConfig = (categoryId, withDefaults = false) =>
       ifNotUndefined(mapGet(categoryMap, id(categoryId)), (categoryConfig) =>
-        objMerge(withDefaults ? DEFAULT_CONFIG : {}, categoryConfig),
+        objMerge(withDefaults ? DEFAULT_TASK_CONFIG : {}, categoryConfig),
       );
     const getCategoryIds = () => mapKeys(categoryMap);
     const delCategory = (categoryId) =>

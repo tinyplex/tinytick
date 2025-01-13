@@ -1,15 +1,18 @@
 import {arrayMap, arrayReduce} from './array.ts';
+import {getTypeOf, strSplit} from './strings.ts';
 import type {Id} from '../@types/index.d.ts';
-import {strSplit} from './strings.ts';
 
-export const GLOBAL = globalThis;
-export const math = Math;
-export const mathFloor = math.floor;
+const GLOBAL = globalThis;
+const math = Math;
+const mathFloor = math.floor;
 
 const MASK6 = 63;
 const ENCODE = /* @__PURE__ */ strSplit(
   '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz',
 );
+
+export const isPositiveNumber = (thing: unknown): thing is number =>
+  getTypeOf(thing) == 'number' && (thing as number) > 0;
 
 export const isUndefined = (thing: unknown): thing is undefined | null =>
   thing == undefined;
@@ -34,7 +37,4 @@ export const getUniqueId = (length = 16): Id =>
     '',
   );
 
-export const encode = (num: number): string => ENCODE[num & MASK6];
-
-export const size = (arrayOrString: string | any[]): number =>
-  arrayOrString.length;
+const encode = (num: number): string => ENCODE[num & MASK6];

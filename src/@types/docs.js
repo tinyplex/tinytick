@@ -97,6 +97,18 @@
    * @since v1.0.0
    */
   /// Manager.unscheduleTaskRun
+  /**
+   * The start method.
+   * @category Lifecycle
+   * @since v1.0.0
+   */
+  /// Manager.start
+  /**
+   * The stop method.
+   * @category Lifecycle
+   * @since v1.0.0
+   */
+  /// Manager.stop
 }
 /**
  * The createManager function.

@@ -331,8 +331,6 @@ const tsCheck = async (dir) => {
   if (results.length > 0) {
     const resultText = results
       .map((result) => {
-        console.log(result);
-
         const {file, messageText, start} = result;
         const {line, character} = file.getLineAndCharacterOfPosition(start);
         return `${file.fileName}:${line}:${character}\n${JSON.stringify(
@@ -347,7 +345,9 @@ const tsCheck = async (dir) => {
       '--excludeDeclarationFiles',
       '--excludePathsFromReport=' +
         'build.ts;' +
-        TEST_MODULES.map((module) => `${module}.ts`).join(';'),
+        TEST_MODULES.map(
+          (module) => `${module == '' ? 'index' : module}.ts`,
+        ).join(';'),
     ]).unusedExports,
   )
     .map(

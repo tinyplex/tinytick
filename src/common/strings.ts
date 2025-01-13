@@ -6,6 +6,9 @@ export const EMPTY_STRING = '';
 
 export const id = (key: unknown): Id => EMPTY_STRING + key;
 
+export const isString = (thing: unknown): thing is string =>
+  getTypeOf(thing) == 'string';
+
 export const strSplit = (
   str: string,
   separator: string | RegExp = EMPTY_STRING,

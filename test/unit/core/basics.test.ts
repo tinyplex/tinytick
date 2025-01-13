@@ -1,11 +1,16 @@
 import {type Manager, createManager} from 'tinytick';
 
 let manager: Manager;
-const task = (_arg: string) => {};
+const task = () => {};
+
+const pause = async (s = 0.05): Promise<void> =>
+  new Promise<void>((resolve) => setTimeout(resolve, s * 1000));
 
 beforeEach(() => {
   manager = createManager();
 });
+
+afterEach(() => manager.stop());
 
 describe('manager', () => {
   test('create', () => {
@@ -45,6 +50,20 @@ describe('manager', () => {
       config.tickInterval = 10;
     }
     expect(manager.getManagerConfig()).toEqual({tickInterval: 5});
+  });
+
+  test('fluent methods', () => {
+    expect(manager.setManagerConfig({tickInterval: 5})).toBe(manager);
+    expect(manager.setTask('task1', task)).toBe(manager);
+    expect(manager.setTaskConfig('task1', {maxDuration: 5})).toBe(manager);
+    expect(manager.delTask('task1')).toBe(manager);
+    expect(manager.setCategoryConfig('category1', {maxDuration: 5})).toBe(
+      manager,
+    );
+    expect(manager.delCategory('category1')).toBe(manager);
+    expect(manager.unscheduleTaskRun('taskRun1')).toBe(manager);
+    expect(manager.start()).toBe(manager);
+    expect(manager.stop()).toBe(manager);
   });
 });
 
@@ -288,7 +307,18 @@ describe('task runs', () => {
   test('getTaskRunInfo', () => {
     manager.setTask('task1', task);
     const taskRunId = manager.scheduleTaskRun('task1');
-    expect(manager.getTaskRunInfo(taskRunId!)).not.toBeUndefined();
+    const taskInfo = manager.getTaskRunInfo(taskRunId!);
+    expect(taskInfo).not.toBeUndefined();
+    expect(taskInfo).toEqual({taskId: 'task1'});
+  });
+
+  test('getTaskRunInfo, with arg', () => {
+    manager.setTask('task1', task);
+    const taskRunId = manager.scheduleTaskRun('task1', 'arg1');
+    expect(manager.getTaskRunInfo(taskRunId!)).toEqual({
+      taskId: 'task1',
+      arg: 'arg1',
+    });
   });
 
   test('getTaskRunInfo, invalid taskRunId', () => {
@@ -309,5 +339,45 @@ describe('task runs', () => {
     const taskRunId = manager.scheduleTaskRun('task1');
     manager.unscheduleTaskRun('');
     expect(manager.getTaskRunInfo(taskRunId!)).not.toBeUndefined();
+  });
+});
+
+describe('ticks', () => {
+  beforeEach(() => manager.setManagerConfig({tickInterval: 0.01}));
+
+  test('start & stop', async () => {
+    let ticks = 0;
+    manager.setTask('task1', () => ticks++);
+    expect(ticks).toBe(0);
+    manager.scheduleTaskRun('task1');
+    expect(ticks).toBe(0);
+    manager.start();
+    await pause(0.005);
+    expect(ticks).toBe(0);
+    await pause(0.005);
+    expect(ticks).toBe(1);
+    manager.stop();
+    await pause(0.015);
+    expect(ticks).toBe(1);
+  });
+
+  test('started timestamp', async () => {
+    manager.setTask('task1', () => {});
+    const taskRunId = manager.scheduleTaskRun('task1');
+    expect(manager.getTaskRunInfo(taskRunId!)?.started).toBeUndefined();
+    manager.start();
+    await pause(0.01);
+    expect(manager.getTaskRunInfo(taskRunId!)?.started).not.toBeUndefined();
+    manager.stop();
+  });
+
+  test('ignore invalid scheduled task', async () => {
+    manager.setTask('task1', () => {});
+    const taskRunId = manager.scheduleTaskRun('task2');
+    expect(manager.getTaskRunInfo(taskRunId!)).not.toBeUndefined();
+    manager.start();
+    await pause(0.01);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    manager.stop();
   });
 });

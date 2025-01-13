@@ -7,11 +7,11 @@ export type Seconds = number;
 
 export type TaskRunInfo = {
   readonly taskId: Id;
-  readonly arg: string;
-  readonly started: Timestamp | null;
+  readonly arg?: string;
+  readonly started?: Timestamp;
 };
 
-export type Task = (arg: string, runInfo: TaskRunInfo, tasks: Manager) => void;
+export type Task = (runInfo: TaskRunInfo, tasks: Manager) => void;
 
 export type TaskConfig = {
   readonly categoryId?: Id;
@@ -33,28 +33,28 @@ export type ManagerConfig = {
 /// Manager
 export interface Manager {
   /// Manager.setManagerConfig
-  setManagerConfig(config: ManagerConfig): Manager;
+  setManagerConfig(config: ManagerConfig): this;
   /// Manager.getManagerConfig
   getManagerConfig(): ManagerConfig;
 
   /// Manager.setTask
-  setTask(taskId: Id, task: Task, config?: TaskConfig): Manager;
+  setTask(taskId: Id, task: Task, config?: TaskConfig): this;
   /// Manager.setTaskConfig
-  setTaskConfig(taskId: Id, config: TaskConfig): Manager;
+  setTaskConfig(taskId: Id, config: TaskConfig): this;
   /// Manager.getTaskConfig
   getTaskConfig(taskId: Id, withDefaults?: boolean): TaskConfig | undefined;
   /// Manager.getTaskIds
   getTaskIds(): Ids;
   /// Manager.delTask
-  delTask(taskId: Id): Manager;
+  delTask(taskId: Id): this;
   /// Manager.setCategoryConfig
-  setCategoryConfig(categoryId: Id, config?: CategoryConfig): Manager;
+  setCategoryConfig(categoryId: Id, config?: CategoryConfig): this;
   /// Manager.getCategoryConfig
   getCategoryConfig(categoryId: Id, withDefaults?: boolean): CategoryConfig;
   /// Manager.getCategoryIds
   getCategoryIds(): Ids;
   /// Manager.delCategory
-  delCategory(categoryId: Id): Manager;
+  delCategory(categoryId: Id): this;
 
   /// Manager.scheduleTaskRun
   scheduleTaskRun(
@@ -66,7 +66,12 @@ export interface Manager {
   /// Manager.getTaskRunInfo
   getTaskRunInfo(taskRunId: Id): TaskRunInfo | undefined;
   /// Manager.unscheduleTaskRun
-  unscheduleTaskRun(taskRunId: Id): Manager;
+  unscheduleTaskRun(taskRunId: Id): this;
+
+  /// Manager.start
+  start(): this;
+  /// Manager.stop
+  stop(): this;
 }
 
 /// createManager

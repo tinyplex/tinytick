@@ -5,7 +5,7 @@
   "repository": "github:tinyplex/tinytick",
   "license": "MIT",
   "homepage": "https://tinytick.org",
-  "description": "A small and powerful way to orchestrate tasks in JavaScript apps.",
+  "description": "An easy way to orchestrate JavaScript tasks.",
   "keywords": [
     "tiny",
     "react"
