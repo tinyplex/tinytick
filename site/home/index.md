@@ -25,43 +25,39 @@
 import {createManager} from 'tinytick';
 
 const manager = createManager();
-manager.setTask('ping', () =>
-  fetch('https://example.com'),
-);
+const ping = () => fetch('https://example.com');
+manager.setTask('ping', ping);
 
 console.log(manager.getTaskIds());
 // -> ['ping']
 ```
 
-> Tasks can be configured - with information about how often to retry them or
+> Tasks can be categorized, with information about how often to retry them or
 > how to time them out, for example.
 
 ```js
-manager.setTaskConfig('ping', {maxDuration: 2});
+manager.setCategory('network', {maxRetries: 10});
+manager.setTask('ping', ping, 'network');
 
-console.log(manager.getTaskConfig('ping'));
-// -> {maxDuration: 2}
+console.log(manager.getTaskConfig('ping', true));
+// -> {maxDuration: 1, maxRetries: 10, retryDelay: 3}
 ```
 
-> Tasks can be categorized, which allows you to create your own defaults for how
-> they behave.
+> Tasks can be configured on a case-by-case basis too:
 
 ```js
-manager.setCategoryConfig('network', {maxRetries: 10});
-manager.setTaskConfig('ping', {categoryId: 'network'});
-
+manager.setTask('ping', ping, undefined, {
+  maxDuration: 2,
+});
 console.log(manager.getTaskConfig('ping'));
-// -> {categoryId: 'network'}
+// -> {maxDuration: 2}
 ```
 
 > And then of course, when you're ready, schedule the task to run! This can be
 > for an immediate run, once in the future, or repetitively.
 
 ```js
-//const runId = manager.scheduleRun('test');
-
-//console.log(manager.getRunStatus(runId));
-//// -> {}
+const testRunId = manager.setTaskRun('test');
 ```
 
 ---

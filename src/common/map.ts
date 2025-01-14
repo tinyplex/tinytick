@@ -1,5 +1,5 @@
+import {collDel, collForEach} from './coll.ts';
 import type {Id} from '../@types/index.js';
-import {collDel} from './coll.ts';
 import {isUndefined} from './other.ts';
 
 export type IdMap<Value> = Map<Id, Value>;
@@ -21,3 +21,8 @@ export const mapGet = <Key, Value>(
 ): Value | undefined => map?.get(key);
 
 export const mapKeys = <Key>(map: Map<Key, unknown>): Key[] => [...map.keys()];
+
+export const mapForEach = <Key, Value>(
+  map: Map<Key, Value> | undefined,
+  cb: (key: Key, value: Value) => void,
+): void => collForEach(map, (value, key) => cb(key, value));

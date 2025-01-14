@@ -26,77 +26,71 @@
    */
   /// Manager.getManagerConfig
   /**
-   * The setTask method.
-   * @category Setter
+   * The setCategory method.
+   * @category Category
    * @since v1.0.0
    */
-  /// Manager.setTask
-  /**
-   * The setTaskConfig method.
-   * @category Setter
-   * @since v1.0.0
-   */
-  /// Manager.setTaskConfig
-  /**
-   * The getTaskConfig method.
-   * @category Getter
-   * @since v1.0.0
-   */
-  /// Manager.getTaskConfig
-  /**
-   * The getTaskIds method.
-   * @category Getter
-   * @since v1.0.0
-   */
-  /// Manager.getTaskIds
-  /**
-   * The delTask method.
-   * @category Deleter
-   * @since v1.0.0
-   */
-  /// Manager.delTask
-  /**
-   * The setCategoryConfig method.
-   * @category Setter
-   * @since v1.0.0
-   */
-  /// Manager.setCategoryConfig
+  /// Manager.setCategory
   /**
    * The getCategoryConfig method.
-   * @category Getter
+   * @category Category
    * @since v1.0.0
    */
   /// Manager.getCategoryConfig
   /**
    * The getCategoryIds method.
-   * @category Getter
+   * @category Category
    * @since v1.0.0
    */
   /// Manager.getCategoryIds
   /**
    * The delCategory method.
-   * @category Deleter
+   * @category Category
    * @since v1.0.0
    */
   /// Manager.delCategory
   /**
-   * The scheduleTaskRun method.
-   * @category Runner
+   * The setTask method.
+   * @category Task
    * @since v1.0.0
    */
-  /// Manager.scheduleTaskRun
+  /// Manager.setTask
   /**
-   * The getTaskRunInfo method.
-   * @category Runner
+   * The getTaskConfig method.
+   * @category Task
    * @since v1.0.0
    */
-  /// Manager.getTaskRunInfo
+  /// Manager.getTaskConfig
   /**
-   * The unscheduleTaskRun method.
-   * @category Runner
+   * The getTaskIds method.
+   * @category Task
    * @since v1.0.0
    */
-  /// Manager.unscheduleTaskRun
+  /// Manager.getTaskIds
+  /**
+   * The delTask method.
+   * @category Task
+   * @since v1.0.0
+   */
+  /// Manager.delTask
+  /**
+   * The setTaskRun method.
+   * @category Task Run
+   * @since v1.0.0
+   */
+  /// Manager.setTaskRun
+  /**
+   * The getTaskRunConfig method.
+   * @category Task Run
+   * @since v1.0.0
+   */
+  /// Manager.getTaskRunConfig
+  /**
+   * The delTaskRun method.
+   * @category Task Run
+   * @since v1.0.0
+   */
+  /// Manager.delTaskRun
   /**
    * The start method.
    * @category Lifecycle
