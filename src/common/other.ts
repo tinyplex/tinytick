@@ -11,6 +11,15 @@ const ENCODE = /* @__PURE__ */ strSplit(
   '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz',
 );
 
+const encode = (num: number): string => ENCODE[num & MASK6];
+
+// Fallback is not cryptographically secure but tolerable for ReactNative UUIDs.
+const getRandomValues = GLOBAL.crypto
+  ? (array: Uint8Array): Uint8Array => GLOBAL.crypto.getRandomValues(array)
+  : /*! istanbul ignore next */
+    (array: Uint8Array): Uint8Array =>
+      arrayMap(array as any, () => mathFloor(math.random() * 256)) as any;
+
 export const isPositiveNumber = (thing: unknown): thing is number =>
   getTypeOf(thing) == 'number' && (thing as number) > 0;
 
@@ -23,13 +32,6 @@ export const ifNotUndefined = <Value, Return>(
   otherwise?: () => Return,
 ): Return | undefined => (isUndefined(value) ? otherwise?.() : then(value));
 
-// Fallback is not cryptographically secure but tolerable for ReactNative UUIDs.
-const getRandomValues = GLOBAL.crypto
-  ? (array: Uint8Array): Uint8Array => GLOBAL.crypto.getRandomValues(array)
-  : /*! istanbul ignore next */
-    (array: Uint8Array): Uint8Array =>
-      arrayMap(array as any, () => mathFloor(math.random() * 256)) as any;
-
 export const getUniqueId = (length = 16): Id =>
   arrayReduce<number, Id>(
     getRandomValues(new Uint8Array(length)) as any,
@@ -37,4 +39,4 @@ export const getUniqueId = (length = 16): Id =>
     '',
   );
 
-const encode = (num: number): string => ENCODE[num & MASK6];
+export const now = Date.now;

@@ -18,7 +18,7 @@ export type TaskRunConfig = {
 };
 
 export type TaskRunInfo = {
-  readonly taskId?: Id;
+  readonly taskId: Id;
   readonly arg?: string;
   readonly started?: Timestamp;
 };

@@ -22,9 +22,15 @@ import {
   ifNotUndefined,
   isPositiveNumber,
   isUndefined,
+  now,
 } from './common/other.ts';
 import {id, isString} from './common/strings.ts';
-import {objFreeze, objMerge, objValidate} from './common/obj.ts';
+import {
+  objFilterUndefined,
+  objFreeze,
+  objMerge,
+  objValidate,
+} from './common/obj.ts';
 import {arrayMap} from './common/array.ts';
 
 const RETRY_PATTERN = /^\d+(,\d+)*$/;
@@ -64,8 +70,8 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   > = mapNew();
   const taskRunMap: IdMap<
     [
-      arg: string | undefined,
       taskId: Id,
+      arg: string | undefined,
       config: TaskRunConfig,
       started?: Timestamp,
     ]
@@ -74,11 +80,11 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const tick = () => {
     mapForEach(taskRunMap, (taskRunId, taskRun) =>
       ifNotUndefined(
-        mapGet(taskMap, taskRun[1]),
+        mapGet(taskMap, taskRun[0]),
         ([task]) => {
           if (isUndefined(taskRun[3])) {
-            taskRun[3] = Date.now();
-            task(taskRun[0], manager).then(() => delTaskRun(taskRunId));
+            taskRun[3] = now();
+            task(taskRun[1], manager).then(() => delTaskRun(taskRunId));
           }
         },
         () => {
@@ -174,8 +180,8 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   ): Id => {
     const taskRunId = getUniqueId();
     mapSet(taskRunMap, taskRunId, [
-      arg,
       taskId,
+      arg,
       validatedTestRunConfig(config),
     ]);
     return taskRunId;
@@ -185,7 +191,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     taskRunId: Id,
     withDefaults: boolean = false,
   ): TaskRunConfig | undefined =>
-    ifNotUndefined(mapGet(taskRunMap, id(taskRunId)), ([, taskId, config]) =>
+    ifNotUndefined(mapGet(taskRunMap, id(taskRunId)), ([taskId, , config]) =>
       objMerge(
         withDefaults ? DEFAULT_TASK_RUN_CONFIG : {},
         withDefaults ? (getTaskConfig(taskId, true) ?? {}) : {},
@@ -193,11 +199,11 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       ),
     );
 
-  const getTaskRunInfo = (taskRunId: Id): TaskRunInfo =>
+  const getTaskRunInfo = (taskRunId: Id): TaskRunInfo | undefined =>
     ifNotUndefined(
       mapGet(taskRunMap, id(taskRunId)),
-      ([arg, taskId, , started]) => ({taskId, arg, started}),
-    ) ?? {};
+      ([taskId, arg, , started]) => objFilterUndefined({taskId, arg, started}),
+    );
 
   const delTaskRun = (taskRunId: Id) =>
     fluent((taskRunId) => mapSet(taskRunMap, taskRunId), taskRunId);

@@ -38,6 +38,11 @@ export const objFreeze = object.freeze;
 export const objMerge = (...objs: IdObj<unknown>[]) =>
   object.assign({}, ...objs);
 
+export const objFilterUndefined = <Obj extends IdObj<any>>(obj: Obj): Obj => {
+  objForEach(obj, (value, id) => (value === undefined ? delete obj[id] : 0));
+  return obj;
+};
+
 export const objValidate = (
   obj: IdObj<any> | undefined,
   validateChild: (child: any, id: Id) => boolean,
