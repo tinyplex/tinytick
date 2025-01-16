@@ -5,6 +5,7 @@ import type {
   ManagerConfig,
   Task,
   TaskRunConfig,
+  TaskRunInfo,
   Timestamp,
   createManager as createManagerDecl,
 } from './@types/index.js';
@@ -188,6 +189,12 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       objMerge(withDefaults ? getTaskConfig(taskId, true) : {}, config),
     ) ?? (withDefaults ? objMerge(DEFAULT_TASK_RUN_CONFIG) : {});
 
+  const getTaskRunInfo = (taskRunId: Id): TaskRunInfo =>
+    ifNotUndefined(
+      mapGet(taskRunMap, id(taskRunId)),
+      ([arg, taskId, , started]) => ({taskId, arg, started}),
+    ) ?? {};
+
   const delTaskRun = (taskRunId: Id) =>
     fluent((taskRunId) => mapSet(taskRunMap, taskRunId), taskRunId);
 
@@ -219,6 +226,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
     setTaskRun,
     getTaskRunConfig,
+    getTaskRunInfo,
     delTaskRun,
 
     start,

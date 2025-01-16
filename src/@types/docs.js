@@ -86,6 +86,12 @@
    */
   /// Manager.getTaskRunConfig
   /**
+   * The getTaskRunInfo method.
+   * @category Task Run
+   * @since v1.0.0
+   */
+  /// Manager.getTaskRunInfo
+  /**
    * The delTaskRun method.
    * @category Task Run
    * @since v1.0.0

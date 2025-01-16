@@ -11,14 +11,16 @@ export type ManagerConfig = {
   readonly tickInterval?: Seconds;
 };
 
-// readonly startAfter?: Seconds | Timestamp;
-// readonly startBefore?: Seconds | Timestamp;
-// readonly categoryId?: Id;
-
 export type TaskRunConfig = {
   readonly maxDuration?: Seconds;
   readonly maxRetries?: number;
   readonly retryDelay?: number | string;
+};
+
+export type TaskRunInfo = {
+  readonly taskId?: Id;
+  readonly arg?: string;
+  readonly started?: Timestamp;
 };
 
 /// Manager
@@ -55,6 +57,8 @@ export interface Manager {
   setTaskRun(taskId: Id, arg?: string, config?: TaskRunConfig): Id;
   /// Manager.getTaskRunConfig
   getTaskRunConfig(taskRunId: Id, withDefaults?: boolean): TaskRunConfig;
+  /// Manager.getTaskRunInfo
+  getTaskRunInfo(taskRunId: Id): TaskRunInfo;
   /// Manager.delTaskRun
   delTaskRun(taskRunId: Id): Manager;
 

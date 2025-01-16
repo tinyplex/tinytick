@@ -407,65 +407,65 @@ describe('task runs', () => {
   });
 });
 
-// describe('ticks', () => {
-//   beforeEach(() => manager.setManagerConfig({tickInterval: 0.01}));
+describe('ticks', () => {
+  beforeEach(() => manager.setManagerConfig({tickInterval: 0.01}));
 
-//   test('start & stop', async () => {
-//     let ticks = 0;
-//     manager.setTask('task1', async () => {
-//       ticks++;
-//     });
-//     expect(ticks).toBe(0);
-//     manager.setTaskRun('task1');
-//     expect(ticks).toBe(0);
-//     manager.start();
-//     await pause(0.005);
-//     expect(ticks).toBe(0);
-//     await pause(0.005);
-//     expect(ticks).toBe(1);
-//     manager.stop();
-//     await pause(0.015);
-//     expect(ticks).toBe(1);
-//   });
+  test('start & stop', async () => {
+    let ticks = 0;
+    manager.setTask('task1', async () => {
+      ticks++;
+    });
+    expect(ticks).toBe(0);
+    manager.setTaskRun('task1');
+    expect(ticks).toBe(0);
+    manager.start();
+    await pause(0.005);
+    expect(ticks).toBe(0);
+    await pause(0.005);
+    expect(ticks).toBe(1);
+    manager.stop();
+    await pause(0.015);
+    expect(ticks).toBe(1);
+  });
 
-//   test('started once, then deleted', async () => {
-//     manager.setTask('task1', async () => {
-//       await pause(0.02);
-//     });
-//     const taskRunId = manager.setTaskRun('task1');
-//     expect(manager.getTaskRunConfig(taskRunId!)?.started).toBeUndefined();
-//     manager.start();
-//     await pause(0.01);
-//     const started = manager.getTaskRunConfig(taskRunId!)?.started;
-//     expect(started).not.toBeUndefined();
-//     await pause(0.01);
-//     expect(manager.getTaskRunConfig(taskRunId!)?.started).toEqual(started);
-//     await pause(0.01);
-//     expect(manager.getTaskRunConfig(taskRunId!)).toBeUndefined();
-//     manager.stop();
-//   });
+  test('started once, then deleted', async () => {
+    manager.setTask('task1', async () => {
+      await pause(0.02);
+    });
+    const taskRunId = manager.setTaskRun('task1');
+    expect(manager.getTaskRunInfo(taskRunId!)?.started).toBeUndefined();
+    manager.start();
+    await pause(0.01);
+    const started = manager.getTaskRunInfo(taskRunId!)?.started;
+    expect(started).not.toBeUndefined();
+    await pause(0.01);
+    expect(manager.getTaskRunInfo(taskRunId!)?.started).toEqual(started);
+    await pause(0.01);
+    expect(manager.getTaskRunInfo(taskRunId!)).toEqual({});
+    manager.stop();
+  });
 
-//   test('ignore invalid scheduled task', async () => {
-//     manager.setTask('task1', async () => {});
-//     const taskRunId = manager.setTaskRun('task2');
-//     expect(manager.getTaskRunConfig(taskRunId!)).not.toBeUndefined();
-//     manager.start();
-//     await pause(0.01);
-//     expect(manager.getTaskRunConfig(taskRunId!)).toBeUndefined();
-//     manager.stop();
-//   });
+  test('ignore invalid scheduled task', async () => {
+    manager.setTask('task1', async () => {});
+    const taskRunId = manager.setTaskRun('task2');
+    expect(manager.getTaskRunInfo(taskRunId!)).not.toEqual({});
+    manager.start();
+    await pause(0.01);
+    expect(manager.getTaskRunInfo(taskRunId!)).toEqual({});
+    manager.stop();
+  });
 
-//   test('run once', async () => {
-//     let ticks = 0;
-//     manager.setTask('task1', async () => {
-//       ticks++;
-//     });
-//     manager.setTaskRun('task1');
-//     manager.start();
-//     await pause(0.01);
-//     expect(ticks).toBe(1);
-//     await pause(0.01);
-//     expect(ticks).toBe(1);
-//     manager.stop();
-//   });
-// });
+  test('run once', async () => {
+    let ticks = 0;
+    manager.setTask('task1', async () => {
+      ticks++;
+    });
+    manager.setTaskRun('task1');
+    manager.start();
+    await pause(0.01);
+    expect(ticks).toBe(1);
+    await pause(0.01);
+    expect(ticks).toBe(1);
+    manager.stop();
+  });
+});
