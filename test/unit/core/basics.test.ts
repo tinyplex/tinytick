@@ -131,6 +131,10 @@ describe('categories & config', () => {
     expect(manager.getCategoryConfig('category1')).toEqual({});
   });
 
+  test('getCategoryConfig, invalid category', () => {
+    expect(manager.getCategoryConfig('category1')).toBeUndefined();
+  });
+
   test('setCategory is immutable', () => {
     manager.setCategory('category1', {maxDuration: 5});
     const config = manager.getCategoryConfig('category1');
@@ -233,10 +237,8 @@ describe('tasks & config', () => {
     expect(manager.getTaskConfig('task1')).toEqual({});
   });
 
-  test('setTask, invalid task', () => {
-    manager.setTask('task1', task, undefined, {maxDuration: 5});
-    expect(manager.getTaskIds()).toEqual(['task1']);
-    expect(manager.getTaskConfig('task2')).toEqual({});
+  test('getTaskConfig, invalid task', () => {
+    expect(manager.getTaskConfig('task2')).toBeUndefined();
   });
 
   test('getTaskConfig is immutable', () => {
@@ -393,8 +395,22 @@ describe('task runs', () => {
     expect(manager.getTaskRunConfig(taskRunId7)).toEqual({});
   });
 
-  test('setTaskRun, invalid task', () => {
-    expect(manager.getTaskRunConfig('')).toEqual({});
+  test('getTaskRunConfig, invalid task', () => {
+    const taskRunId = manager.setTaskRun('');
+    expect(manager.getTaskRunConfig(taskRunId)).toEqual({});
+  });
+
+  test('getTaskRunConfig, invalid task with defaults', () => {
+    const taskRunId = manager.setTaskRun('');
+    expect(manager.getTaskRunConfig(taskRunId, true)).toEqual({
+      maxDuration: 1,
+      maxRetries: 2,
+      retryDelay: 3,
+    });
+  });
+
+  test('getTaskRunConfig, invalid taskRun', () => {
+    expect(manager.getTaskRunConfig('')).toBeUndefined();
   });
 
   test('getTaskRunConfig is immutable', () => {

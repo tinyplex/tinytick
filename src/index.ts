@@ -121,10 +121,9 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const getCategoryConfig = (
     categoryId: Id,
     withDefaults: boolean = false,
-  ): TaskRunConfig =>
-    objMerge(
-      withDefaults ? DEFAULT_TASK_RUN_CONFIG : {},
-      mapGet(categoryMap, id(categoryId)) ?? {},
+  ): TaskRunConfig | undefined =>
+    ifNotUndefined(mapGet(categoryMap, id(categoryId)), (config) =>
+      objMerge(withDefaults ? DEFAULT_TASK_RUN_CONFIG : {}, config),
     );
 
   const getCategoryIds = (): Ids => mapKeys(categoryMap);
@@ -152,15 +151,16 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const getTaskConfig = (
     taskId: Id,
     withDefaults: boolean = false,
-  ): TaskRunConfig =>
+  ): TaskRunConfig | undefined =>
     ifNotUndefined(mapGet(taskMap, id(taskId)), ([, categoryId, config]) =>
       objMerge(
+        withDefaults ? DEFAULT_TASK_RUN_CONFIG : {},
         withDefaults && !isUndefined(categoryId)
-          ? getCategoryConfig(categoryId, true)
+          ? (getCategoryConfig(categoryId) ?? {})
           : {},
         config,
       ),
-    ) ?? (withDefaults ? objMerge(DEFAULT_TASK_RUN_CONFIG) : {});
+    );
 
   const getTaskIds = (): Ids => mapKeys(taskMap);
 
@@ -184,10 +184,14 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const getTaskRunConfig = (
     taskRunId: Id,
     withDefaults: boolean = false,
-  ): TaskRunConfig =>
+  ): TaskRunConfig | undefined =>
     ifNotUndefined(mapGet(taskRunMap, id(taskRunId)), ([, taskId, config]) =>
-      objMerge(withDefaults ? getTaskConfig(taskId, true) : {}, config),
-    ) ?? (withDefaults ? objMerge(DEFAULT_TASK_RUN_CONFIG) : {});
+      objMerge(
+        withDefaults ? DEFAULT_TASK_RUN_CONFIG : {},
+        withDefaults ? (getTaskConfig(taskId, true) ?? {}) : {},
+        config,
+      ),
+    );
 
   const getTaskRunInfo = (taskRunId: Id): TaskRunInfo =>
     ifNotUndefined(

@@ -33,7 +33,10 @@ export interface Manager {
   /// Manager.setCategory
   setCategory(categoryId: Id, config: TaskRunConfig): Manager;
   /// Manager.getCategoryConfig
-  getCategoryConfig(categoryId: Id, withDefaults?: boolean): TaskRunConfig;
+  getCategoryConfig(
+    categoryId: Id,
+    withDefaults?: boolean,
+  ): TaskRunConfig | undefined;
   /// Manager.getCategoryIds
   getCategoryIds(): Ids;
   /// Manager.delCategory
@@ -47,7 +50,7 @@ export interface Manager {
     config?: TaskRunConfig,
   ): Manager;
   /// Manager.getTaskConfig
-  getTaskConfig(taskId: Id, withDefaults?: boolean): TaskRunConfig;
+  getTaskConfig(taskId: Id, withDefaults?: boolean): TaskRunConfig | undefined;
   /// Manager.getTaskIds
   getTaskIds(): Ids;
   /// Manager.delTask
@@ -56,9 +59,12 @@ export interface Manager {
   /// Manager.setTaskRun
   setTaskRun(taskId: Id, arg?: string, config?: TaskRunConfig): Id;
   /// Manager.getTaskRunConfig
-  getTaskRunConfig(taskRunId: Id, withDefaults?: boolean): TaskRunConfig;
+  getTaskRunConfig(
+    taskRunId: Id,
+    withDefaults?: boolean,
+  ): TaskRunConfig | undefined;
   /// Manager.getTaskRunInfo
-  getTaskRunInfo(taskRunId: Id): TaskRunInfo;
+  getTaskRunInfo(taskRunId: Id): TaskRunInfo | undefined;
   /// Manager.delTaskRun
   delTaskRun(taskRunId: Id): Manager;
 
