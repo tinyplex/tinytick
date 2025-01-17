@@ -1,6 +1,6 @@
+import type {DurationMs, Id, TimestampMs} from '../@types/index.d.ts';
 import {arrayMap, arrayReduce} from './array.ts';
 import {getTypeOf, strSplit} from './strings.ts';
-import type {Id} from '../@types/index.d.ts';
 
 const GLOBAL = globalThis;
 const math = Math;
@@ -11,7 +11,7 @@ const ENCODE = /* @__PURE__ */ strSplit(
   '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz',
 );
 
-const SECONDS_IN_YEAR = 31536000;
+const MILLISECONDS_IN_YEAR = 31536000000;
 
 const encode = (num: number): string => ENCODE[num & MASK6];
 
@@ -41,11 +41,14 @@ export const getUniqueId = (length = 16): Id =>
     '',
   );
 
-export const getNow = Date.now;
+export const size = (arrayOrString: string | any[]): number =>
+  arrayOrString.length;
 
-export const toTimestamp = (number: number): number => {
+export const getNow: () => TimestampMs = Date.now;
+
+export const toTimestamp = (number: TimestampMs | DurationMs): TimestampMs => {
   if (!isPositiveNumber(number)) {
     number = 0;
   }
-  return number > SECONDS_IN_YEAR ? number : getNow() + number;
+  return number > MILLISECONDS_IN_YEAR ? number : getNow() + number;
 };

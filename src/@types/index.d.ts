@@ -2,17 +2,17 @@
 
 export type Id = string;
 export type Ids = Id[];
-export type Timestamp = number;
-export type Seconds = number;
+export type TimestampMs = number;
+export type DurationMs = number;
 
 export type Task = (arg: string | undefined, tasks: Manager) => Promise<void>;
 
 export type ManagerConfig = {
-  readonly tickInterval?: Seconds;
+  readonly tickInterval?: DurationMs;
 };
 
 export type TaskRunConfig = {
-  readonly maxDuration?: Seconds;
+  readonly maxDuration?: DurationMs;
   readonly maxRetries?: number;
   readonly retryDelay?: number | string;
 };
@@ -20,8 +20,8 @@ export type TaskRunConfig = {
 export type TaskRunInfo = {
   readonly taskId: Id;
   readonly arg?: string;
-  readonly startAfter: Timestamp;
-  readonly started?: Timestamp;
+  readonly startAfter: TimestampMs;
+  readonly started?: TimestampMs;
 };
 
 /// Manager
@@ -61,7 +61,7 @@ export interface Manager {
   setTaskRun(
     taskId: Id,
     arg?: string,
-    startAfter?: Timestamp | Seconds,
+    startAfter?: TimestampMs | DurationMs,
     config?: TaskRunConfig,
   ): Id;
   /// Manager.getTaskRunConfig
@@ -80,7 +80,7 @@ export interface Manager {
   stop(): Manager;
 
   /// Manager.getNow
-  getNow(): Timestamp;
+  getNow(): TimestampMs;
 }
 
 /// createManager

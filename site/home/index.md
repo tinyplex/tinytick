@@ -40,17 +40,17 @@ manager.setCategory('network', {maxRetries: 10});
 manager.setTask('ping', ping, 'network');
 
 console.log(manager.getTaskConfig('ping', true));
-// -> {maxDuration: 1, maxRetries: 10, retryDelay: 3}
+// -> {maxDuration: 1000, maxRetries: 10, retryDelay: 3000}
 ```
 
 > Tasks can be configured on a case-by-case basis too:
 
 ```js
 manager.setTask('ping', ping, undefined, {
-  maxDuration: 2,
+  maxDuration: 2000,
 });
 console.log(manager.getTaskConfig('ping'));
-// -> {maxDuration: 2}
+// -> {maxDuration: 2000}
 ```
 
 > And then of course, when you're ready, schedule the task to run! This can be

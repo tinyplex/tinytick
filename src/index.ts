@@ -1,13 +1,13 @@
 import type {
+  DurationMs,
   Id,
   Ids,
   Manager,
   ManagerConfig,
-  Seconds,
   Task,
   TaskRunConfig,
   TaskRunInfo,
-  Timestamp,
+  TimestampMs,
   createManager as createManagerDecl,
 } from './@types/index.js';
 import {
@@ -24,6 +24,7 @@ import {
   ifNotUndefined,
   isPositiveNumber,
   isUndefined,
+  size,
   toTimestamp,
 } from './common/other.ts';
 import {id, isString} from './common/strings.ts';
@@ -35,16 +36,29 @@ import {
 } from './common/obj.ts';
 import {arrayMap} from './common/array.ts';
 
-const RETRY_PATTERN = /^\d+(,\d+)*$/;
+type TaskRun = [
+  taskId: Id,
+  arg: string | undefined,
+  startAfter: TimestampMs,
+  config: TaskRunConfig,
+  index: number,
+  started?: TimestampMs,
+];
+const TASK_ID = 0;
+const ARG = 1;
+const INDEX = 4;
+const STARTED = 5;
+
+const RETRY_PATTERN = /^(\d*\.?\d+)(,\d*\.?\d+)*$/;
 
 const DEFAULT_MANAGER_CONFIG: ManagerConfig = {
-  tickInterval: 1,
+  tickInterval: 100,
 };
 
 const DEFAULT_TASK_RUN_CONFIG: TaskRunConfig = {
-  maxDuration: 1,
+  maxDuration: 1000,
   maxRetries: 2,
-  retryDelay: 3,
+  retryDelay: 3000,
 };
 
 const managerConfigValidators: {[id: string]: (child: any) => boolean} = {
@@ -70,24 +84,17 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const taskMap: IdMap<
     [task: Task, categoryId: Id | undefined, config: TaskRunConfig]
   > = mapNew();
-  const taskRunMap: IdMap<
-    [
-      taskId: Id,
-      arg: string | undefined,
-      startAfter: Timestamp,
-      config: TaskRunConfig,
-      started?: Timestamp,
-    ]
-  > = mapNew();
+  const taskRunMap: IdMap<TaskRun> = mapNew();
+  const taskRunIndex: [taskRunId: Id, startAfter: TimestampMs][] = [];
 
   const tick = () => {
     mapForEach(taskRunMap, (taskRunId, taskRun) =>
       ifNotUndefined(
-        mapGet(taskMap, taskRun[0]),
+        mapGet(taskMap, taskRun[TASK_ID]),
         ([task]) => {
-          if (isUndefined(taskRun[4])) {
-            taskRun[4] = getNow();
-            task(taskRun[1], manager).then(() => delTaskRun(taskRunId));
+          if (isUndefined(taskRun[STARTED])) {
+            taskRun[STARTED] = getNow();
+            task(taskRun[ARG], manager).then(() => delTaskRun(taskRunId));
           }
         },
         () => {
@@ -179,16 +186,19 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const setTaskRun = (
     taskId: Id,
     arg?: string,
-    startAfter: Timestamp | Seconds = 0,
+    startAfter: TimestampMs | DurationMs = 0,
     config: TaskRunConfig = {},
   ): Id => {
     const taskRunId = getUniqueId();
+    const startAfterTimestamp = toTimestamp(startAfter);
     mapSet(taskRunMap, taskRunId, [
       id(taskId),
       arg,
-      toTimestamp(startAfter),
+      startAfterTimestamp,
       validatedTestRunConfig(config),
+      size(taskRunIndex),
     ]);
+    taskRunIndex.push([taskRunId, startAfterTimestamp]);
     return taskRunId;
   };
 
@@ -207,20 +217,22 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const getTaskRunInfo = (taskRunId: Id): TaskRunInfo | undefined =>
     ifNotUndefined(
       mapGet(taskRunMap, id(taskRunId)),
-      ([taskId, arg, startAfter, , started]) =>
+      ([taskId, arg, startAfter, , , started]) =>
         objFilterUndefined({taskId, arg, startAfter, started}),
     );
 
   const delTaskRun = (taskRunId: Id) =>
-    fluent((taskRunId) => mapSet(taskRunMap, taskRunId), taskRunId);
+    fluent((taskRunId) => {
+      ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
+        taskRunIndex.splice(taskRun[INDEX], 1);
+        mapSet(taskRunMap, taskRunId);
+      });
+    }, taskRunId);
 
   const start = () =>
     fluent(() => {
       stop();
-      tickHandle = setTimeout(
-        tick,
-        getManagerConfig(true).tickInterval! * 1000,
-      );
+      tickHandle = setTimeout(tick, getManagerConfig(true).tickInterval!);
     });
 
   const stop = () =>
