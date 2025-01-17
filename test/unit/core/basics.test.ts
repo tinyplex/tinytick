@@ -299,11 +299,11 @@ describe('taskRun', () => {
 
     test('invalid maxDuration', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.setTaskRun('task1', undefined, {
+      const taskRunId = manager.setTaskRun('task1', undefined, undefined, {
         maxDuration: -5,
       });
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({});
-      const taskRunId2 = manager.setTaskRun('task1', undefined, {
+      const taskRunId2 = manager.setTaskRun('task1', undefined, undefined, {
         // @ts-expect-error property is numeric
         maxDuration: 'five',
       });
@@ -312,11 +312,11 @@ describe('taskRun', () => {
 
     test('invalid maxRetries', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.setTaskRun('task1', undefined, {
+      const taskRunId = manager.setTaskRun('task1', undefined, undefined, {
         maxRetries: -5,
       });
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({});
-      const taskRunId2 = manager.setTaskRun('task1', undefined, {
+      const taskRunId2 = manager.setTaskRun('task1', undefined, undefined, {
         // @ts-expect-error property is numeric
         maxRetries: 'five',
       });
@@ -325,33 +325,33 @@ describe('taskRun', () => {
 
     test('invalid retryDelay', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.setTaskRun('task1', undefined, {
+      const taskRunId = manager.setTaskRun('task1', undefined, undefined, {
         retryDelay: -5,
       });
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({});
-      const taskRunId2 = manager.setTaskRun('task1', undefined, {
+      const taskRunId2 = manager.setTaskRun('task1', undefined, undefined, {
         // @ts-expect-error property is numeric
         retryDelay: false,
       });
       expect(manager.getTaskRunConfig(taskRunId2)).toEqual({});
 
-      const taskRunId3 = manager.setTaskRun('task1', undefined, {
+      const taskRunId3 = manager.setTaskRun('task1', undefined, undefined, {
         retryDelay: ',',
       });
       expect(manager.getTaskRunConfig(taskRunId3)).toEqual({});
-      const taskRunId4 = manager.setTaskRun('task1', undefined, {
+      const taskRunId4 = manager.setTaskRun('task1', undefined, undefined, {
         retryDelay: '5,',
       });
       expect(manager.getTaskRunConfig(taskRunId4)).toEqual({});
-      const taskRunId5 = manager.setTaskRun('task1', undefined, {
+      const taskRunId5 = manager.setTaskRun('task1', undefined, undefined, {
         retryDelay: ',5',
       });
       expect(manager.getTaskRunConfig(taskRunId5)).toEqual({});
-      const taskRunId6 = manager.setTaskRun('task1', undefined, {
+      const taskRunId6 = manager.setTaskRun('task1', undefined, undefined, {
         retryDelay: '',
       });
       expect(manager.getTaskRunConfig(taskRunId6)).toEqual({});
-      const taskRunId7 = manager.setTaskRun('task1', undefined, {
+      const taskRunId7 = manager.setTaskRun('task1', undefined, undefined, {
         retryDelay: 'a,5',
       });
       expect(manager.getTaskRunConfig(taskRunId7)).toEqual({});
@@ -361,7 +361,7 @@ describe('taskRun', () => {
   describe('getTaskRunConfig', () => {
     test('no defaults', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.setTaskRun('task1', undefined, {
+      const taskRunId = manager.setTaskRun('task1', undefined, undefined, {
         maxDuration: 5,
       });
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({maxDuration: 5});
@@ -369,7 +369,7 @@ describe('taskRun', () => {
 
     test('with defaults', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.setTaskRun('task1', undefined, {
+      const taskRunId = manager.setTaskRun('task1', undefined, undefined, {
         maxDuration: 5,
       });
       expect(manager.getTaskRunConfig(taskRunId, true)).toEqual({
@@ -414,7 +414,7 @@ describe('taskRun', () => {
     test('with config, task & category defaults', () => {
       manager.setTask('task1', task, 'category1', {maxRetries: 5});
       manager.setCategory('category1', {retryDelay: 5});
-      const taskRunId = manager.setTaskRun('task1', undefined, {
+      const taskRunId = manager.setTaskRun('task1', undefined, undefined, {
         maxDuration: 5,
       });
       expect(manager.getTaskRunConfig(taskRunId, true)).toEqual({
@@ -444,7 +444,7 @@ describe('taskRun', () => {
 
     test('immutable', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.setTaskRun('task1', undefined, {
+      const taskRunId = manager.setTaskRun('task1', undefined, undefined, {
         maxDuration: 5,
       });
       const config = manager.getTaskRunConfig(taskRunId);
@@ -458,15 +458,21 @@ describe('taskRun', () => {
     test('basic', () => {
       manager.setTask('task1', task);
       const taskRunId = manager.setTaskRun('task1');
-      expect(manager.getTaskRunInfo(taskRunId)).toEqual({taskId: 'task1'});
+      const startAfter = manager.getNow();
+      expect(manager.getTaskRunInfo(taskRunId)).toEqual({
+        taskId: 'task1',
+        startAfter,
+      });
     });
 
     test('with arg', () => {
       manager.setTask('task1', task);
       const taskRunId = manager.setTaskRun('task1', 'arg1');
+      const startAfter = manager.getNow();
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         arg: 'arg1',
         taskId: 'task1',
+        startAfter,
       });
     });
 
@@ -476,10 +482,15 @@ describe('taskRun', () => {
         await pause(0.02);
       });
       const taskRunId = manager.setTaskRun('task1');
-      expect(manager.getTaskRunInfo(taskRunId)).toEqual({taskId: 'task1'});
+      const startAfter = manager.getNow();
+      expect(manager.getTaskRunInfo(taskRunId)).toEqual({
+        taskId: 'task1',
+        startAfter,
+      });
       manager.start();
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
+        startAfter,
       });
       await pause(0.01);
       expect(manager.getTaskRunInfo(taskRunId)?.taskId).toEqual('task1');

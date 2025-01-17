@@ -109,6 +109,12 @@
    * @since v1.0.0
    */
   /// Manager.stop
+  /**
+   * The getNow method.
+   * @category Lifecycle
+   * @since v1.0.0
+   */
+  /// Manager.getNow
 }
 /**
  * The createManager function.

@@ -20,6 +20,7 @@ export type TaskRunConfig = {
 export type TaskRunInfo = {
   readonly taskId: Id;
   readonly arg?: string;
+  readonly startAfter: Timestamp;
   readonly started?: Timestamp;
 };
 
@@ -57,7 +58,12 @@ export interface Manager {
   delTask(taskId: Id): Manager;
 
   /// Manager.setTaskRun
-  setTaskRun(taskId: Id, arg?: string, config?: TaskRunConfig): Id;
+  setTaskRun(
+    taskId: Id,
+    arg?: string,
+    startAfter?: Timestamp | Seconds,
+    config?: TaskRunConfig,
+  ): Id;
   /// Manager.getTaskRunConfig
   getTaskRunConfig(
     taskRunId: Id,
@@ -72,6 +78,9 @@ export interface Manager {
   start(): Manager;
   /// Manager.stop
   stop(): Manager;
+
+  /// Manager.getNow
+  getNow(): Timestamp;
 }
 
 /// createManager

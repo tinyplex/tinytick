@@ -11,6 +11,8 @@ const ENCODE = /* @__PURE__ */ strSplit(
   '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz',
 );
 
+const SECONDS_IN_YEAR = 31536000;
+
 const encode = (num: number): string => ENCODE[num & MASK6];
 
 // Fallback is not cryptographically secure but tolerable for ReactNative UUIDs.
@@ -21,7 +23,7 @@ const getRandomValues = GLOBAL.crypto
       arrayMap(array as any, () => mathFloor(math.random() * 256)) as any;
 
 export const isPositiveNumber = (thing: unknown): thing is number =>
-  getTypeOf(thing) == 'number' && (thing as number) > 0;
+  getTypeOf(thing) == 'number' && (thing as number) >= 0;
 
 export const isUndefined = (thing: unknown): thing is undefined | null =>
   thing == undefined;
@@ -39,4 +41,11 @@ export const getUniqueId = (length = 16): Id =>
     '',
   );
 
-export const now = Date.now;
+export const getNow = Date.now;
+
+export const toTimestamp = (number: number): number => {
+  if (!isPositiveNumber(number)) {
+    number = 0;
+  }
+  return number > SECONDS_IN_YEAR ? number : getNow() + number;
+};
