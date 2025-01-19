@@ -5,10 +5,17 @@ export type Ids = Id[];
 export type TimestampMs = number;
 export type DurationMs = number;
 
-export type Task = (arg: string | undefined, tasks: Manager) => Promise<void>;
+export type Task = (
+  arg: string | undefined,
+  tasks: Manager,
+) => Promise<unknown>;
 
 export type ManagerConfig = {
   readonly tickInterval?: DurationMs;
+};
+
+export type ManagerConfigWithDefaults = {
+  readonly tickInterval: DurationMs;
 };
 
 export type TaskRunConfig = {
@@ -17,11 +24,17 @@ export type TaskRunConfig = {
   readonly retryDelay?: number | string;
 };
 
+export type TaskRunConfigWithDefaults = {
+  readonly maxDuration: DurationMs;
+  readonly maxRetries: number;
+  readonly retryDelay: number | string;
+};
+
 export type TaskRunInfo = {
   readonly taskId: Id;
   readonly arg?: string;
   readonly startAfter: TimestampMs;
-  readonly started?: TimestampMs;
+  readonly running?: true;
 };
 
 /// Manager
@@ -29,15 +42,19 @@ export interface Manager {
   /// Manager.setManagerConfig
   setManagerConfig(config: ManagerConfig): Manager;
   /// Manager.getManagerConfig
-  getManagerConfig(withDefaults?: boolean): ManagerConfig;
+  getManagerConfig<WithDefaults extends boolean>(
+    withDefaults?: WithDefaults,
+  ): WithDefaults extends true ? ManagerConfigWithDefaults : ManagerConfig;
 
   /// Manager.setCategory
   setCategory(categoryId: Id, config: TaskRunConfig): Manager;
   /// Manager.getCategoryConfig
-  getCategoryConfig(
+  getCategoryConfig<WithDefaults extends boolean>(
     categoryId: Id,
-    withDefaults?: boolean,
-  ): TaskRunConfig | undefined;
+    withDefaults?: WithDefaults,
+  ): WithDefaults extends true
+    ? TaskRunConfigWithDefaults
+    : TaskRunConfig | undefined;
   /// Manager.getCategoryIds
   getCategoryIds(): Ids;
   /// Manager.delCategory
@@ -51,7 +68,12 @@ export interface Manager {
     config?: TaskRunConfig,
   ): Manager;
   /// Manager.getTaskConfig
-  getTaskConfig(taskId: Id, withDefaults?: boolean): TaskRunConfig | undefined;
+  getTaskConfig<WithDefaults extends boolean>(
+    taskId: Id,
+    withDefaults?: WithDefaults,
+  ): WithDefaults extends true
+    ? TaskRunConfigWithDefaults
+    : TaskRunConfig | undefined;
   /// Manager.getTaskIds
   getTaskIds(): Ids;
   /// Manager.delTask
@@ -65,10 +87,12 @@ export interface Manager {
     config?: TaskRunConfig,
   ): Id;
   /// Manager.getTaskRunConfig
-  getTaskRunConfig(
+  getTaskRunConfig<WithDefaults extends boolean>(
     taskRunId: Id,
-    withDefaults?: boolean,
-  ): TaskRunConfig | undefined;
+    withDefaults?: WithDefaults,
+  ): WithDefaults extends true
+    ? TaskRunConfigWithDefaults
+    : TaskRunConfig | undefined;
   /// Manager.getTaskRunInfo
   getTaskRunInfo(taskRunId: Id): TaskRunInfo | undefined;
   /// Manager.delTaskRun

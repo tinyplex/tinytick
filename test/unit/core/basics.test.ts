@@ -488,11 +488,9 @@ describe('taskRun', () => {
       });
     });
 
-    test('started', async () => {
+    test('running', async () => {
       manager.setManagerConfig({tickInterval: 1});
-      manager.setTask('task1', async () => {
-        await pause(2);
-      });
+      manager.setTask('task1', async () => await pause(2));
       const taskRunId = manager.setTaskRun('task1');
       const startAfter = manager.getNow();
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
@@ -505,8 +503,11 @@ describe('taskRun', () => {
         startAfter,
       });
       await pause(1);
-      expect(manager.getTaskRunInfo(taskRunId)?.taskId).toEqual('task1');
-      expect(manager.getTaskRunInfo(taskRunId)?.started).toBeDefined();
+      expect(manager.getTaskRunInfo(taskRunId)).toEqual({
+        taskId: 'task1',
+        startAfter,
+        running: true,
+      });
     });
   });
 });
@@ -516,9 +517,7 @@ describe('ticks', () => {
 
   test('start & stop', async () => {
     let ticks = 0;
-    manager.setTask('task1', async () => {
-      ticks++;
-    });
+    manager.setTask('task1', async () => ticks++);
     expect(ticks).toBe(0);
     manager.setTaskRun('task1');
     expect(ticks).toBe(0);
@@ -533,19 +532,17 @@ describe('ticks', () => {
   });
 
   test('started once, then deleted', async () => {
-    manager.setTask('task1', async () => {
-      await pause(4);
-    });
+    manager.setTask('task1', async () => await pause(4));
     const taskRunId = manager.setTaskRun('task1');
-    expect(manager.getTaskRunInfo(taskRunId!)?.started).toBeUndefined();
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toBeUndefined();
     manager.start();
     await pause(1);
-    expect(manager.getTaskRunInfo(taskRunId!)?.started).toBeUndefined();
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toBeUndefined();
     await pause(1);
-    const started = manager.getTaskRunInfo(taskRunId!)?.started;
-    expect(started).not.toBeUndefined();
+    const running = manager.getTaskRunInfo(taskRunId!)?.running;
+    expect(running).toEqual(true);
     await pause(2);
-    expect(manager.getTaskRunInfo(taskRunId!)?.started).toEqual(started);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(running);
     await pause(2);
     expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
     manager.stop();
@@ -563,9 +560,7 @@ describe('ticks', () => {
 
   test('run once', async () => {
     let ticks = 0;
-    manager.setTask('task1', async () => {
-      ticks++;
-    });
+    manager.setTask('task1', async () => ticks++);
     manager.setTaskRun('task1');
     manager.start();
     await pause(2);
@@ -575,19 +570,19 @@ describe('ticks', () => {
     manager.stop();
   });
 
-  test.only('run in right order', async () => {
+  test('run in right order', async () => {
     const runs: string[] = [];
-    manager.setTask('task1', async () => {
-      runs.push('task1');
-    });
-    manager.setTask('task2', async () => {
-      runs.push('task2');
-    });
+    manager.setTask('task1', async () => runs.push('task1'));
+    manager.setTask('task2', async () => runs.push('task2'));
+    manager.setTask('task3', async () => runs.push('task3'));
+    manager.setTask('task4', async () => runs.push('task4'));
     manager.setTaskRun('task2', undefined, 1);
+    manager.setTaskRun('task4', undefined, 3);
+    manager.setTaskRun('task3', undefined, 2);
     manager.setTaskRun('task1');
     manager.start();
-    await pause(2);
-    expect(runs).toEqual(['task1', 'task2']);
+    await pause(10);
+    expect(runs).toEqual(['task1', 'task2', 'task3', 'task4']);
     manager.stop();
   });
 });

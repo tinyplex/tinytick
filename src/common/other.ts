@@ -46,7 +46,9 @@ export const size = (arrayOrString: string | any[]): number =>
 
 export const getNow: () => TimestampMs = Date.now;
 
-export const toTimestamp = (number: TimestampMs | DurationMs): TimestampMs => {
+export const normalizeTimestamp = (
+  number: TimestampMs | DurationMs,
+): TimestampMs => {
   if (!isPositiveNumber(number)) {
     number = 0;
   }

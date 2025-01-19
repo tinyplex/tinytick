@@ -13,3 +13,18 @@ export const arrayForEach = <Value>(
   array: {forEach: (cb: (value: Value, index: number) => void) => void},
   cb: (value: Value, index: number) => void,
 ): void => array.forEach(cb);
+
+export const arrayEvery = <Value>(
+  array: Value[],
+  cb: (value: Value, index: number) => boolean | 0 | 1,
+): boolean => array.every(cb);
+
+export const arrayPush = <Value>(array: Value[], ...values: Value[]): number =>
+  array.push(...values);
+
+export const arraySplice = <Value>(
+  array: Value[],
+  start: number,
+  deleteCount: number,
+  ...values: Value[]
+) => array.splice(start, deleteCount, ...values);
