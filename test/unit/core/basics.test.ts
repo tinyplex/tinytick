@@ -675,6 +675,27 @@ describe('ticks', () => {
     manager.stop();
   });
 
+  test('over runs', async () => {
+    manager.setTask('task1', async () => await pause(25));
+    const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      maxDuration: 15,
+    });
+    manager.start();
+    await pause(15);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getScheduledTaskRunIds()).toEqual([]);
+    expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getScheduledTaskRunIds()).toEqual([]);
+    expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    expect(manager.getScheduledTaskRunIds()).toEqual([]);
+    expect(manager.getRunningTaskRunIds()).toEqual([]);
+    manager.stop();
+  });
+
   test('ignore invalid scheduled task', async () => {
     manager.setTask('task1', async () => {});
     const taskRunId = manager.scheduleTaskRun('task2');
