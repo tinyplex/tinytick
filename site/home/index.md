@@ -57,7 +57,7 @@ console.log(manager.getTaskConfig('ping'));
 > for an immediate run, once in the future, or repetitively.
 
 ```js
-const testRunId = manager.setTaskRun('test');
+const testRunId = manager.scheduleTaskRun('test');
 ```
 
 ---

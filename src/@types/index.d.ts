@@ -79,8 +79,8 @@ export interface Manager {
   /// Manager.delTask
   delTask(taskId: Id): Manager;
 
-  /// Manager.setTaskRun
-  setTaskRun(
+  /// Manager.scheduleTaskRun
+  scheduleTaskRun(
     taskId: Id,
     arg?: string,
     startAfter?: TimestampMs | DurationMs,
@@ -97,6 +97,12 @@ export interface Manager {
   getTaskRunInfo(taskRunId: Id): TaskRunInfo | undefined;
   /// Manager.delTaskRun
   delTaskRun(taskRunId: Id): Manager;
+
+  /// Manager.getScheduledTaskRunIds
+  getScheduledTaskRunIds(): Ids;
+
+  /// Manager.getRunningTaskRunIds
+  getRunningTaskRunIds(): Ids;
 
   /// Manager.start
   start(): Manager;

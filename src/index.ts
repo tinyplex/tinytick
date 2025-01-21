@@ -13,7 +13,7 @@ import type {
   createManager as createManagerDecl,
 } from './@types/index.js';
 import {IdMap, mapGet, mapKeys, mapNew, mapSet} from './common/map.ts';
-import {arrayMap, arraySplice} from './common/array.ts';
+import {arrayFilter, arrayMap, arraySplice} from './common/array.ts';
 import {
   getNow,
   getUniqueId,
@@ -30,13 +30,16 @@ import {
   objMerge,
   objValidate,
 } from './common/obj.ts';
+import {collHas} from './common/coll.ts';
+
+type TimestampPair = [taskRunId: Id | null, timestamp: TimestampMs];
 
 type TaskRun = [
   taskId: Id,
   arg: string | undefined,
   startAfterTimestamp: TimestampMs,
   config: TaskRunConfig,
-  index: number,
+  timestampPair: TimestampPair,
   resolvedConfig?: {
     maxDuration: DurationMs;
     maxRetries: number;
@@ -45,7 +48,7 @@ type TaskRun = [
 ];
 const TASK_ID = 0;
 const ARG = 1;
-const INDEX = 4;
+const TIMESTAMP_PAIR = 4;
 const RESOLVED_CONFIG = 5;
 
 const RETRY_PATTERN = /^(\d*\.?\d+)(,\d*\.?\d+)*$/;
@@ -77,17 +80,28 @@ const validatedTestRunConfig = (config: TaskRunConfig): TaskRunConfig =>
     : {};
 
 const insertTaskRun = (
-  taskRuns: [taskRunId: Id, timestamp: TimestampMs][],
+  taskRuns: TimestampPair[],
   taskRunId: Id,
   timestamp: TimestampMs,
-): number => {
+): TimestampPair => {
   const nextIndex = taskRuns.findIndex(
     ([, existingTimestamp]) => existingTimestamp > timestamp,
   );
-  const index = nextIndex == -1 ? size(taskRuns) : nextIndex;
-  arraySplice(taskRuns, index, 0, [taskRunId, timestamp]);
-  return index;
+  const timestampPair: TimestampPair = [taskRunId, timestamp];
+  arraySplice(
+    taskRuns,
+    nextIndex == -1 ? size(taskRuns) : nextIndex,
+    0,
+    timestampPair,
+  );
+  return timestampPair;
 };
+
+const getTaskRunIds = (taskRuns: TimestampPair[]): Ids =>
+  arrayFilter(
+    arrayMap(taskRuns, ([taskRunId]) => taskRunId),
+    isString,
+  ) as Ids;
 
 export const createManager: typeof createManagerDecl = (): Manager => {
   let config: ManagerConfig = {};
@@ -97,29 +111,39 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     [task: Task, categoryId: Id | undefined, config: TaskRunConfig]
   > = mapNew();
   const taskRunMap: IdMap<TaskRun> = mapNew();
-  const pendingTaskRuns: [taskRunId: Id, startAfterTimestamp: TimestampMs][] =
+  const scheduledTaskRuns: [taskRunId: Id, startAfterTimestamp: TimestampMs][] =
     [];
   const runningTaskRuns: [taskRunId: Id, finishAfterTimestamp: TimestampMs][] =
     [];
 
   const tick = () => {
     const now = getNow();
-    while (size(pendingTaskRuns) && pendingTaskRuns[0][1] <= now) {
-      const [taskRunId] = pendingTaskRuns.shift()!;
-      const taskRun = mapGet(taskRunMap, taskRunId)!;
-      ifNotUndefined(
-        mapGet(taskMap, taskRun[TASK_ID]),
-        ([task]) => {
-          const resolvedConfig = getTaskRunConfig(taskRunId, true);
-          taskRun[RESOLVED_CONFIG] = resolvedConfig;
-          taskRun[INDEX] = insertTaskRun(
-            runningTaskRuns,
-            taskRunId,
-            now + resolvedConfig.maxDuration,
-          );
-          task(taskRun[ARG], manager).then(() => delTaskRun(taskRunId));
-        },
-        () => delTaskRun(taskRunId) as any,
+    while (size(scheduledTaskRuns) && scheduledTaskRuns[0][1] <= now) {
+      const [taskRunId] = scheduledTaskRuns.shift()!;
+      ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) =>
+        ifNotUndefined(
+          mapGet(taskMap, taskRun[TASK_ID]),
+          ([task]) => {
+            taskRun[RESOLVED_CONFIG] = getTaskRunConfig(taskRunId, true);
+            taskRun[TIMESTAMP_PAIR] = insertTaskRun(
+              runningTaskRuns,
+              taskRunId,
+              now + taskRun[RESOLVED_CONFIG].maxDuration,
+            );
+            task(taskRun[ARG], manager).then(() => delTaskRun(taskRunId));
+          },
+          () => delTaskRun(taskRunId) as any,
+        ),
+      );
+    }
+    while (
+      size(runningTaskRuns) &&
+      (runningTaskRuns[0][1] <= now ||
+        !collHas(taskRunMap, runningTaskRuns[0][0]) ||
+        isUndefined(runningTaskRuns[0][0]))
+    ) {
+      ifNotUndefined(runningTaskRuns.shift()![0], (testRunId) =>
+        delTaskRun(testRunId),
       );
     }
     start();
@@ -209,7 +233,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const delTask = (taskId: Id): Manager =>
     fluent((taskId) => mapSet(taskMap, taskId), taskId);
 
-  const setTaskRun = (
+  const scheduleTaskRun = (
     taskId: Id,
     arg?: string,
     startAfter: TimestampMs | DurationMs = 0,
@@ -217,18 +241,13 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   ): Id => {
     const taskRunId = getUniqueId();
     const startAfterTimestamp = normalizeTimestamp(startAfter);
-    const index = insertTaskRun(
-      pendingTaskRuns,
-      taskRunId,
-      startAfterTimestamp,
-    );
-
     mapSet(taskRunMap, taskRunId, [
       id(taskId),
       arg,
       startAfterTimestamp,
       validatedTestRunConfig(config),
-      index,
+      insertTaskRun(scheduledTaskRuns, taskRunId, startAfterTimestamp),
+      undefined,
     ]);
     return taskRunId;
   };
@@ -260,12 +279,18 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     );
 
   const delTaskRun = (taskRunId: Id) =>
-    fluent((taskRunId) => {
-      ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
-        arraySplice(pendingTaskRuns, taskRun[INDEX], 1);
-        mapSet(taskRunMap, taskRunId);
-      });
-    }, taskRunId);
+    fluent(
+      (taskRunId) =>
+        ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
+          taskRun[TIMESTAMP_PAIR]![0] = null;
+          mapSet(taskRunMap, taskRunId);
+        }),
+      taskRunId,
+    );
+
+  const getScheduledTaskRunIds = () => getTaskRunIds(scheduledTaskRuns);
+
+  const getRunningTaskRunIds = () => getTaskRunIds(runningTaskRuns);
 
   const start = () =>
     fluent(() => {
@@ -290,10 +315,13 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     getTaskIds,
     delTask,
 
-    setTaskRun,
+    scheduleTaskRun,
     getTaskRunConfig,
     getTaskRunInfo,
     delTaskRun,
+
+    getScheduledTaskRunIds,
+    getRunningTaskRunIds,
 
     start,
     stop,

@@ -28,3 +28,8 @@ export const arraySplice = <Value>(
   deleteCount: number,
   ...values: Value[]
 ) => array.splice(start, deleteCount, ...values);
+
+export const arrayFilter = <Value>(
+  array: Value[],
+  cb: (value: Value) => boolean,
+): Value[] => array.filter(cb);

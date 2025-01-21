@@ -1,4 +1,4 @@
-jest.retryTimes(10);
+jest.retryTimes(0);
 
 afterEach(
   () => (global.env.assertionCalls += expect.getState().assertionCalls),
