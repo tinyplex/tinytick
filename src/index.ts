@@ -43,10 +43,10 @@ type TaskRun = [
   arg: string | undefined,
   startAfter: TimestampMs,
   config: TaskRunConfig,
-
   retry: number,
   running: boolean,
-  timestampPair?: TimestampPair,
+  timestampPair: TimestampPair,
+
   abortController?: AbortController,
   duration?: DurationMs,
   retries?: number,
@@ -54,7 +54,6 @@ type TaskRun = [
 ];
 const TASK_ID = 0;
 const ARG = 1;
-const START_AFTER = 2;
 const RETRY = 4;
 const RUNNING = 5;
 const TIMESTAMP_PAIR = 6;
@@ -153,7 +152,6 @@ export const createManager: typeof createManagerDecl = (): Manager => {
                 ? retryDelay.split(',').map((number) => parseInt(number))
                 : [retryDelay];
             }
-
             taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
               runningTaskRuns,
               taskRunId,
@@ -185,14 +183,12 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         if (taskRun[RETRIES]!-- > 0) {
           const delays = taskRun[DELAYS]!;
           const delay = size(delays) > 1 ? delays.shift() : delays[0];
-          const startAfterTimestamp = now + delay!;
-          taskRun[START_AFTER] = startAfterTimestamp;
           taskRun[RETRY]++;
           taskRun[RUNNING] = false;
           taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
             scheduledTaskRuns,
             taskRunId,
-            startAfterTimestamp,
+            now + delay!,
           );
           taskRun[ABORT_CONTROLLER] = undefined;
         } else {
@@ -294,15 +290,18 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     config: TaskRunConfig = {},
   ): Id => {
     const taskRunId = getUniqueId();
-    const startAfterTimestamp = normalizeTimestamp(startAfter);
     mapSet(taskRunMap, taskRunId, [
       id(taskId),
       arg,
-      startAfterTimestamp,
+      normalizeTimestamp(startAfter),
       validatedTestRunConfig(config),
       0,
       false,
-      insertTimestampPair(scheduledTaskRuns, taskRunId, startAfterTimestamp),
+      insertTimestampPair(
+        scheduledTaskRuns,
+        taskRunId,
+        normalizeTimestamp(startAfter),
+      ),
     ]);
     return taskRunId;
   };
@@ -324,13 +323,13 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const getTaskRunInfo = (taskRunId: Id): TaskRunInfo | undefined =>
     ifNotUndefined(
       mapGet(taskRunMap, id(taskRunId)),
-      ([taskId, arg, startAfter, , retry, running]) =>
+      ([taskId, arg, , , retry, running, [, nextTimestamp]]) =>
         objFilterUndefined({
           taskId,
           arg,
-          startAfter,
           retry,
           running,
+          nextTimestamp,
         }),
     );
 

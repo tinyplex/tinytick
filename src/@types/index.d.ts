@@ -34,9 +34,9 @@ export type TaskRunConfigWithDefaults = {
 export type TaskRunInfo = {
   readonly taskId: Id;
   readonly arg: string | undefined;
-  readonly startAfter: TimestampMs;
   readonly retry: number;
   readonly running: boolean;
+  readonly nextTimestamp: TimestampMs;
 };
 
 /// Manager

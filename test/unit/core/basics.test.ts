@@ -533,10 +533,10 @@ describe('taskRun', () => {
     test('basic', () => {
       manager.setTask('task1', task);
       const taskRunId = manager.scheduleTaskRun('task1');
-      const startAfter = manager.getNow();
+      const nextTimestamp = manager.getNow();
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
-        startAfter,
+        nextTimestamp,
         retry: 0,
         running: false,
       });
@@ -552,13 +552,13 @@ describe('taskRun', () => {
       const taskRunId1 = manager.scheduleTaskRun('task1', undefined, 5);
       expect(manager.getTaskRunInfo(taskRunId1)).toEqual({
         taskId: 'task1',
-        startAfter: now + 5,
+        nextTimestamp: now + 5,
         retry: 0,
         running: false,
       });
       expect(manager.getTaskRunInfo(taskRunId2)).toEqual({
         taskId: 'task2',
-        startAfter: now + 10,
+        nextTimestamp: now + 10,
         retry: 0,
         running: false,
       });
@@ -572,11 +572,11 @@ describe('taskRun', () => {
     test('with arg', () => {
       manager.setTask('task1', task);
       const taskRunId = manager.scheduleTaskRun('task1', 'arg1');
-      const startAfter = manager.getNow();
+      const nextTimestamp = manager.getNow();
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         arg: 'arg1',
         taskId: 'task1',
-        startAfter,
+        nextTimestamp,
         retry: 0,
         running: false,
       });
@@ -586,10 +586,10 @@ describe('taskRun', () => {
       manager.setManagerConfig({tickInterval: 1});
       manager.setTask('task1', async () => await pause(2));
       const taskRunId = manager.scheduleTaskRun('task1');
-      const startAfter = manager.getNow();
+      const nextTimestamp = manager.getNow();
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
-        startAfter,
+        nextTimestamp,
         retry: 0,
         running: false,
       });
@@ -598,7 +598,7 @@ describe('taskRun', () => {
       manager.start();
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
-        startAfter,
+        nextTimestamp,
         retry: 0,
         running: false,
       });
@@ -607,10 +607,13 @@ describe('taskRun', () => {
       await pause(1);
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
-        startAfter,
+        nextTimestamp: expect.any(Number),
         retry: 0,
         running: true,
       });
+      expect(
+        manager.getTaskRunInfo(taskRunId)!.nextTimestamp - nextTimestamp,
+      ).toBeGreaterThanOrEqual(1000);
       expect(manager.getScheduledTaskRunIds()).toEqual([]);
       expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
     });
@@ -621,10 +624,10 @@ describe('taskRun', () => {
       manager.setManagerConfig({tickInterval: 10});
       manager.setTask('task1', task);
       const taskRunId = manager.scheduleTaskRun('task1');
-      const startAfter = manager.getNow();
+      const nextTimestamp = manager.getNow();
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
-        startAfter,
+        nextTimestamp,
         retry: 0,
         running: false,
       });
@@ -640,12 +643,12 @@ describe('taskRun', () => {
       manager.setManagerConfig({tickInterval: 10});
       manager.setTask('task1', async () => await pause(20));
       const taskRunId = manager.scheduleTaskRun('task1');
-      const startAfter = manager.getNow();
+      const nextTimestamp = manager.getNow();
       manager.start();
       await pause(5);
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
-        startAfter,
+        nextTimestamp,
         retry: 0,
         running: false,
       });
@@ -653,10 +656,13 @@ describe('taskRun', () => {
       await pause(10);
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
-        startAfter,
+        nextTimestamp: expect.any(Number),
         retry: 0,
         running: true,
       });
+      expect(
+        manager.getTaskRunInfo(taskRunId)!.nextTimestamp - nextTimestamp,
+      ).toBeGreaterThanOrEqual(1000);
       manager.delTaskRun(taskRunId);
       expect(manager.getTaskRunInfo(taskRunId)).toBeUndefined();
       expect(manager.getScheduledTaskRunIds()).toEqual([]);
