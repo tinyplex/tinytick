@@ -9,16 +9,23 @@
 })(this, function (exports) {
   'use strict';
 
-  const EMPTY_STRING = '';
-  const id = (key) => EMPTY_STRING + key;
-  const strSplit = (str, separator = EMPTY_STRING, limit) =>
-    str.split(separator, limit);
-
-  const collDel = (coll, keyOrValue) => coll?.delete(keyOrValue);
+  const collHas = (coll, keyOrValue) => coll.has(keyOrValue);
+  const collDel = (coll, keyOrValue) => coll.delete(keyOrValue);
 
   const arrayMap = (array, cb) => array.map(cb);
   const arrayReduce = (array, cb, initial) => array.reduce(cb, initial);
   const arrayForEach = (array, cb) => array.forEach(cb);
+  const arraySplice = (array, start, deleteCount, ...values) =>
+    array.splice(start, deleteCount, ...values);
+  const arrayShift = (array) => array.shift();
+  const arrayFilter = (array, cb) => array.filter(cb);
+
+  const EMPTY_STRING = '';
+  const getTypeOf = (thing) => typeof thing;
+  const id = (key) => EMPTY_STRING + key;
+  const isString = (thing) => getTypeOf(thing) == 'string';
+  const strSplit = (str, separator = EMPTY_STRING, limit) =>
+    str.split(separator, limit);
 
   const GLOBAL = globalThis;
   const math = Math;
@@ -27,31 +34,44 @@
   const ENCODE = /* @__PURE__ */ strSplit(
     '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz',
   );
-  const isUndefined = (thing) => thing == undefined;
-  const ifNotUndefined = (value, then, otherwise) =>
-    isUndefined(value) ? otherwise?.() : then(value);
+  const MILLISECONDS_IN_YEAR = 31536e6;
+  const encode = (num) => ENCODE[num & MASK6];
   const getRandomValues = GLOBAL.crypto
     ? (array) => GLOBAL.crypto.getRandomValues(array)
     : /* istanbul ignore next */
       (array) => arrayMap(array, () => mathFloor(math.random() * 256));
+  const isPositiveNumber = (thing) =>
+    getTypeOf(thing) == 'number' && thing >= 0;
+  const isUndefined = (thing) => thing == undefined;
+  const ifNotUndefined = (value, then, otherwise) =>
+    isUndefined(value) ? otherwise?.() : then(value);
   const getUniqueId = (length = 16) =>
     arrayReduce(
       getRandomValues(new Uint8Array(length)),
       (uniqueId, number) => uniqueId + encode(number),
       '',
     );
-  const encode = (num) => ENCODE[num & MASK6];
+  const size = (arrayOrString) => arrayOrString.length;
+  const getNow = Date.now;
+  const normalizeTimestamp = (number) => {
+    if (!isPositiveNumber(number)) {
+      number = 0;
+    }
+    return number > MILLISECONDS_IN_YEAR ? number : getNow() + number;
+  };
 
   const mapNew = (entries) => new Map(entries);
   const mapSet = (map, key, value) =>
     isUndefined(value) ? (collDel(map, key), map) : map?.set(key, value);
   const mapGet = (map, key) => map?.get(key);
-  const mapKeys = (map) => [...(map?.keys() ?? [])];
+  const mapKeys = (map) => [...map.keys()];
 
   const object = Object;
   const getPrototypeOf = (obj) => object.getPrototypeOf(obj);
   const objFrozen = object.isFrozen;
   const objEntries = object.entries;
+  const objForEach = (obj, cb) =>
+    arrayForEach(objEntries(obj), ([id, value]) => cb(value, id));
   const isObject = (obj) =>
     !isUndefined(obj) &&
     ifNotUndefined(
@@ -63,12 +83,14 @@
       /* istanbul ignore next */
       () => true,
     );
-  const objFreeze = object.freeze;
-  const objForEach = (obj, cb) =>
-    arrayForEach(objEntries(obj), ([id, value]) => cb(value, id));
-  const objMerge = (...objs) => object.assign({}, ...objs);
   const objDel = (obj, id) => {
     delete obj[id];
+    return obj;
+  };
+  const objFreeze = object.freeze;
+  const objMerge = (...objs) => object.assign({}, ...objs);
+  const objFilterUndefined = (obj) => {
+    objForEach(obj, (value, id) => (value === undefined ? delete obj[id] : 0));
     return obj;
   };
   const objValidate = (obj, validateChild) => {
@@ -83,136 +105,224 @@
     return 1;
   };
 
-  const RETRY_PATTERN = /^\d+(,\d+)*$/;
+  const TASK_ID = 0;
+  const ARG = 1;
+  const TIMESTAMP_PAIR = 4;
+  const RESOLVED_CONFIG = 5;
+  const ABORT_CONTROLLER = 6;
+  const TICK_INTERVAL = 'tickInterval';
+  const MAX_DURATION = 'maxDuration';
+  const MAX_RETRIES = 'maxRetries';
+  const RETRY_DELAY = 'retryDelay';
+  const RETRY_PATTERN = /^(\d*\.?\d+)(,\d*\.?\d+)*$/;
   const DEFAULT_MANAGER_CONFIG = {
-    tickInterval: 1,
+    [TICK_INTERVAL]: 100,
   };
-  const DEFAULT_TASK_CONFIG = {
-    maxDuration: 1,
-    maxRetries: 2,
-    retryDelay: 3,
+  const DEFAULT_TASK_RUN_CONFIG = {
+    [MAX_DURATION]: 1e3,
+    [MAX_RETRIES]: 2,
+    [RETRY_DELAY]: 3e3,
   };
-  const isString = (child) => typeof child == 'string';
-  const isPositiveNumber = (child) => typeof child == 'number' && child > 0;
   const managerConfigValidators = {
-    tickInterval: isPositiveNumber,
+    [TICK_INTERVAL]: isPositiveNumber,
   };
-  const categoryConfigValidators = {
-    maxDuration: isPositiveNumber,
-    maxRetries: isPositiveNumber,
-    retryDelay: (child) =>
-      isPositiveNumber(child) ||
-      (typeof child == 'string' && RETRY_PATTERN.test(child)),
+  const taskRunConfigValidators = {
+    [MAX_DURATION]: isPositiveNumber,
+    [MAX_RETRIES]: isPositiveNumber,
+    [RETRY_DELAY]: (child) =>
+      isPositiveNumber(child) || (isString(child) && RETRY_PATTERN.test(child)),
   };
-  const taskConfigValidators = {
-    categoryId: isString,
-    ...categoryConfigValidators,
+  const validatedTestRunConfig = (config) =>
+    objValidate(config, (child, id2) => taskRunConfigValidators[id2]?.(child))
+      ? config
+      : {};
+  const insertTaskRun = (taskRuns, taskRunId, timestamp) => {
+    const nextIndex = taskRuns.findIndex(
+      ([, existingTimestamp]) => existingTimestamp > timestamp,
+    );
+    const timestampPair = [taskRunId, timestamp];
+    arraySplice(
+      taskRuns,
+      nextIndex == -1 ? size(taskRuns) : nextIndex,
+      0,
+      timestampPair,
+    );
+    return timestampPair;
   };
+  const getTaskRunIds = (taskRuns) =>
+    arrayFilter(
+      arrayMap(taskRuns, ([taskRunId]) => taskRunId),
+      isString,
+    );
   const createManager = () => {
     let config = {};
     let tickHandle;
     const categoryMap = mapNew();
     const taskMap = mapNew();
     const taskRunMap = mapNew();
+    const scheduledTaskRuns = [];
+    const runningTaskRuns = [];
     const tick = () => {
-      tickHandle = setTimeout(tick, 0);
+      const now = getNow();
+      while (size(scheduledTaskRuns) && scheduledTaskRuns[0][1] <= now) {
+        const [taskRunId] = arrayShift(scheduledTaskRuns);
+        ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) =>
+          ifNotUndefined(
+            mapGet(taskMap, taskRun[TASK_ID]),
+            ([task]) => {
+              taskRun[RESOLVED_CONFIG] = getTaskRunConfig(taskRunId, true);
+              taskRun[TIMESTAMP_PAIR] = insertTaskRun(
+                runningTaskRuns,
+                taskRunId,
+                now + taskRun[RESOLVED_CONFIG][MAX_DURATION],
+              );
+              taskRun[ABORT_CONTROLLER] = new AbortController();
+              task(
+                taskRun[ARG],
+                taskRun[ABORT_CONTROLLER].signal,
+                manager,
+              ).then(() => delTaskRun(taskRunId));
+            },
+            () => delTaskRun(taskRunId),
+          ),
+        );
+      }
+      while (
+        size(runningTaskRuns) &&
+        (runningTaskRuns[0][1] <= now ||
+          !collHas(taskRunMap, runningTaskRuns[0][0]) ||
+          isUndefined(runningTaskRuns[0][0]))
+      ) {
+        ifNotUndefined(arrayShift(runningTaskRuns)[0], (testRunId) =>
+          delTaskRun(testRunId),
+        );
+      }
+      start();
     };
     const fluent = (actions, ...args) => {
       actions(...arrayMap(args, id));
       return manager;
     };
     const setManagerConfig = (managerConfig) =>
-      fluent(() => {
-        if (
-          objValidate(managerConfig, (child, id2) =>
-            managerConfigValidators[id2]?.(child),
-          )
-        ) {
-          config = managerConfig;
-          clearTimeout(tickHandle);
-          tickHandle = setTimeout(
-            tick,
-            getManagerConfig(true).tickInterval * 1e3,
-          );
-        }
-      });
-    const getManagerConfig = (withDefaults = false) =>
-      objMerge(withDefaults ? DEFAULT_MANAGER_CONFIG : {}, config);
-    const setTask = (taskId, task, taskConfig = {}) =>
-      fluent((taskId2) => mapSet(taskMap, taskId2, [task, taskConfig]), taskId);
-    const setTaskConfig = (taskId, taskConfig) =>
-      fluent(
-        (taskId2) =>
-          ifNotUndefined(mapGet(taskMap, taskId2), (taskAndConfig) =>
-            objValidate(taskConfig, (child, id2) =>
-              taskConfigValidators[id2]?.(child),
-            )
-              ? (taskAndConfig[1] = taskConfig)
-              : 0,
-          ),
-        taskId,
+      fluent(() =>
+        objValidate(managerConfig, (child, id2) =>
+          managerConfigValidators[id2]?.(child),
+        )
+          ? (config = managerConfig)
+          : 0,
       );
-    const getTaskConfig = (taskId, withDefaults = false) =>
-      ifNotUndefined(mapGet(taskMap, id(taskId)), ([, taskConfig]) =>
+    const getManagerConfig = (withDefaults) =>
+      objMerge(withDefaults ? DEFAULT_MANAGER_CONFIG : {}, config);
+    const setCategory = (categoryId, config2) =>
+      fluent(
+        (categoryId2) =>
+          mapSet(categoryMap, categoryId2, validatedTestRunConfig(config2)),
+        categoryId,
+      );
+    const getCategoryConfig = (categoryId, withDefaults) =>
+      ifNotUndefined(mapGet(categoryMap, id(categoryId)), (config2) =>
+        objMerge(withDefaults ? DEFAULT_TASK_RUN_CONFIG : {}, config2),
+      );
+    const getCategoryIds = () => mapKeys(categoryMap);
+    const delCategory = (categoryId) =>
+      fluent((categoryId2) => mapSet(categoryMap, categoryId2), categoryId);
+    const setTask = (taskId, task, categoryId, config2 = {}) =>
+      fluent(
+        (taskId2, categoryId2) =>
+          mapSet(taskMap, taskId2, [
+            task,
+            categoryId2,
+            validatedTestRunConfig(config2),
+          ]),
+        taskId,
+        categoryId,
+      );
+    const getTaskConfig = (taskId, withDefaults) =>
+      ifNotUndefined(mapGet(taskMap, id(taskId)), ([, categoryId, config2]) =>
         objMerge(
-          withDefaults
-            ? ifNotUndefined(
-                taskConfig.categoryId,
-                (categoryId) => getCategoryConfig(categoryId, true),
-                () => DEFAULT_TASK_CONFIG,
-              )
+          withDefaults ? DEFAULT_TASK_RUN_CONFIG : {},
+          withDefaults && !isUndefined(categoryId)
+            ? (getCategoryConfig(categoryId) ?? {})
             : {},
-          taskConfig,
+          config2,
         ),
       );
     const getTaskIds = () => mapKeys(taskMap);
     const delTask = (taskId) =>
       fluent((taskId2) => mapSet(taskMap, taskId2), taskId);
-    const setCategoryConfig = (categoryId, config2) =>
-      fluent(
-        (categoryId2) =>
-          objValidate(config2, (child, id2) =>
-            categoryConfigValidators[id2]?.(child),
-          )
-            ? mapSet(categoryMap, categoryId2, config2)
-            : 0,
-        categoryId,
-      );
-    const getCategoryConfig = (categoryId, withDefaults = false) =>
-      ifNotUndefined(mapGet(categoryMap, id(categoryId)), (categoryConfig) =>
-        objMerge(withDefaults ? DEFAULT_TASK_CONFIG : {}, categoryConfig),
-      );
-    const getCategoryIds = () => mapKeys(categoryMap);
-    const delCategory = (categoryId) =>
-      fluent((categoryId2) => mapSet(categoryMap, categoryId2), categoryId);
-    const scheduleTaskRun = (
-      taskId,
-      arg = EMPTY_STRING,
-      _after = 0,
-      _before = Infinity,
-    ) => {
+    const scheduleTaskRun = (taskId, arg, startAfter = 0, config2 = {}) => {
       const taskRunId = getUniqueId();
-      mapSet(taskRunMap, taskRunId, {taskId, arg, started: null});
+      const startAfterTimestamp = normalizeTimestamp(startAfter);
+      mapSet(taskRunMap, taskRunId, [
+        id(taskId),
+        arg,
+        startAfterTimestamp,
+        validatedTestRunConfig(config2),
+        insertTaskRun(scheduledTaskRuns, taskRunId, startAfterTimestamp),
+        undefined,
+      ]);
       return taskRunId;
     };
-    const getTaskRunInfo = (taskRunId) => mapGet(taskRunMap, taskRunId);
-    const unscheduleTaskRun = (taskRunId) =>
-      fluent((taskRunId2) => mapSet(taskRunMap, taskRunId2), taskRunId);
+    const getTaskRunConfig = (taskRunId, withDefaults) =>
+      ifNotUndefined(
+        mapGet(taskRunMap, id(taskRunId)),
+        ([taskId, , , config2]) =>
+          objMerge(
+            withDefaults ? DEFAULT_TASK_RUN_CONFIG : {},
+            withDefaults ? (getTaskConfig(taskId, true) ?? {}) : {},
+            config2,
+          ),
+      );
+    const getTaskRunInfo = (taskRunId) =>
+      ifNotUndefined(
+        mapGet(taskRunMap, id(taskRunId)),
+        ([taskId, arg, startAfter, , , resolvedConfig]) =>
+          objFilterUndefined({
+            taskId,
+            arg,
+            startAfter,
+            running: isUndefined(resolvedConfig) ? undefined : true,
+          }),
+      );
+    const delTaskRun = (taskRunId) =>
+      fluent(
+        (taskRunId2) =>
+          ifNotUndefined(mapGet(taskRunMap, taskRunId2), (taskRun) => {
+            taskRun[ABORT_CONTROLLER]?.abort();
+            taskRun[TIMESTAMP_PAIR][0] = null;
+            mapSet(taskRunMap, taskRunId2);
+          }),
+        taskRunId,
+      );
+    const getScheduledTaskRunIds = () => getTaskRunIds(scheduledTaskRuns);
+    const getRunningTaskRunIds = () => getTaskRunIds(runningTaskRuns);
+    const start = () =>
+      fluent(() => {
+        stop();
+        tickHandle = setTimeout(tick, getManagerConfig(true)[TICK_INTERVAL]);
+      });
+    const stop = () =>
+      fluent(() => (isUndefined(tickHandle) ? 0 : clearTimeout(tickHandle)));
     const manager = {
       setManagerConfig,
       getManagerConfig,
-      setTask,
-      setTaskConfig,
-      getTaskConfig,
-      getTaskIds,
-      delTask,
-      setCategoryConfig,
+      setCategory,
       getCategoryConfig,
       getCategoryIds,
       delCategory,
+      setTask,
+      getTaskConfig,
+      getTaskIds,
+      delTask,
       scheduleTaskRun,
+      getTaskRunConfig,
       getTaskRunInfo,
-      unscheduleTaskRun,
+      delTaskRun,
+      getScheduledTaskRunIds,
+      getRunningTaskRunIds,
+      start,
+      stop,
+      getNow,
     };
     return objFreeze(manager);
   };

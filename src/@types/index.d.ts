@@ -7,6 +7,7 @@ export type DurationMs = number;
 
 export type Task = (
   arg: string | undefined,
+  signal: AbortSignal,
   tasks: Manager,
 ) => Promise<unknown>;
 
@@ -32,9 +33,10 @@ export type TaskRunConfigWithDefaults = {
 
 export type TaskRunInfo = {
   readonly taskId: Id;
-  readonly arg?: string;
+  readonly arg: string | undefined;
   readonly startAfter: TimestampMs;
-  readonly running?: true;
+  readonly retry: number;
+  readonly running: boolean;
 };
 
 /// Manager

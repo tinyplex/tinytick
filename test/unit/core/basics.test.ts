@@ -6,6 +6,22 @@ const task = async () => {};
 const pause = async (ms = 5): Promise<void> =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+const until = (test: () => boolean, min: number, max: number): Promise<void> =>
+  new Promise<void>((resolve) => {
+    const from = manager.getNow();
+    const interval = setInterval(() => {
+      if (test()) {
+        clearInterval(interval);
+        const time = manager.getNow() - from;
+        /* eslint-disable jest/no-conditional-expect */
+        expect(time).toBeGreaterThanOrEqual(min);
+        expect(time).toBeLessThanOrEqual(max);
+        /* eslint-enable jest/no-conditional-expect */
+        resolve();
+      }
+    }, 5);
+  });
+
 beforeEach(() => {
   manager = createManager();
 });
@@ -521,6 +537,8 @@ describe('taskRun', () => {
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
         startAfter,
+        retry: 0,
+        running: false,
       });
       expect(manager.getScheduledTaskRunIds()).toEqual([taskRunId]);
       expect(manager.getRunningTaskRunIds()).toEqual([]);
@@ -535,10 +553,14 @@ describe('taskRun', () => {
       expect(manager.getTaskRunInfo(taskRunId1)).toEqual({
         taskId: 'task1',
         startAfter: now + 5,
+        retry: 0,
+        running: false,
       });
       expect(manager.getTaskRunInfo(taskRunId2)).toEqual({
         taskId: 'task2',
         startAfter: now + 10,
+        retry: 0,
+        running: false,
       });
       expect(manager.getScheduledTaskRunIds()).toEqual([
         taskRunId1,
@@ -555,6 +577,8 @@ describe('taskRun', () => {
         arg: 'arg1',
         taskId: 'task1',
         startAfter,
+        retry: 0,
+        running: false,
       });
     });
 
@@ -566,6 +590,8 @@ describe('taskRun', () => {
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
         startAfter,
+        retry: 0,
+        running: false,
       });
       expect(manager.getScheduledTaskRunIds()).toEqual([taskRunId]);
       expect(manager.getRunningTaskRunIds()).toEqual([]);
@@ -573,6 +599,8 @@ describe('taskRun', () => {
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
         startAfter,
+        retry: 0,
+        running: false,
       });
       expect(manager.getScheduledTaskRunIds()).toEqual([taskRunId]);
       expect(manager.getRunningTaskRunIds()).toEqual([]);
@@ -580,6 +608,7 @@ describe('taskRun', () => {
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
         startAfter,
+        retry: 0,
         running: true,
       });
       expect(manager.getScheduledTaskRunIds()).toEqual([]);
@@ -596,6 +625,8 @@ describe('taskRun', () => {
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
         startAfter,
+        retry: 0,
+        running: false,
       });
       expect(manager.getScheduledTaskRunIds()).toEqual([taskRunId]);
       manager.delTaskRun(taskRunId);
@@ -615,12 +646,15 @@ describe('taskRun', () => {
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
         startAfter,
+        retry: 0,
+        running: false,
       });
       expect(manager.getScheduledTaskRunIds()).toEqual([taskRunId]);
       await pause(10);
       expect(manager.getTaskRunInfo(taskRunId)).toEqual({
         taskId: 'task1',
         startAfter,
+        retry: 0,
         running: true,
       });
       manager.delTaskRun(taskRunId);
@@ -655,10 +689,10 @@ describe('ticks', () => {
   test('started once, then ends', async () => {
     manager.setTask('task1', async () => await pause(25));
     const taskRunId = manager.scheduleTaskRun('task1');
-    expect(manager.getTaskRunInfo(taskRunId!)?.running).toBeUndefined();
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
     manager.start();
     await pause(5);
-    expect(manager.getTaskRunInfo(taskRunId!)?.running).toBeUndefined();
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
     expect(manager.getScheduledTaskRunIds()).toEqual([taskRunId]);
     await pause(10);
     expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
@@ -675,10 +709,30 @@ describe('ticks', () => {
     manager.stop();
   });
 
-  test('over runs', async () => {
-    manager.setTask('task1', async () => await pause(25));
+  test('cancelled, signal', async () => {
+    let aborted = false;
+    manager.setTask('task1', async (_, signal) => {
+      signal.addEventListener('abort', () => (aborted = true));
+      await pause(25);
+    });
+    const taskRunId = manager.scheduleTaskRun('task1');
+    manager.start();
+    await pause(15);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(aborted).toEqual(false);
+    expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
+    manager.delTaskRun(taskRunId);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    expect(aborted).toEqual(true);
+    expect(manager.getRunningTaskRunIds()).toEqual([]);
+    manager.stop();
+  });
+
+  test('over runs, no retry', async () => {
+    manager.setTask('task1', async () => await pause(100));
     const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
-      maxDuration: 15,
+      maxDuration: 1,
+      maxRetries: 0,
     });
     manager.start();
     await pause(15);
@@ -686,13 +740,159 @@ describe('ticks', () => {
     expect(manager.getScheduledTaskRunIds()).toEqual([]);
     expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
     await pause(10);
-    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
-    expect(manager.getScheduledTaskRunIds()).toEqual([]);
-    expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
-    await pause(10);
-    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toBeUndefined();
     expect(manager.getScheduledTaskRunIds()).toEqual([]);
     expect(manager.getRunningTaskRunIds()).toEqual([]);
+    manager.stop();
+  });
+
+  test('over runs, one retry', async () => {
+    let taskStarts = 0;
+    manager.setTask('task1', async () => {
+      taskStarts++;
+      await pause(1000);
+    });
+    const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      maxDuration: 1,
+      maxRetries: 1,
+      retryDelay: 10,
+    });
+    manager.start();
+    await until(() => taskStarts == 1, 0, 20);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(0);
+    expect(manager.getScheduledTaskRunIds()).toEqual([]);
+    expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(1);
+    expect(manager.getScheduledTaskRunIds()).toEqual([taskRunId]);
+    expect(manager.getRunningTaskRunIds()).toEqual([]);
+
+    await until(() => taskStarts == 2, 0, 20);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(1);
+    expect(manager.getScheduledTaskRunIds()).toEqual([]);
+    expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toBeUndefined();
+    expect(manager.getScheduledTaskRunIds()).toEqual([]);
+    expect(manager.getRunningTaskRunIds()).toEqual([]);
+    manager.stop();
+  });
+
+  test('over runs, complex retries 1', async () => {
+    let taskStarts = 0;
+    manager.setTask('task1', async () => {
+      taskStarts++;
+      await pause(200);
+    });
+    const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      maxDuration: 1,
+      maxRetries: 2,
+      retryDelay: '50,100,150',
+    });
+    manager.start();
+    await until(() => taskStarts == 1, 0, 20);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(0);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(1);
+
+    await until(() => taskStarts == 2, 40, 60);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(1);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(2);
+
+    await until(() => taskStarts == 3, 90, 110);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(2);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    manager.stop();
+  });
+
+  test('over runs, complex retries 2', async () => {
+    let taskStarts = 0;
+    manager.setTask('task1', async () => {
+      taskStarts++;
+      await pause(200);
+    });
+    const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      maxDuration: 1,
+      maxRetries: 4,
+      retryDelay: '50,100,50',
+    });
+    manager.start();
+    await until(() => taskStarts == 1, 0, 20);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(0);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(1);
+
+    await until(() => taskStarts == 2, 40, 60);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(1);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(2);
+
+    await until(() => taskStarts == 3, 90, 110);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(2);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(3);
+
+    await until(() => taskStarts == 4, 40, 60);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(3);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(4);
+
+    await until(() => taskStarts == 5, 40, 60);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(4);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    manager.stop();
+  });
+
+  test('over runs, signal', async () => {
+    let aborted = false;
+    manager.setTask('task1', async (_, signal) => {
+      signal.addEventListener('abort', () => (aborted = true));
+      await pause(100);
+    });
+    const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      maxDuration: 15,
+      maxRetries: 0,
+    });
+    manager.start();
+    await pause(15);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(aborted).toEqual(false);
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(aborted).toEqual(false);
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    expect(aborted).toEqual(true);
     manager.stop();
   });
 

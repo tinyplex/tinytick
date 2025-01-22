@@ -13,7 +13,12 @@ import type {
   createManager as createManagerDecl,
 } from './@types/index.js';
 import {IdMap, mapGet, mapKeys, mapNew, mapSet} from './common/map.ts';
-import {arrayFilter, arrayMap, arraySplice} from './common/array.ts';
+import {
+  arrayFilter,
+  arrayMap,
+  arrayShift,
+  arraySplice,
+} from './common/array.ts';
 import {
   getNow,
   getUniqueId,
@@ -30,47 +35,59 @@ import {
   objMerge,
   objValidate,
 } from './common/obj.ts';
-import {collHas} from './common/coll.ts';
 
 type TimestampPair = [taskRunId: Id | null, timestamp: TimestampMs];
 
 type TaskRun = [
   taskId: Id,
   arg: string | undefined,
-  startAfterTimestamp: TimestampMs,
+  startAfter: TimestampMs,
   config: TaskRunConfig,
-  timestampPair: TimestampPair,
-  resolvedConfig?: {
-    maxDuration: DurationMs;
-    maxRetries: number;
-    retryDelay: number | string;
-  },
+
+  retry: number,
+  running: boolean,
+  timestampPair?: TimestampPair,
+  abortController?: AbortController,
+  duration?: DurationMs,
+  retries?: number,
+  delays?: number[],
 ];
 const TASK_ID = 0;
 const ARG = 1;
-const TIMESTAMP_PAIR = 4;
-const RESOLVED_CONFIG = 5;
+const START_AFTER = 2;
+const RETRY = 4;
+const RUNNING = 5;
+const TIMESTAMP_PAIR = 6;
+const ABORT_CONTROLLER = 7;
+const DURATION = 8;
+const RETRIES = 9;
+const DELAYS = 10;
 
-const RETRY_PATTERN = /^(\d*\.?\d+)(,\d*\.?\d+)*$/;
+const TICK_INTERVAL = 'tickInterval';
+const MAX_DURATION = 'maxDuration';
+const MAX_RETRIES = 'maxRetries';
+const RETRY_DELAY = 'retryDelay';
+
+const RETRY_PATTERN = /^(\d*\.?\d+)(, ?\d*\.?\d+)*$/;
 
 const DEFAULT_MANAGER_CONFIG: ManagerConfigWithDefaults = {
-  tickInterval: 100,
+  [TICK_INTERVAL]: 100,
 };
 
 const DEFAULT_TASK_RUN_CONFIG: TaskRunConfigWithDefaults = {
-  maxDuration: 1000,
-  maxRetries: 2,
-  retryDelay: 3000,
+  [MAX_DURATION]: 1000,
+  [MAX_RETRIES]: 2,
+  [RETRY_DELAY]: 3000,
 };
 
 const managerConfigValidators: {[id: string]: (child: any) => boolean} = {
-  tickInterval: isPositiveNumber,
+  [TICK_INTERVAL]: isPositiveNumber,
 };
 
 const taskRunConfigValidators: {[id: string]: (child: any) => boolean} = {
-  maxDuration: isPositiveNumber,
-  maxRetries: isPositiveNumber,
-  retryDelay: (child: any) =>
+  [MAX_DURATION]: isPositiveNumber,
+  [MAX_RETRIES]: isPositiveNumber,
+  [RETRY_DELAY]: (child: any) =>
     isPositiveNumber(child) || (isString(child) && RETRY_PATTERN.test(child)),
 };
 
@@ -79,7 +96,7 @@ const validatedTestRunConfig = (config: TaskRunConfig): TaskRunConfig =>
     ? config
     : {};
 
-const insertTaskRun = (
+const insertTimestampPair = (
   taskRuns: TimestampPair[],
   taskRunId: Id,
   timestamp: TimestampMs,
@@ -96,6 +113,9 @@ const insertTaskRun = (
   );
   return timestampPair;
 };
+
+const abortTaskRun = (taskRun: TaskRun): void =>
+  taskRun[ABORT_CONTROLLER]?.abort();
 
 const getTaskRunIds = (taskRuns: TimestampPair[]): Ids =>
   arrayFilter(
@@ -119,18 +139,37 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const tick = () => {
     const now = getNow();
     while (size(scheduledTaskRuns) && scheduledTaskRuns[0][1] <= now) {
-      const [taskRunId] = scheduledTaskRuns.shift()!;
+      const [taskRunId] = arrayShift(scheduledTaskRuns)!;
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) =>
         ifNotUndefined(
           mapGet(taskMap, taskRun[TASK_ID]),
           ([task]) => {
-            taskRun[RESOLVED_CONFIG] = getTaskRunConfig(taskRunId, true);
-            taskRun[TIMESTAMP_PAIR] = insertTaskRun(
+            if (isUndefined(taskRun[DURATION])) {
+              const config = getTaskRunConfig(taskRunId, true);
+              const retryDelay = config[RETRY_DELAY];
+              taskRun[DURATION] = config[MAX_DURATION];
+              taskRun[RETRIES] = config[MAX_RETRIES];
+              taskRun[DELAYS] = isString(retryDelay)
+                ? retryDelay.split(',').map((number) => parseInt(number))
+                : [retryDelay];
+            }
+
+            taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
               runningTaskRuns,
               taskRunId,
-              now + taskRun[RESOLVED_CONFIG].maxDuration,
+              now + taskRun[DURATION],
             );
-            task(taskRun[ARG], manager).then(() => delTaskRun(taskRunId));
+            taskRun[RUNNING] = true;
+            taskRun[ABORT_CONTROLLER] = new AbortController();
+
+            task(taskRun[ARG], taskRun[ABORT_CONTROLLER].signal, manager).then(
+              () => {
+                if (taskRun[RUNNING]) {
+                  taskRun[TIMESTAMP_PAIR]![0] = null;
+                  mapSet(taskRunMap, taskRunId);
+                }
+              },
+            );
           },
           () => delTaskRun(taskRunId) as any,
         ),
@@ -138,13 +177,28 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     }
     while (
       size(runningTaskRuns) &&
-      (runningTaskRuns[0][1] <= now ||
-        !collHas(taskRunMap, runningTaskRuns[0][0]) ||
-        isUndefined(runningTaskRuns[0][0]))
+      (isUndefined(runningTaskRuns[0][0]) || runningTaskRuns[0][1] <= now)
     ) {
-      ifNotUndefined(runningTaskRuns.shift()![0], (testRunId) =>
-        delTaskRun(testRunId),
-      );
+      const [taskRunId] = arrayShift(runningTaskRuns)!;
+      ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
+        abortTaskRun(taskRun);
+        if (taskRun[RETRIES]!-- > 0) {
+          const delays = taskRun[DELAYS]!;
+          const delay = size(delays) > 1 ? delays.shift() : delays[0];
+          const startAfterTimestamp = now + delay!;
+          taskRun[START_AFTER] = startAfterTimestamp;
+          taskRun[RETRY]++;
+          taskRun[RUNNING] = false;
+          taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
+            scheduledTaskRuns,
+            taskRunId,
+            startAfterTimestamp,
+          );
+          taskRun[ABORT_CONTROLLER] = undefined;
+        } else {
+          delTaskRun(taskRunId);
+        }
+      });
     }
     start();
   };
@@ -246,8 +300,9 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       arg,
       startAfterTimestamp,
       validatedTestRunConfig(config),
-      insertTaskRun(scheduledTaskRuns, taskRunId, startAfterTimestamp),
-      undefined,
+      0,
+      false,
+      insertTimestampPair(scheduledTaskRuns, taskRunId, startAfterTimestamp),
     ]);
     return taskRunId;
   };
@@ -269,36 +324,38 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const getTaskRunInfo = (taskRunId: Id): TaskRunInfo | undefined =>
     ifNotUndefined(
       mapGet(taskRunMap, id(taskRunId)),
-      ([taskId, arg, startAfter, , , resolvedConfig]) =>
+      ([taskId, arg, startAfter, , retry, running]) =>
         objFilterUndefined({
           taskId,
           arg,
           startAfter,
-          running: isUndefined(resolvedConfig) ? undefined : true,
+          retry,
+          running,
         }),
     );
 
-  const delTaskRun = (taskRunId: Id) =>
+  const delTaskRun = (taskRunId: Id): Manager =>
     fluent(
       (taskRunId) =>
         ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
+          abortTaskRun(taskRun);
           taskRun[TIMESTAMP_PAIR]![0] = null;
           mapSet(taskRunMap, taskRunId);
         }),
       taskRunId,
     );
 
-  const getScheduledTaskRunIds = () => getTaskRunIds(scheduledTaskRuns);
+  const getScheduledTaskRunIds = (): Ids => getTaskRunIds(scheduledTaskRuns);
 
-  const getRunningTaskRunIds = () => getTaskRunIds(runningTaskRuns);
+  const getRunningTaskRunIds = (): Ids => getTaskRunIds(runningTaskRuns);
 
-  const start = () =>
+  const start = (): Manager =>
     fluent(() => {
       stop();
-      tickHandle = setTimeout(tick, getManagerConfig(true).tickInterval!);
+      tickHandle = setTimeout(tick, getManagerConfig(true)[TICK_INTERVAL]!);
     });
 
-  const stop = () =>
+  const stop = (): Manager =>
     fluent(() => (isUndefined(tickHandle) ? 0 : clearTimeout(tickHandle)));
 
   const manager: Manager = {
