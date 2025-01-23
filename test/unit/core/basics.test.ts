@@ -902,6 +902,51 @@ describe('ticks', () => {
     manager.stop();
   });
 
+  test('throws exception', async () => {
+    manager.setTask('task1', async () => {
+      await pause(10);
+      throw new Error('test');
+    });
+    const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      maxRetries: 0,
+    });
+    manager.start();
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(0);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    manager.stop();
+  });
+
+  test('throws exception, retry', async () => {
+    manager.setTask('task1', async () => {
+      await pause(10);
+      throw new Error('test');
+    });
+    const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      maxRetries: 1,
+      retryDelay: 10,
+    });
+    manager.start();
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(0);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(1);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getTaskRunInfo(taskRunId!)?.retry).toEqual(1);
+
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    manager.stop();
+  });
+
   test('ignore invalid scheduled task', async () => {
     manager.setTask('task1', async () => {});
     const taskRunId = manager.scheduleTaskRun('task2');

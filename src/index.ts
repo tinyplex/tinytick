@@ -160,14 +160,14 @@ export const createManager: typeof createManagerDecl = (): Manager => {
             taskRun[RUNNING] = true;
             taskRun[ABORT_CONTROLLER] = new AbortController();
 
-            task(taskRun[ARG], taskRun[ABORT_CONTROLLER].signal, manager).then(
-              () => {
+            task(taskRun[ARG], taskRun[ABORT_CONTROLLER].signal, manager)
+              .then(() => {
                 if (taskRun[RUNNING]) {
                   taskRun[TIMESTAMP_PAIR]![0] = null;
                   mapSet(taskRunMap, taskRunId);
                 }
-              },
-            );
+              })
+              .catch(() => rescheduleTaskRun(taskRunId, taskRun, getNow()));
           },
           () => delTaskRun(taskRunId) as any,
         ),
@@ -180,23 +180,31 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       const [taskRunId] = arrayShift(runningTaskRuns)!;
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
         abortTaskRun(taskRun);
-        if (taskRun[RETRIES]!-- > 0) {
-          const delays = taskRun[DELAYS]!;
-          const delay = size(delays) > 1 ? delays.shift() : delays[0];
-          taskRun[RETRY]++;
-          taskRun[RUNNING] = false;
-          taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
-            scheduledTaskRuns,
-            taskRunId,
-            now + delay!,
-          );
-          taskRun[ABORT_CONTROLLER] = undefined;
-        } else {
-          delTaskRun(taskRunId);
-        }
+        rescheduleTaskRun(taskRunId, taskRun, now);
       });
     }
     start();
+  };
+
+  const rescheduleTaskRun = (
+    taskRunId: Id,
+    taskRun: TaskRun,
+    now: TimestampMs,
+  ): void => {
+    if (taskRun[RETRIES]!-- > 0) {
+      const delays = taskRun[DELAYS]!;
+      const delay = size(delays) > 1 ? delays.shift() : delays[0];
+      taskRun[RETRY]++;
+      taskRun[RUNNING] = false;
+      taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
+        scheduledTaskRuns,
+        taskRunId,
+        now + delay!,
+      );
+      taskRun[ABORT_CONTROLLER] = undefined;
+    } else {
+      delTaskRun(taskRunId);
+    }
   };
 
   const fluent = (
