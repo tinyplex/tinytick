@@ -1,10 +1,8 @@
 import {type Manager, createManager} from 'tinytick';
+import {pause} from '../common.ts';
 
 let manager: Manager;
 const task = async () => {};
-
-const pause = async (ms = 5): Promise<void> =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const until = (test: () => boolean, min: number, max: number): Promise<void> =>
   new Promise<void>((resolve) => {
