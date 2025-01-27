@@ -2,7 +2,7 @@
 
 <section id="hero">
   <h2>
-    An easy way to orchestrate JavaScript tasks.
+    A tiny but very useful JavaScript task orchestrator.
   </h2>
 </section>
 
@@ -18,46 +18,109 @@
 
 ---
 
-> Firstly, create the manager, define tasks as functions and register them
-> programmatically.
+> ## Task management is too hard
+>
+> Background tasks like fetching, syncing, and cache eviction are common in
+> intelligent web applications. Yet managing them - with scheduling, failure
+> handling, retries, and so on - can be a pain.
+
+> ## TinyTick is here to make it easy!
+>
+> Specify your tasks imperatively (or declaratively into a React context),
+> configure their schedules, timeouts, and retry sequences - and let TinyTick
+> take care of everything for you.
+
+---
+
+> ## Create and start a Manager object.
+>
+> This is the main entry point for the TinyTick API.
 
 ```js
 import {createManager} from 'tinytick';
+const manager = createManager().start();
+```
 
-const manager = createManager();
-const ping = () => fetch('https://example.com');
+> ## Register a Task.
+>
+> A TinyTick task is simply an asynchronous function that can take an optional
+> string argument (and a few other things, as you'll see later!). Simply
+> register it with a string Id.
+
+```js
+const ping = async (url) => await fetch(url);
 manager.setTask('ping', ping);
+```
 
+> ## Schedule it to run.
+>
+> By default, TinyTask schedules the task to start as soon as possible. And it
+> will generate a unique Id for each 'task run' so you can track its progress.
+
+```js
+const taskRunId = manager.scheduleTaskRun(
+  'ping',
+  'https://example.com',
+);
+```
+
+> ## Keep up with what is going on.
+>
+> The Manager object exposes plenty of accessors to let you inspect the tasks
+> you have registered and the state of the task runs you've scheduled.
+
+```js yolo
 console.log(manager.getTaskIds());
 // -> ['ping']
+console.log(manager.getTaskRunInfo(taskRunId));
+// -> {taskId: 'ping', arg: 'https://example.com', ...}
 ```
 
-> Tasks can be categorized, with information about how often to retry them or
-> how to time them out, for example.
+> ## Configure timeouts for your tasks.
+>
+> Tasks (or individual task runs) can have a timeout set, and they will be
+> aborted if they run over. Task functions are passed an [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) parameter so
+> you can handle the timeout. You can pass this straight on to the [fetch](https://developer.mozilla.org/en-US/docs/Web/API/RequestInit) call, for
+> example.
 
 ```js
-manager.setCategory('network', {maxRetries: 10});
-manager.setTask('ping', ping, 'network');
-
-console.log(manager.getTaskConfig('ping', true));
-// -> {maxDuration: 1000, maxRetries: 10, retryDelay: 3000}
+manager.setTask(
+  'ping',
+  async (url, signal) => await fetch(url, {signal}),
+  undefined,
+  {maxDuration: 100}, // milliseconds
+);
 ```
 
-> Tasks can be configured on a case-by-case basis too:
+> ## Orchestrate retries.
+>
+> If a task run fails (for taking too long, or throwing an exception), you can
+> indicate that you want it to retry, and even configure a backoff strategy.
 
 ```js
-manager.setTask('ping', ping, undefined, {
-  maxDuration: 2000,
+manager.setTask(
+  'ping',
+  async (url, signal) => await fetch(url, {signal}),
+  undefined, // we'll explain this argument in a moment!
+  {maxRetries: 3, retryDelay: '1000, 5000, 10000'},
+);
+```
+
+> ## Create configuration categories.
+>
+> A Task can be assigned a category, which can have its own configuration for
+> duration, retries, and retry delays. But of course, individual properties can
+> still be overridden per task or per task run.
+
+```js
+manager.setCategory('network', {
+  maxDuration: 100,
+  maxRetries: 3,
+  retryDelay: '1000, 5000, 10000',
 });
-console.log(manager.getTaskConfig('ping'));
-// -> {maxDuration: 2000}
-```
-
-> And then of course, when you're ready, schedule the task to run! This can be
-> for an immediate run, once in the future, or repetitively.
-
-```js
-const testRunId = manager.scheduleTaskRun('test');
+manager.setTask('ping', ping, 'network', {
+  maxRetries: 5,
+});
 ```
 
 ---
