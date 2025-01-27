@@ -9,7 +9,6 @@
 })(this, function (exports) {
   'use strict';
 
-  const collHas = (coll, keyOrValue) => coll.has(keyOrValue);
   const collDel = (coll, keyOrValue) => coll.delete(keyOrValue);
 
   const arrayMap = (array, cb) => array.map(cb);
@@ -18,6 +17,7 @@
   const arraySplice = (array, start, deleteCount, ...values) =>
     array.splice(start, deleteCount, ...values);
   const arrayShift = (array) => array.shift();
+  const arraySplit = (string, separator) => string.split(separator);
   const arrayFilter = (array, cb) => array.filter(cb);
 
   const EMPTY_STRING = '';
@@ -107,21 +107,25 @@
 
   const TASK_ID = 0;
   const ARG = 1;
-  const TIMESTAMP_PAIR = 4;
-  const RESOLVED_CONFIG = 5;
-  const ABORT_CONTROLLER = 6;
+  const RETRY = 4;
+  const RUNNING = 5;
+  const TIMESTAMP_PAIR = 6;
+  const ABORT_CONTROLLER = 7;
+  const DURATION = 8;
+  const RETRIES = 9;
+  const DELAYS = 10;
   const TICK_INTERVAL = 'tickInterval';
   const MAX_DURATION = 'maxDuration';
   const MAX_RETRIES = 'maxRetries';
   const RETRY_DELAY = 'retryDelay';
-  const RETRY_PATTERN = /^(\d*\.?\d+)(,\d*\.?\d+)*$/;
+  const RETRY_PATTERN = /^(\d*\.?\d+)(, ?\d*\.?\d+)*$/;
   const DEFAULT_MANAGER_CONFIG = {
     [TICK_INTERVAL]: 100,
   };
   const DEFAULT_TASK_RUN_CONFIG = {
     [MAX_DURATION]: 1e3,
-    [MAX_RETRIES]: 2,
-    [RETRY_DELAY]: 3e3,
+    [MAX_RETRIES]: 0,
+    [RETRY_DELAY]: 1e3,
   };
   const managerConfigValidators = {
     [TICK_INTERVAL]: isPositiveNumber,
@@ -136,7 +140,7 @@
     objValidate(config, (child, id2) => taskRunConfigValidators[id2]?.(child))
       ? config
       : {};
-  const insertTaskRun = (taskRuns, taskRunId, timestamp) => {
+  const insertTimestampPair = (taskRuns, taskRunId, timestamp) => {
     const nextIndex = taskRuns.findIndex(
       ([, existingTimestamp]) => existingTimestamp > timestamp,
     );
@@ -149,6 +153,7 @@
     );
     return timestampPair;
   };
+  const abortTaskRun = (taskRun) => taskRun[ABORT_CONTROLLER]?.abort();
   const getTaskRunIds = (taskRuns) =>
     arrayFilter(
       arrayMap(taskRuns, ([taskRunId]) => taskRunId),
@@ -170,18 +175,32 @@
           ifNotUndefined(
             mapGet(taskMap, taskRun[TASK_ID]),
             ([task]) => {
-              taskRun[RESOLVED_CONFIG] = getTaskRunConfig(taskRunId, true);
-              taskRun[TIMESTAMP_PAIR] = insertTaskRun(
+              if (isUndefined(taskRun[DURATION])) {
+                const config2 = getTaskRunConfig(taskRunId, true);
+                const retryDelay = config2[RETRY_DELAY];
+                taskRun[DURATION] = config2[MAX_DURATION];
+                taskRun[RETRIES] = config2[MAX_RETRIES];
+                taskRun[DELAYS] = isString(retryDelay)
+                  ? arrayMap(arraySplit(retryDelay, ','), (number) =>
+                      parseInt(number),
+                    )
+                  : [retryDelay];
+              }
+              taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
                 runningTaskRuns,
                 taskRunId,
-                now + taskRun[RESOLVED_CONFIG][MAX_DURATION],
+                now + taskRun[DURATION],
               );
+              taskRun[RUNNING] = true;
               taskRun[ABORT_CONTROLLER] = new AbortController();
-              task(
-                taskRun[ARG],
-                taskRun[ABORT_CONTROLLER].signal,
-                manager,
-              ).then(() => delTaskRun(taskRunId));
+              task(taskRun[ARG], taskRun[ABORT_CONTROLLER].signal, manager)
+                .then(() => {
+                  if (taskRun[RUNNING]) {
+                    taskRun[TIMESTAMP_PAIR][0] = null;
+                    mapSet(taskRunMap, taskRunId);
+                  }
+                })
+                .catch(() => rescheduleTaskRun(taskRunId, taskRun, getNow()));
             },
             () => delTaskRun(taskRunId),
           ),
@@ -189,15 +208,31 @@
       }
       while (
         size(runningTaskRuns) &&
-        (runningTaskRuns[0][1] <= now ||
-          !collHas(taskRunMap, runningTaskRuns[0][0]) ||
-          isUndefined(runningTaskRuns[0][0]))
+        (isUndefined(runningTaskRuns[0][0]) || runningTaskRuns[0][1] <= now)
       ) {
-        ifNotUndefined(arrayShift(runningTaskRuns)[0], (testRunId) =>
-          delTaskRun(testRunId),
-        );
+        const [taskRunId] = arrayShift(runningTaskRuns);
+        ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
+          abortTaskRun(taskRun);
+          rescheduleTaskRun(taskRunId, taskRun, now);
+        });
       }
       start();
+    };
+    const rescheduleTaskRun = (taskRunId, taskRun, now) => {
+      if (taskRun[RETRIES]-- > 0) {
+        const delays = taskRun[DELAYS];
+        const delay = size(delays) > 1 ? delays.shift() : delays[0];
+        taskRun[RETRY]++;
+        taskRun[RUNNING] = false;
+        taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
+          scheduledTaskRuns,
+          taskRunId,
+          now + delay,
+        );
+        taskRun[ABORT_CONTROLLER] = undefined;
+      } else {
+        delTaskRun(taskRunId);
+      }
     };
     const fluent = (actions, ...args) => {
       actions(...arrayMap(args, id));
@@ -252,14 +287,18 @@
       fluent((taskId2) => mapSet(taskMap, taskId2), taskId);
     const scheduleTaskRun = (taskId, arg, startAfter = 0, config2 = {}) => {
       const taskRunId = getUniqueId();
-      const startAfterTimestamp = normalizeTimestamp(startAfter);
       mapSet(taskRunMap, taskRunId, [
         id(taskId),
         arg,
-        startAfterTimestamp,
+        normalizeTimestamp(startAfter),
         validatedTestRunConfig(config2),
-        insertTaskRun(scheduledTaskRuns, taskRunId, startAfterTimestamp),
-        undefined,
+        0,
+        false,
+        insertTimestampPair(
+          scheduledTaskRuns,
+          taskRunId,
+          normalizeTimestamp(startAfter),
+        ),
       ]);
       return taskRunId;
     };
@@ -276,19 +315,20 @@
     const getTaskRunInfo = (taskRunId) =>
       ifNotUndefined(
         mapGet(taskRunMap, id(taskRunId)),
-        ([taskId, arg, startAfter, , , resolvedConfig]) =>
+        ([taskId, arg, , , retry, running, [, nextTimestamp]]) =>
           objFilterUndefined({
             taskId,
             arg,
-            startAfter,
-            running: isUndefined(resolvedConfig) ? undefined : true,
+            retry,
+            running,
+            nextTimestamp,
           }),
       );
     const delTaskRun = (taskRunId) =>
       fluent(
         (taskRunId2) =>
           ifNotUndefined(mapGet(taskRunMap, taskRunId2), (taskRun) => {
-            taskRun[ABORT_CONTROLLER]?.abort();
+            abortTaskRun(taskRun);
             taskRun[TIMESTAMP_PAIR][0] = null;
             mapSet(taskRunMap, taskRunId2);
           }),
