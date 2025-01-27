@@ -24,6 +24,9 @@ export const arraySplice = <Value>(
 export const arrayShift = <Value>(array: Value[]): Value | undefined =>
   array.shift();
 
+export const arraySplit = (string: string, separator: string): string[] =>
+  string.split(separator);
+
 export const arrayFilter = <Value>(
   array: Value[],
   cb: (value: Value) => boolean,

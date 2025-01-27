@@ -18,6 +18,7 @@ import {
   arrayMap,
   arrayShift,
   arraySplice,
+  arraySplit,
 } from './common/array.ts';
 import {
   getNow,
@@ -75,8 +76,8 @@ const DEFAULT_MANAGER_CONFIG: ManagerConfigWithDefaults = {
 
 const DEFAULT_TASK_RUN_CONFIG: TaskRunConfigWithDefaults = {
   [MAX_DURATION]: 1000,
-  [MAX_RETRIES]: 2,
-  [RETRY_DELAY]: 3000,
+  [MAX_RETRIES]: 0,
+  [RETRY_DELAY]: 1000,
 };
 
 const managerConfigValidators: {[id: string]: (child: any) => boolean} = {
@@ -149,7 +150,9 @@ export const createManager: typeof createManagerDecl = (): Manager => {
               taskRun[DURATION] = config[MAX_DURATION];
               taskRun[RETRIES] = config[MAX_RETRIES];
               taskRun[DELAYS] = isString(retryDelay)
-                ? retryDelay.split(',').map((number) => parseInt(number))
+                ? arrayMap(arraySplit(retryDelay, ','), (number) =>
+                    parseInt(number),
+                  )
                 : [retryDelay];
             }
             taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
