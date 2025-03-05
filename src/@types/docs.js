@@ -309,8 +309,8 @@
    *
    * You can either return just the configuration you have set, or the full
    * configuration, including any defaults of those you have not provided.
-   * @param withDefaults Whether to return the full configuration including
-   * defaults.
+   * @param withDefaults An optional boolean indicating whether to return the
+   * full configuration, including defaults.
    * @returns The configuration as a ManagerConfig or ManagerConfigWithDefaults.
    * @example
    * This example creates a Manager object and gets its default configuration.
@@ -334,8 +334,8 @@
   /**
    * The setCategory method lets you create and configure a category for tasks.
    *
-   * A category is identified by a string Id, and all tasks associated with
-   * that category will inherit its TaskRunConfig. If this method is called on a
+   * A category is identified by a string Id, and all tasks associated with that
+   * category will inherit its TaskRunConfig. If this method is called on a
    * category Id that already exists, its configuration will be updated.
    *
    * This has properties which let you indicate the duration of task runs and
@@ -387,8 +387,8 @@
    *
    * If the category Id does not exist, this method will return `undefined`.
    * @param categoryId The Id of the category to get the configuration for.
-   * @param withDefaults Whether to return the full configuration including
-   * defaults.
+   * @param withDefaults An optional boolean indicating whether to return the
+   * full configuration, including defaults.
    * @returns The configuration as a TaskRunConfig (or `undefined` if the
    * category Id does not exist) or TaskRunConfigWithDefaults.
    * @example
@@ -484,8 +484,8 @@
    * the full configuration, including any inherited from the category, or
    * defaults of those you have not provided.
    * @param taskId The Id of the Task to get the configuration for.
-   * @param withDefaults Whether to return the full configuration including
-   * defaults.
+   * @param withDefaults An optional boolean indicating whether to return the
+   * full configuration, including defaults.
    * @returns The configuration as a TaskRunConfig  (or `undefined` if the Task
    * Id does not exist) or TaskRunConfigWithDefaults.
    * @category Task
@@ -543,8 +543,8 @@
    * the full configuration, including any inherited from the Task, its
    * category, or defaults of those you have not provided.
    * @param taskRunId The Id of the task run to get the configuration for.
-   * @param withDefaults Whether to return the full configuration including
-   * defaults.
+   * @param withDefaults An optional boolean indicating whether to return the
+   * full configuration including defaults.
    * @returns The configuration as a TaskRunConfig (or `undefined` if the task
    * run Id does not exist) or TaskRunConfigWithDefaults.
    * @category TaskRun
