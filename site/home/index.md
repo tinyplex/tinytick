@@ -14,7 +14,7 @@
 
 <a href='/demos/'>Try the demos</a>
 
-<a href='/api/'>Read the docs</a>
+<a href='/api/tinytick/interfaces/manager/manager/'>Read the docs</a>
 
 ---
 
@@ -129,4 +129,4 @@ manager.setTask('ping', ping, 'network', {
 
 <a href='/demos/'>Try the demos</a>
 
-<a href='/api/'>Read the docs</a>
+<a href='/api/tinytick/interfaces/manager/manager/'>Read the docs</a>

@@ -271,6 +271,34 @@
    * to abort.
    * @param config The ManagerConfig to set.
    * @returns A reference to the Manager.
+   * @example
+   * This example creates a Manager object and sets its configuration.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setManagerConfig({tickInterval: 200});
+   *
+   * console.log(manager.getManagerConfig());
+   * // -> {tickInterval: 200}
+   * ```
+   * @example
+   * This example creates a Manager object with some invalid configuration items
+   * (which are ignored).
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setManagerConfig({
+   *   tickInterval: -2000, // should be a positive integer
+   *   oops: 42, // not a valid configuration item
+   * });
+   *
+   * console.log(manager.getManagerConfig());
+   * // -> {}
+   * ```
    * @category Manager
    * @since v1.0.0
    */
@@ -284,6 +312,21 @@
    * @param withDefaults Whether to return the full configuration including
    * defaults.
    * @returns The configuration as a ManagerConfig or ManagerConfigWithDefaults.
+   * @example
+   * This example creates a Manager object and gets its default configuration.
+   * No additional configuration has been provided, so when the `withDefaults`
+   * flag is not set, the object returned is empty.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   *
+   * console.log(manager.getManagerConfig(true));
+   * // -> {tickInterval: 100}
+   * console.log(manager.getManagerConfig());
+   * // -> {}
+   * ```
    * @category Manager
    * @since v1.0.0
    */
@@ -291,8 +334,8 @@
   /**
    * The setCategory method lets you create and configure a category for tasks.
    *
-   * A category is identified by a string Id, and all tasks associated with that
-   * category will inherit its TaskRunConfig. If this method is called on a
+   * A category is identified by a string Id, and all tasks associated with
+   * that category will inherit its TaskRunConfig. If this method is called on a
    * category Id that already exists, its configuration will be updated.
    *
    * This has properties which let you indicate the duration of task runs and
@@ -300,6 +343,36 @@
    * @param categoryId The Id of the category to create or update.
    * @param config The TaskRunConfig to set.
    * @returns A reference to the Manager.
+   * @example
+   * This example creates a Manager object and creates a category called
+   * `network` with a specific maximum duration.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setCategory('network', {maxDuration: 5000});
+   *
+   * console.log(manager.getCategoryConfig('network'));
+   * // -> {maxDuration: 5000}
+   * ```
+   * @example
+   * This example creates a Manager object and creates a category with some
+   * invalid configuration items (which are ignored).
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setCategory('network', {
+   *   maxDuration: 5000,
+   *   maxRetries: -2, // should be a positive integer
+   *   oops: 42, // not a valid configuration item
+   * });
+   *
+   * console.log(manager.getCategoryConfig('network'));
+   * // -> {maxDuration: 5000}
+   * ```
    * @category Category
    * @since v1.0.0
    */
@@ -311,11 +384,43 @@
    * You can either return just the configuration you have set for this
    * category, or the full configuration, including any defaults of those you
    * have not provided.
+   *
+   * If the category Id does not exist, this method will return `undefined`.
    * @param categoryId The Id of the category to get the configuration for.
    * @param withDefaults Whether to return the full configuration including
    * defaults.
    * @returns The configuration as a TaskRunConfig (or `undefined` if the
    * category Id does not exist) or TaskRunConfigWithDefaults.
+   * @example
+   * This example creates a Manager object and a category called `network` with
+   * a specific maximum duration. Its configuration can be accessed with or
+   * without the defaults included.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setCategory('network', {maxDuration: 5000});
+   *
+   * console.log(manager.getCategoryConfig('network'));
+   * // -> {maxDuration: 5000}
+   * console.log(manager.getCategoryConfig('network', true));
+   * // -> {maxDuration: 5000, maxRetries: 0, retryDelay: 1000}
+   * ```
+   * @example
+   * This example creates a Manager object and tries to get the configuration of
+   * a category that does not exist. The method returns `undefined`.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   *
+   * console.log(manager.getCategoryConfig('oops'));
+   * // -> undefined
+   * console.log(manager.getCategoryConfig('oops', true));
+   * // -> undefined
+   * ```
    * @category Category
    * @since v1.0.0
    */
@@ -324,6 +429,20 @@
    * The getCategoryIds method returns an array containing all registered
    * category Ids.
    * @returns An array of category Ids.
+   * @example
+   * This example creates a Manager object and categories called `network` and
+   * `file`. Their Ids are retrieved.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setCategory('network', {maxDuration: 5000});
+   * manager.setCategory('file', {maxDuration: 100});
+   *
+   * console.log(manager.getCategoryIds());
+   * // -> ['network', 'file']
+   * ```
    * @category Category
    * @since v1.0.0
    */
@@ -499,6 +618,17 @@
  * Once you have a reference to the Manager, you can start and stop it, register
  * tasks and categories, and schedule task runs.
  * @returns A new Manager.
+ * @example
+ * This example creates a Manager object and gets its default configuration.
+ *
+ * ```js
+ * import {createManager} from 'tinytick';
+ *
+ * const manager = createManager();
+ *
+ * console.log(manager.getManagerConfig(true));
+ * // -> {tickInterval: 100}
+ * ```
  * @category Creation
  * @since v1.0.0
  */
