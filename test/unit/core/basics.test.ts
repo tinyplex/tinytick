@@ -151,8 +151,8 @@ describe('category', () => {
       manager.setCategory('category1', {maxDuration: 5000});
       expect(manager.getCategoryConfig('category1', true)).toEqual({
         maxDuration: 5000,
-        maxRetries: 2,
-        retryDelay: 3000,
+        maxRetries: 0,
+        retryDelay: 1000,
       });
     });
 
@@ -255,8 +255,8 @@ describe('task', () => {
       manager.setTask('task1', task, undefined, {maxDuration: 5000});
       expect(manager.getTaskConfig('task1', true)).toEqual({
         maxDuration: 5000,
-        maxRetries: 2,
-        retryDelay: 3000,
+        maxRetries: 0,
+        retryDelay: 1000,
       });
     });
 
@@ -266,7 +266,7 @@ describe('task', () => {
       expect(manager.getTaskConfig('task1', true)).toEqual({
         maxDuration: 5000,
         maxRetries: 5,
-        retryDelay: 3000,
+        retryDelay: 1000,
       });
     });
 
@@ -447,8 +447,8 @@ describe('taskRun', () => {
       });
       expect(manager.getTaskRunConfig(taskRunId, true)).toEqual({
         maxDuration: 5000,
-        maxRetries: 2,
-        retryDelay: 3000,
+        maxRetries: 0,
+        retryDelay: 1000,
       });
     });
 
@@ -458,7 +458,7 @@ describe('taskRun', () => {
       expect(manager.getTaskRunConfig(taskRunId, true)).toEqual({
         maxDuration: 1000,
         maxRetries: 5,
-        retryDelay: 3000,
+        retryDelay: 1000,
       });
     });
 
@@ -468,7 +468,7 @@ describe('taskRun', () => {
       const taskRunId = manager.scheduleTaskRun('task1');
       expect(manager.getTaskRunConfig(taskRunId, true)).toEqual({
         maxDuration: 1000,
-        maxRetries: 2,
+        maxRetries: 0,
         retryDelay: 5000,
       });
     });
@@ -506,8 +506,8 @@ describe('taskRun', () => {
       const taskRunId = manager.scheduleTaskRun('');
       expect(manager.getTaskRunConfig(taskRunId, true)).toEqual({
         maxDuration: 1000,
-        maxRetries: 2,
-        retryDelay: 3000,
+        maxRetries: 0,
+        retryDelay: 1000,
       });
     });
 

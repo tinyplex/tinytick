@@ -30,13 +30,11 @@ export const build = async (
     .addJsFile('site/js/home.ts')
     .addJsFile('site/js/app.ts')
     .addJsFile('site/js/single.ts')
-    .addFile('node_modules/react/umd/react.production.min.js', 'umd')
-    .addFile('node_modules/react-dom/umd/react-dom.production.min.js', 'umd')
     .addLessFile('site/less/index.less')
     .addDir('site/fonts', 'fonts')
     .addDir('site/extras');
 
-  ['', '/react'].forEach((module) =>
+  [''].forEach((module) =>
     docs.addFile('dist/umd' + module + '/index.js', 'umd/tinytick/' + module),
   );
 
@@ -65,10 +63,7 @@ export const build = async (
   docs.publish();
 };
 
-const addApi = (docs: Docs): Docs =>
-  docs
-    .addApiFile('dist/@types/index.d.ts')
-    .addApiFile('dist/@types/react/index.d.ts');
+const addApi = (docs: Docs): Docs => docs.addApiFile('dist/@types/index.d.ts');
 
 const addPages = (docs: Docs): Docs =>
   docs

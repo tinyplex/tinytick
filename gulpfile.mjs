@@ -1,11 +1,11 @@
 // All other imports are lazy so that single tasks start up fast.
-import {basename, dirname, join, resolve} from 'path';
 import {existsSync, promises, readdirSync} from 'fs';
 import gulp from 'gulp';
+import {basename, dirname, join, resolve} from 'path';
 import {gzipSync} from 'zlib';
 
 const UTF8 = 'utf-8';
-const TEST_MODULES = ['', 'react'];
+const TEST_MODULES = [''];
 const ALL_MODULES = [...TEST_MODULES];
 const ALL_DEFINITIONS = [...ALL_MODULES];
 
@@ -248,8 +248,6 @@ const lintCheckDocs = async (dir) => {
     overrideConfig: {
       rules: {
         'no-console': 0,
-        'react/prop-types': 0,
-        'react-hooks/rules-of-hooks': 0,
         '@typescript-eslint/no-unused-expressions': 0,
         'max-len': [
           2,
@@ -382,7 +380,7 @@ const compileModule = async (
   }
 
   const inputConfig = {
-    external: ['fs', 'react', 'react-dom'],
+    external: ['fs'],
     input: inputFile,
     plugins: [
       esbuild({target, legalComments: 'inline'}),
@@ -390,7 +388,6 @@ const compileModule = async (
         '/*!': '\n/*',
         delimiters: ['', ''],
         preventAssignment: true,
-        '../react/index.ts': '../react',
       }),
       shebang(),
       image(),
@@ -414,8 +411,6 @@ const compileModule = async (
     format,
     globals: {
       fs: 'fs',
-      react: 'React',
-      [path.resolve('src/react')]: getGlobalName('react'),
     },
     interop: 'default',
     name: getGlobalName(module),
@@ -455,7 +450,6 @@ const test = async (
             coverageProvider: 'babel',
             collectCoverageFrom: [
               `${DIST_DIR}/index.js`,
-              `${DIST_DIR}/react/index.js`,
               // Other modules cannot be fully exercised in isolation.
             ],
             coverageReporters: ['text-summary']

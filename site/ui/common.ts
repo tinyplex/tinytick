@@ -1,1 +1,1 @@
-export const MODULES = ['', 'react'];
+export const MODULES = [''];

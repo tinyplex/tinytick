@@ -1,36 +1,49 @@
 /// tinytick
 
+/// Id
 export type Id = string;
+
+/// Ids
 export type Ids = Id[];
+
+/// TimestampMs
 export type TimestampMs = number;
+
+/// DurationMs
 export type DurationMs = number;
 
+/// Task
 export type Task = (
   arg: string | undefined,
   signal: AbortSignal,
-  tasks: Manager,
+  manager: Manager,
 ) => Promise<unknown>;
 
+/// ManagerConfig
 export type ManagerConfig = {
   readonly tickInterval?: DurationMs;
 };
 
+/// ManagerConfigWithDefaults
 export type ManagerConfigWithDefaults = {
   readonly tickInterval: DurationMs;
 };
 
+/// TaskRunConfig
 export type TaskRunConfig = {
   readonly maxDuration?: DurationMs;
   readonly maxRetries?: number;
-  readonly retryDelay?: number | string;
+  readonly retryDelay?: DurationMs | string;
 };
 
+/// TaskRunConfigWithDefaults
 export type TaskRunConfigWithDefaults = {
   readonly maxDuration: DurationMs;
   readonly maxRetries: number;
-  readonly retryDelay: number | string;
+  readonly retryDelay: DurationMs | string;
 };
 
+/// TaskRunInfo
 export type TaskRunInfo = {
   readonly taskId: Id;
   readonly arg: string | undefined;
