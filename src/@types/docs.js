@@ -451,6 +451,22 @@
    * The delCategory method deletes a category configuration.
    * @param categoryId The Id of the category to delete.
    * @returns A reference to the Manager.
+   * @example
+   * This example creates a Manager object and a category called `network` which
+   * is then deleted.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setCategory('network', {maxDuration: 5000});
+   * console.log(manager.getCategoryIds());
+   * // -> ['network']
+   *
+   * manager.delCategory('network');
+   * console.log(manager.getCategoryIds());
+   * // -> []
+   * ```
    * @category Category
    * @since v1.0.0
    */
@@ -473,6 +489,57 @@
    * @param categoryId The optional Id of a category to associate the Task with.
    * @param config An optional TaskRunConfig to set for all runs of this Task.
    * @returns A reference to the Manager.
+   * @example
+   * This example creates a Manager object and registers a task called `ping`
+   * that fetches content from a website.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * console.log(manager.getTaskIds());
+   * // -> ['ping']
+   * ```
+   * @example
+   * This example creates a Manager object and registers a task called `ping`
+   * that fetches content from a website. It has some task-specific
+   * configuration.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask(
+   *   'ping',
+   *   async () => await fetch('https://example.org'),
+   *   undefined,
+   *   {maxRetries: 3},
+   * );
+   *
+   * console.log(manager.getTaskConfig('ping', true));
+   * // -> {maxDuration: 1000, maxRetries: 3, retryDelay: 1000}
+   * ```
+   * @example
+   * This example creates a Manager object and registers a task called `ping`
+   * that fetches content from a website. It is given the category of 'network',
+   * which has been given some specific configuration.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setCategory('network', {maxDuration: 5000});
+   * manager.setTask(
+   *   'ping',
+   *   async () => await fetch('https://example.org'),
+   *   'network',
+   * );
+   *
+   * console.log(manager.getTaskConfig('ping', true));
+   * // -> {maxDuration: 5000, maxRetries: 0, retryDelay: 1000}
+   * ```
    * @category Task
    * @since v1.0.0
    */
@@ -483,11 +550,46 @@
    * You can either return just the configuration you have set for this Task, or
    * the full configuration, including any inherited from the category, or
    * defaults of those you have not provided.
+   *
+   * If the task Id does not exist, this method will return `undefined`.
    * @param taskId The Id of the Task to get the configuration for.
    * @param withDefaults An optional boolean indicating whether to return the
    * full configuration, including defaults.
    * @returns The configuration as a TaskRunConfig  (or `undefined` if the Task
    * Id does not exist) or TaskRunConfigWithDefaults.
+   * @example
+   * This example creates a Manager object and category, and registers a task
+   * for which the configuration is returned.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setCategory('network', {maxDuration: 5000});
+   * manager.setTask(
+   *   'ping',
+   *   async () => await fetch('https://example.org'),
+   *   'network',
+   *   {maxRetries: 3},
+   * );
+   *
+   * console.log(manager.getTaskConfig('ping', true));
+   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 1000}
+   * ```
+   * @example
+   * This example creates a Manager object and tries to return the configuration
+   * of a task that does not exist. The method returns `undefined`.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   *
+   * console.log(manager.getTaskConfig('oops'));
+   * // -> undefined
+   * console.log(manager.getTaskConfig('oops', true));
+   * // -> undefined
+   * ```
    * @category Task
    * @since v1.0.0
    */
@@ -495,6 +597,20 @@
   /**
    * The getTaskIds method returns an array containing all registered Task Ids.
    * @returns An array of Task Ids.
+   * @example
+   * This example creates a Manager object and tasks called `ping` and `pong`.
+   * Their Ids are retrieved.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async () => {});
+   * manager.setTask('pong', async () => {});
+   *
+   * console.log(manager.getTaskIds());
+   * // -> ['ping', 'pong']
+   * ```
    * @category Task
    * @since v1.0.0
    */
@@ -503,6 +619,22 @@
    * The delTask method deletes a Task registration.
    * @param taskId The Id of the Task to delete.
    * @returns A reference to the Manager.
+   * @example
+   * This example creates a Manager object and a task called `ping` which is
+   * then deleted.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async () => {});
+   * console.log(manager.getTaskIds());
+   * // -> ['ping']
+   *
+   * manager.delTask('ping');
+   * console.log(manager.getTaskIds());
+   * // -> []
+   * ```
    * @category Task
    * @since v1.0.0
    */
