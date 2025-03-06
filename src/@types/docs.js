@@ -710,15 +710,10 @@
    *   'network',
    *   {maxRetries: 3},
    * );
-   * const taskRunId = manager.scheduleTaskRun(
-   *   'ping',
-   *   '',
-   *   0,
-   *   {retryDelay: 2000},
-   * );
+   * const taskRunId = manager.scheduleTaskRun('ping', '', 0, {retryDelay: 10});
    *
    * console.log(manager.getTaskRunConfig(taskRunId, true));
-   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 2000}
+   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 10}
    * ```
    * @category TaskRun
    * @since v1.0.0
@@ -752,17 +747,12 @@
    *   'network',
    *   {maxRetries: 3},
    * );
-   * const taskRunId = manager.scheduleTaskRun(
-   *   'ping',
-   *   '',
-   *   0,
-   *   {retryDelay: 2000},
-   * );
+   * const taskRunId = manager.scheduleTaskRun('ping', '', 0, {retryDelay: 10});
    *
    * console.log(manager.getTaskRunConfig(taskRunId));
-   * // -> {retryDelay: 2000}
+   * // -> {retryDelay: 10}
    * console.log(manager.getTaskRunConfig(taskRunId, true));
-   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 2000}
+   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 10}
    * ```
    * @example
    * This example tries to return the configuration of a task run that does not
