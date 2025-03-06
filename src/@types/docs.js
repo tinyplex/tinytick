@@ -344,8 +344,8 @@
    * @param config The TaskRunConfig to set.
    * @returns A reference to the Manager.
    * @example
-   * This example creates a Manager object and creates a category called
-   * `network` with a specific maximum duration.
+   * This example creates a category called `network` with a specific maximum
+   * duration.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -357,8 +357,8 @@
    * // -> {maxDuration: 5000}
    * ```
    * @example
-   * This example creates a Manager object and creates a category with some
-   * invalid configuration items (which are ignored).
+   * This example creates a category with some invalid configuration items
+   * (which are ignored).
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -392,9 +392,9 @@
    * @returns The configuration as a TaskRunConfig (or `undefined` if the
    * category Id does not exist) or TaskRunConfigWithDefaults.
    * @example
-   * This example creates a Manager object and a category called `network` with
-   * a specific maximum duration. Its configuration can be accessed with or
-   * without the defaults included.
+   * This example creates a category called `network` with a specific maximum
+   * duration. Its configuration can be accessed with or without the defaults
+   * included.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -408,8 +408,8 @@
    * // -> {maxDuration: 5000, maxRetries: 0, retryDelay: 1000}
    * ```
    * @example
-   * This example creates a Manager object and tries to get the configuration of
-   * a category that does not exist. The method returns `undefined`.
+   * This example tries to get the configuration of a category that does not
+   * exist. The method returns `undefined`.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -430,8 +430,8 @@
    * category Ids.
    * @returns An array of category Ids.
    * @example
-   * This example creates a Manager object and categories called `network` and
-   * `file`. Their Ids are retrieved.
+   * This example creates categories called `network` and `file`. Their Ids are
+   * retrieved.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -452,8 +452,7 @@
    * @param categoryId The Id of the category to delete.
    * @returns A reference to the Manager.
    * @example
-   * This example creates a Manager object and a category called `network` which
-   * is then deleted.
+   * This example creates a category called `network` which is then deleted.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -490,8 +489,8 @@
    * @param config An optional TaskRunConfig to set for all runs of this Task.
    * @returns A reference to the Manager.
    * @example
-   * This example creates a Manager object and registers a task called `ping`
-   * that fetches content from a website.
+   * This example registers a task called `ping` that fetches content from a
+   * website.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -503,9 +502,8 @@
    * // -> ['ping']
    * ```
    * @example
-   * This example creates a Manager object and registers a task called `ping`
-   * that fetches content from a website. It has some task-specific
-   * configuration.
+   * This example registers a task called `ping` that fetches content from a
+   * website. It has some task-specific configuration.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -522,9 +520,9 @@
    * // -> {maxDuration: 1000, maxRetries: 3, retryDelay: 1000}
    * ```
    * @example
-   * This example creates a Manager object and registers a task called `ping`
-   * that fetches content from a website. It is given the category of 'network',
-   * which has been given some specific configuration.
+   * This example registers a task called `ping` that fetches content from a
+   * website. It is given the category of 'network', which has been given some
+   * specific configuration.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -558,8 +556,8 @@
    * @returns The configuration as a TaskRunConfig  (or `undefined` if the Task
    * Id does not exist) or TaskRunConfigWithDefaults.
    * @example
-   * This example creates a Manager object and category, and registers a task
-   * for which the configuration is returned.
+   * This example creates a category, and registers a task for which the
+   * configuration is returned.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -577,8 +575,8 @@
    * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 1000}
    * ```
    * @example
-   * This example creates a Manager object and tries to return the configuration
-   * of a task that does not exist. The method returns `undefined`.
+   * This example tries to return the configuration of a task that does not
+   * exist. The method returns `undefined`.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -598,8 +596,8 @@
    * The getTaskIds method returns an array containing all registered Task Ids.
    * @returns An array of Task Ids.
    * @example
-   * This example creates a Manager object and tasks called `ping` and `pong`.
-   * Their Ids are retrieved.
+   * This example creates tasks called `ping` and `pong`. Their Ids are
+   * retrieved.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -620,8 +618,7 @@
    * @param taskId The Id of the Task to delete.
    * @returns A reference to the Manager.
    * @example
-   * This example creates a Manager object and a task called `ping` which is
-   * then deleted.
+   * This example creates a task called `ping` which is then deleted.
    *
    * ```js
    * import {createManager} from 'tinytick';
@@ -653,9 +650,9 @@
    * properties of this TaskRunConfig with those registered with the Task, and
    * in turn with its category, if any. Any properties not provided will be
    * defaulted by TinyTick. This resolution of the run's configuration is done
-   * at the moment the run starts (not when it is scheduled), and will not
-   * change subsequently, even if, say, the Task or category are reconfigured
-   * after it has started.
+   * at the moment the run starts (not when it is scheduled), but after that, it
+   * will not change subsequently, even if, say, the Task or category are
+   * reconfigured after it has started.
    *
    * This method returns a unique Id for the scheduled task run.
    * @param taskId The Id of the Task to run.
@@ -664,6 +661,65 @@
    * run.
    * @param config An optional TaskRunConfig to set for this run.
    * @returns A new unique Id of the scheduled task run.
+   * @example
+   * This example registers a task that is then scheduled to run.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * const taskRunId = manager.scheduleTaskRun('ping');
+   * console.log(manager.getScheduledTaskRunIds().length);
+   * // -> 1
+   *
+   * console.log(manager.getTaskRunConfig(taskRunId, true));
+   * // -> {maxDuration: 1000, maxRetries: 0, retryDelay: 1000}
+   * ```
+   * @example
+   * This example registers a task that takes a string parameter and that is
+   * then scheduled to run with an argument.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async (url) => await fetch(url));
+   *
+   * const taskRunId = manager.scheduleTaskRun('ping', 'https://example.org');
+   * console.log(manager.getScheduledTaskRunIds().length);
+   * // -> 1
+   *
+   * console.log(manager.getTaskRunInfo(taskRunId).arg);
+   * // -> 'https://example.org'
+   * ```
+   * @example
+   * This example registers a task that has a category and that is then
+   * scheduled to run. Configuration is provided, for the category, the task,
+   * and this specific run.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setCategory('network', {maxDuration: 5000});
+   * manager.setTask(
+   *   'ping',
+   *   async () => await fetch('https://example.org'),
+   *   'network',
+   *   {maxRetries: 3},
+   * );
+   * const taskRunId = manager.scheduleTaskRun(
+   *   'ping',
+   *   '',
+   *   0,
+   *   {retryDelay: 2000},
+   * );
+   *
+   * console.log(manager.getTaskRunConfig(taskRunId, true));
+   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 2000}
+   * ```
    * @category TaskRun
    * @since v1.0.0
    */
@@ -674,11 +730,54 @@
    * You can either return just the configuration you have set for this run, or
    * the full configuration, including any inherited from the Task, its
    * category, or defaults of those you have not provided.
+   *
+   * If the task run Id does not exist, this method will return `undefined`.
    * @param taskRunId The Id of the task run to get the configuration for.
    * @param withDefaults An optional boolean indicating whether to return the
    * full configuration including defaults.
    * @returns The configuration as a TaskRunConfig (or `undefined` if the task
    * run Id does not exist) or TaskRunConfigWithDefaults.
+   * @example
+   * This example registers a task that has a category and that is then
+   * scheduled to run. The configuration is then returned.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setCategory('network', {maxDuration: 5000});
+   * manager.setTask(
+   *   'ping',
+   *   async () => await fetch('https://example.org'),
+   *   'network',
+   *   {maxRetries: 3},
+   * );
+   * const taskRunId = manager.scheduleTaskRun(
+   *   'ping',
+   *   '',
+   *   0,
+   *   {retryDelay: 2000},
+   * );
+   *
+   * console.log(manager.getTaskRunConfig(taskRunId));
+   * // -> {retryDelay: 2000}
+   * console.log(manager.getTaskRunConfig(taskRunId, true));
+   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 2000}
+   * ```
+   * @example
+   * This example tries to return the configuration of a task run that does not
+   * exist. The method returns `undefined`.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   *
+   * console.log(manager.getTaskRunConfig('oops'));
+   * // -> undefined
+   * console.log(manager.getTaskRunConfig('oops', true));
+   * // -> undefined
+   * ```
    * @category TaskRun
    * @since v1.0.0
    */
@@ -686,9 +785,44 @@
   /**
    * The getTaskRunInfo method returns information about a scheduled or running
    * task run.
+   *
+   * If the task run Id does not exist, this method will return `undefined`.
    * @param taskRunId The Id of the task run to get information for.
    * @returns The TaskRunInfo for the task run, or `undefined` if the task run
    * Id does not exist.
+   * @example
+   * This example registers a task that is then scheduled to run. The info is
+   * then returned.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async (url) => await fetch(url));
+   * const taskRunId = manager.scheduleTaskRun('ping', 'https://example.org');
+   *
+   * const info = manager.getTaskRunInfo(taskRunId);
+   * console.log(info.taskId);
+   * // -> 'ping'
+   * console.log(info.arg);
+   * // -> 'https://example.org'
+   * console.log(info.running);
+   * // -> false
+   * ```
+   * @example
+   * This example tries to return the info of a task run that does not exist.
+   * The method returns `undefined`.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   *
+   * console.log(manager.getTaskRunInfo('oops'));
+   * // -> undefined
+   * console.log(manager.getTaskRunInfo('oops', true));
+   * // -> undefined
+   * ```
    * @category TaskRun
    * @since v1.0.0
    */
@@ -697,6 +831,24 @@
    * The delTaskRun method deletes a scheduled task run or aborts a running one.
    * @param taskRunId The Id of the task run to delete or abort.
    * @returns A reference to the Manager.
+   * @example
+   * This example registers a task that is then scheduled to run. The test run
+   * is then deleted.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * const taskRunId = manager.scheduleTaskRun('ping');
+   * console.log(manager.getScheduledTaskRunIds().length);
+   * // -> 1
+   *
+   * manager.delTaskRun(taskRunId);
+   * console.log(manager.getScheduledTaskRunIds().length);
+   * // -> 0
+   * ```
    * @category TaskRun
    * @since v1.0.0
    */
@@ -705,6 +857,25 @@
    * The getScheduledTaskRunIds method returns an array containing all scheduled
    * task run Ids.
    * @returns An array of task run Ids.
+   * @example
+   * This example registers a task that is then scheduled to run twice.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * const taskRunId1 = manager.scheduleTaskRun('ping');
+   * const taskRunId2 = manager.scheduleTaskRun('ping');
+   *
+   * console.log(manager.getScheduledTaskRunIds().length);
+   * // -> 2
+   * console.log(manager.getScheduledTaskRunIds()[0] == taskRunId1);
+   * // -> true
+   * console.log(manager.getScheduledTaskRunIds()[1] == taskRunId2);
+   * // -> true
+   * ```
    * @category TaskRun
    * @since v1.0.0
    */
