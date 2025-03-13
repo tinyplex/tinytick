@@ -18,13 +18,13 @@
 
 ---
 
-> ## Task management is too hard.
+> ## Task management is hard.
 >
 > Background tasks like fetching, syncing, and cache eviction are common in
 > intelligent web applications. Yet managing them - with scheduling, failure
 > handling, retries, and so on - can be a pain.
 
-> ## TinyTick is here to make it easy!
+> ## So make it easy.
 >
 > Specify your tasks imperatively, ahead of time, and then configure their
 > schedules, timeouts, and retry sequences - and let TinyTick take care of
