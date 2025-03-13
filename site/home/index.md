@@ -174,7 +174,7 @@ manager.scheduleTaskRun('fetchParents');
       <br/>
       <b>TinyBase</b>
     </a>
-    <br />The reactive data store for local-first apps.<br />
+    <br />The reactive data store for local-first apps.
   </p>
 
   <p>
@@ -183,13 +183,13 @@ manager.scheduleTaskRun('fetchParents');
       <br/>
       <b>TinyWidgets</b>
     </a>
-    <br />A collection of tiny, reusable, UI components.<br />
+    <br />A collection of tiny, reusable, UI components.
   </p>
 
   <p>
     <img width="48" src="https://tinytick.org/favicon.svg?asImg" />
     <br />
     <b>TinyTick</b>
-    <br />A tiny but very useful task orchestrator.<br />
+    <br />A tiny but very useful task orchestrator.
   </p>
 </section>
