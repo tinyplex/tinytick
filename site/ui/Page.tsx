@@ -12,7 +12,7 @@ import {Main} from './Main.tsx';
 import type {NoPropComponent} from 'tinydocs';
 import React from 'react';
 
-const GTM_ID = 'G-D1MGR8VRWJ';
+const GTM_ID = 'G-14BZ56H85M';
 
 const FONTS = ['inter', 'inconsolata', 'shantell'];
 
