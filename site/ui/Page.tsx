@@ -35,7 +35,7 @@ export const Page: NoPropComponent = () => {
   const title =
     (pageNode.name != 'TinyTick' ? pageNode.name + ' | ' : '') + 'TinyTick';
   const description = isHome
-    ? 'An easy way to orchestrate JavaScript tasks.'
+    ? 'A tiny but very useful JavaScript task orchestrator.'
     : (NodeSummary({node: pageNode, asText: true}) as any);
   const url = `${baseUrl}${pageNode.url}`;
 
