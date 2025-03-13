@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strict": true,
+    "removeComments": true,
+    "target": "ESNext",
+    "module": "NodeNext",
+    "jsx": "react",
+    "moduleResolution": "NodeNext",
+    "allowSyntheticDefaultImports": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["jest", "node", "jest-environment-puppeteer", "http-server"],
+    "typeRoots": ["../node_modules/@types", "./modules"],
+    "skipLibCheck": true
+  }
+}

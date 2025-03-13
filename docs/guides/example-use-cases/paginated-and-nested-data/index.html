@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="en"><head><link rel="dns-prefetch" href="https://www.googletagmanager.com/"><link href="https://www.googletagmanager.com/gtag/js?id=G-D1MGR8VRWJ" rel="preload" as="script"><link rel="preload" as="font" href="/fonts/inter.woff2" type="font/woff2" crossorigin="anonymous"><link rel="preload" as="font" href="/fonts/inconsolata.woff2" type="font/woff2" crossorigin="anonymous"><link rel="preload" as="font" href="/fonts/shantell.woff2" type="font/woff2" crossorigin="anonymous"><title>Paginated And Nested Data | TinyTick</title><meta name="description" content="Imagine you are fetching information about multiple &#x27;parent&#x27; items from a network endpoint, but the items you want are paginated. Also imagine that each item requires subsequent separate network requests to access &#x27;child&#x27; data about it - which might also be paginated."><meta property="og:type" content="website"><meta property="og:title" content="Paginated And Nested Data | TinyTick"><meta property="og:description" content="Imagine you are fetching information about multiple &#x27;parent&#x27; items from a network endpoint, but the items you want are paginated. Also imagine that each item requires subsequent separate network requests to access &#x27;child&#x27; data about it - which might also be paginated."><meta property="og:url" content="https://tinytick.org/guides/example-use-cases/paginated-and-nested-data/"><meta property="og:image" content="https://tinytick.org/favicon_pad.png"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Paginated And Nested Data | TinyTick"><meta name="twitter:description" content="Imagine you are fetching information about multiple &#x27;parent&#x27; items from a network endpoint, but the items you want are paginated. Also imagine that each item requires subsequent separate network requests to access &#x27;child&#x27; data about it - which might also be paginated."><meta name="twitter:site" content="@tinybasejs"><meta name="twitter:image" content="https://tinytick.org/favicon_pad.png"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/css/index.css"><link rel="canonical" href="https://tinytick.org/guides/example-use-cases/paginated-and-nested-data/"><script src="/js/app.js"></script></head><body><header><a href="/"><img src="/favicon.svg" alt="TinyTick logo"><span>TinyTick</span></a><nav><ul><li><a href="/guides/">Guides</a></li><li><a href="/demos/">Demos</a></li><li><a href="/api/">API</a></li><li><a href="https://github.com/tinyplex/tinytick">GitHub</a></li></ul></nav><span id="dark"></span></header><main><nav><ul><li id="root" class="parent open"><span></span><a href="/">TinyTick</a><ul><li id="G" class="parent open"><span></span><a href="/guides/">Guides</a><ul><li id="GS"><span></span><a href="/guides/getting-started/">Getting Started</a></li><li id="KC"><span></span><a href="/guides/key-concepts/">Key Concepts</a></li><li id="DT"><span></span><a href="/guides/defining-tasks/">Defining Tasks</a></li><li id="ST"><span></span><a href="/guides/scheduling-tasks/">Scheduling Tasks</a></li><li id="AU" class="parent"><span></span><a href="/guides/advanced-usage/">Advanced Usage</a></li><li id="EUC" class="parent open"><span></span><a href="/guides/example-use-cases/">Example Use Cases</a><ul><li id="PAND" class="current"><span></span><a href="/guides/example-use-cases/paginated-and-nested-data/">Paginated And Nested Data</a></li></ul></li><li id="R"><span></span><a href="/guides/releases/">Releases</a></li></ul></li><li id="D" class="parent"><span></span><a href="/demos/">Demos</a></li><li id="api" class="parent"><span></span><a href="/api/">API</a></li></ul></li></ul></nav><article><nav><ul><li><a href="/">TinyTick</a></li><li><a href="/guides/">Guides</a></li><li><a href="/guides/example-use-cases/">Example Use Cases</a></li><li><a href="/guides/example-use-cases/paginated-and-nested-data/">Paginated And Nested Data</a></li></ul></nav><section class="s1" id="/guides/example-use-cases/paginated-and-nested-data/" data-id="PAND"><h1>Paginated And Nested Data</h1><p>Imagine you are fetching information about multiple &#x27;parent&#x27; items from a network endpoint, but the items you want are paginated. Also imagine that each item requires subsequent separate network requests to access &#x27;child&#x27; data about it - which might also be paginated.</p><p>A real example of this might be fetching data about GitHub repositories, and for each repository, fetching the issues and pull requests associated with it. But of course many similar examples exist in applications that have relational- or graph-like data models.</p><p>Your choices (other than to build a GraphQL backend!) are traditionally to go either:</p><h3 id="breadth-first">Breadth-first</h3><p>Fetch and paginate through every parent item (A, B, C...) until you have them all, and then go back and fetch and paginate through every child item (a1, a2, a3, a4, b2, ...) for each parent item.</p><p>The fetch sequence for data would look like this:</p><pre><code>Parent page 1:
+  A
+  B
+Parent page 2:
+  C
+  D
+A children page 1:
+  a1
+  a2
+A children page 2:
+  a3
+  a4
+B children page 1:
+  b1
+  b2
+...
+</code></pre><p>The downside of this is that you have no child data about the first parent item until you have fetched <em>all</em> the parent items.</p><h3 id="or-depth-first">OR Depth-first</h3><p>Fetch each parent item, and then fetch and paginate through all the child data for that item before moving on to the next parent item.</p><p>The fetch sequence for data would look like this:</p><pre><code>Parent page 1:
+  A
+  B
+A children page 1:
+  a1
+  a2
+A children page 2:
+  a3
+  a4
+B children page 1:
+  b1
+  b2
+Parent page 2:
+  C
+  D
+...
+</code></pre><p>The downside of <em>this</em> approach means you quickly have all the child data for the first item but you can&#x27;t see that later parent items even exist until the whole process is nearly complete.</p><p>And in either case, if a single fetch fails, or is slow, the whole sequence is held up until it completes.</p><h3 id="but-with-tinytick">BUT With TinyTick...</h3><p>Instead, TinyTick can help you to fetch all the data with sort of a &#x27;queue&#x27; approach, which ends up being a hybrid of the two loop-based approaches. Every time a fetch task completes, it schedules the next tasks to run - such as the next page of parent items, or the first page of child data for the parent item just fetched. That first page of child data can then schedule the next page of child data itself if needed.</p><p>Depending on how long each fetch takes, the sequence of fetches that the application is making is then a mix of parent and child data:</p><pre><code>Parent page 1:
+  A
+  B
+  -> schedule 'A children page 1', 'B children page 1', 'Parent page 2'
+A children page 1:
+  a1
+  a2
+  -> schedule 'A children page 2'
+B children page 1:
+  b1
+  b2
+Parent page 2:
+  C
+  D
+  -> schedule 'C children page 1', 'D children page 1'
+A children page 2:
+  a3
+  a4
+...
+</code></pre><p>This interleaving minimizes the disadvantages of breadth-first and depth-first approaches, since you start to see the child detail for early parent items quickly, but you also see the full set of parent items appear early too.</p><p>This is also more tolerant to a single fetch failing or being slow, since the other parts of the sequence have been scheduled and can continue in the meantime.</p><h3 id="a-possible-implementation">A possible implementation</h3><p>Here is a very simplified example of how you might implement this with TinyTick against an idealized data source.</p><p>First initialize TinyTick:</p><pre><code><span class="keyword">import</span> <span class="punctuation">{</span>createManager<span class="punctuation">}</span> <span class="keyword">from</span> <span class="string">'tinytick'</span><span class="punctuation">;</span>
+
+<span class="keyword">const</span> manager <span class="operator">=</span> <span class="function"><a href="/api/tinytick/functions/creation/createmanager/">createManager</a></span><span class="punctuation">(</span><span class="punctuation">)</span><span class="punctuation">;</span>
+manager<span class="punctuation">.</span><span class="function"><a href="/api/tinytick/interfaces/manager/manager/methods/lifecycle/start/">start</a></span><span class="punctuation">(</span><span class="punctuation">)</span><span class="punctuation">;</span>
+</code></pre><p>Let&#x27;s register a task function to fetch a page of parent data. It will schedule the next page of parent data and the first page of child data for each parent item:</p><pre><code>manager<span class="punctuation">.</span><span class="function"><a href="/api/tinytick/interfaces/manager/manager/methods/task/settask/">setTask</a></span><span class="punctuation">(</span>
+  <span class="string">'fetchParents'</span><span class="punctuation">,</span>
+  <span class="keyword">async</span> <span class="punctuation">(</span>arg <span class="operator">=</span> <span class="string">'[1]'</span><span class="punctuation">)</span> <span class="operator">=></span> <span class="punctuation">{</span>
+    <span class="keyword">const</span> <span class="punctuation">[</span>page<span class="punctuation">]</span> <span class="operator">=</span> <span class="constant">JSON</span><span class="punctuation">.</span><span class="function">parse</span><span class="punctuation">(</span>arg<span class="punctuation">)</span><span class="punctuation">;</span>
+
+    <span class="keyword">const</span> url <span class="operator">=</span> <span class="template-string"><span class="template-punctuation">`</span><span class="string">https://api.org/parents?page=</span><span class="interpolation"><span class="interpolation-punctuation">${</span>page<span class="interpolation-punctuation">}</span></span><span class="template-punctuation">`</span></span><span class="punctuation">;</span>
+    console<span class="punctuation">.</span><span class="function">log</span><span class="punctuation">(</span><span class="template-string"><span class="template-punctuation">`</span><span class="string">Fetching </span><span class="interpolation"><span class="interpolation-punctuation">${</span>url<span class="interpolation-punctuation">}</span></span><span class="template-punctuation">`</span></span><span class="punctuation">)</span><span class="punctuation">;</span>
+
+    <span class="keyword">const</span> data <span class="operator">=</span> <span class="keyword">await</span> <span class="punctuation">(</span><span class="keyword">await</span> <span class="function">fetch</span><span class="punctuation">(</span>url<span class="punctuation">)</span><span class="punctuation">)</span><span class="punctuation">.</span><span class="function">json</span><span class="punctuation">(</span><span class="punctuation">)</span><span class="punctuation">;</span>
+
+    data<span class="punctuation">.</span>parents<span class="punctuation">.</span><span class="function">forEach</span><span class="punctuation">(</span><span class="punctuation">(</span><span class="parameter">parent</span><span class="punctuation">)</span> <span class="operator">=></span> <span class="punctuation">{</span>
+      <span class="comment">// 1. Store parent data in memory or local storage (not shown)</span>
+      console<span class="punctuation">.</span><span class="function">log</span><span class="punctuation">(</span><span class="template-string"><span class="template-punctuation">`</span><span class="string">Storing parent </span><span class="interpolation"><span class="interpolation-punctuation">${</span>parent<span class="punctuation">.</span>id<span class="interpolation-punctuation">}</span></span><span class="template-punctuation">`</span></span><span class="punctuation">)</span><span class="punctuation">;</span>
+
+      <span class="comment">// 2. Schedule the first page of child data for this parent</span>
+      <span class="keyword">const</span> parentIdAndPage <span class="operator">=</span> <span class="constant">JSON</span><span class="punctuation">.</span><span class="function">stringify</span><span class="punctuation">(</span><span class="punctuation">[</span>parent<span class="punctuation">.</span>id<span class="punctuation">,</span> <span class="number">1</span><span class="punctuation">]</span><span class="punctuation">)</span><span class="punctuation">;</span>
+      manager<span class="punctuation">.</span><span class="function"><a href="/api/tinytick/interfaces/manager/manager/methods/taskrun/scheduletaskrun/">scheduleTaskRun</a></span><span class="punctuation">(</span><span class="string">'fetchChildren'</span><span class="punctuation">,</span> parentIdAndPage<span class="punctuation">)</span><span class="punctuation">;</span>
+    <span class="punctuation">}</span><span class="punctuation">)</span><span class="punctuation">;</span>
+
+    <span class="keyword">if</span> <span class="punctuation">(</span>data<span class="punctuation">.</span>hasMore<span class="punctuation">)</span> <span class="punctuation">{</span>
+      <span class="comment">// 3. Schedule the next page of parent data</span>
+      manager<span class="punctuation">.</span><span class="function"><a href="/api/tinytick/interfaces/manager/manager/methods/taskrun/scheduletaskrun/">scheduleTaskRun</a></span><span class="punctuation">(</span><span class="string">'fetchParents'</span><span class="punctuation">,</span> <span class="constant">JSON</span><span class="punctuation">.</span><span class="function">stringify</span><span class="punctuation">(</span><span class="punctuation">[</span>page <span class="operator">+</span> <span class="number">1</span><span class="punctuation">]</span><span class="punctuation">)</span><span class="punctuation">)</span><span class="punctuation">;</span>
+    <span class="punctuation">}</span>
+  <span class="punctuation">}</span><span class="punctuation">,</span>
+  <span class="string">'network'</span><span class="punctuation">,</span>
+<span class="punctuation">)</span><span class="punctuation">;</span>
+</code></pre><p>Next, let&#x27;s create a task to fetch child data. It will also schedule the next page of child data if there is one:</p><pre><code>manager<span class="punctuation">.</span><span class="function"><a href="/api/tinytick/interfaces/manager/manager/methods/task/settask/">setTask</a></span><span class="punctuation">(</span>
+  <span class="string">'fetchChildren'</span><span class="punctuation">,</span>
+  <span class="keyword">async</span> <span class="punctuation">(</span><span class="parameter">arg</span><span class="punctuation">)</span> <span class="operator">=></span> <span class="punctuation">{</span>
+    <span class="keyword">const</span> <span class="punctuation">[</span>parentId<span class="punctuation">,</span> page<span class="punctuation">]</span> <span class="operator">=</span> <span class="constant">JSON</span><span class="punctuation">.</span><span class="function">parse</span><span class="punctuation">(</span>arg<span class="punctuation">)</span><span class="punctuation">;</span>
+
+    <span class="keyword">const</span> url <span class="operator">=</span> <span class="template-string"><span class="template-punctuation">`</span><span class="string">https://api.org/children?parentId=</span><span class="interpolation"><span class="interpolation-punctuation">${</span>parentId<span class="interpolation-punctuation">}</span></span><span class="string">&amp;page=</span><span class="interpolation"><span class="interpolation-punctuation">${</span>page<span class="interpolation-punctuation">}</span></span><span class="template-punctuation">`</span></span><span class="punctuation">;</span>
+    console<span class="punctuation">.</span><span class="function">log</span><span class="punctuation">(</span><span class="template-string"><span class="template-punctuation">`</span><span class="string">Fetching </span><span class="interpolation"><span class="interpolation-punctuation">${</span>url<span class="interpolation-punctuation">}</span></span><span class="template-punctuation">`</span></span><span class="punctuation">)</span><span class="punctuation">;</span>
+
+    <span class="keyword">const</span> data <span class="operator">=</span> <span class="keyword">await</span> <span class="punctuation">(</span><span class="keyword">await</span> <span class="function">fetch</span><span class="punctuation">(</span>url<span class="punctuation">)</span><span class="punctuation">)</span><span class="punctuation">.</span><span class="function">json</span><span class="punctuation">(</span><span class="punctuation">)</span><span class="punctuation">;</span>
+
+    data<span class="punctuation">.</span>children<span class="punctuation">.</span><span class="function">forEach</span><span class="punctuation">(</span><span class="punctuation">(</span><span class="parameter">child</span><span class="punctuation">)</span> <span class="operator">=></span> <span class="punctuation">{</span>
+      <span class="comment">// 1. Store child data in memory or local storage (not shown)</span>
+      console<span class="punctuation">.</span><span class="function">log</span><span class="punctuation">(</span><span class="template-string"><span class="template-punctuation">`</span><span class="string">Storing child </span><span class="interpolation"><span class="interpolation-punctuation">${</span>child<span class="punctuation">.</span>id<span class="interpolation-punctuation">}</span></span><span class="template-punctuation">`</span></span><span class="punctuation">)</span><span class="punctuation">;</span>
+    <span class="punctuation">}</span><span class="punctuation">)</span><span class="punctuation">;</span>
+
+    <span class="keyword">if</span> <span class="punctuation">(</span>data<span class="punctuation">.</span>hasMore<span class="punctuation">)</span> <span class="punctuation">{</span>
+      <span class="comment">// 2. Schedule the next page of children data</span>
+      <span class="keyword">const</span> parentIdAndPage <span class="operator">=</span> <span class="constant">JSON</span><span class="punctuation">.</span><span class="function">stringify</span><span class="punctuation">(</span><span class="punctuation">[</span>parentId<span class="punctuation">,</span> page <span class="operator">+</span> <span class="number">1</span><span class="punctuation">]</span><span class="punctuation">)</span><span class="punctuation">;</span>
+      manager<span class="punctuation">.</span><span class="function"><a href="/api/tinytick/interfaces/manager/manager/methods/taskrun/scheduletaskrun/">scheduleTaskRun</a></span><span class="punctuation">(</span><span class="string">'fetchChildren'</span><span class="punctuation">,</span> parentIdAndPage<span class="punctuation">)</span><span class="punctuation">;</span>
+    <span class="punctuation">}</span>
+  <span class="punctuation">}</span><span class="punctuation">,</span>
+  <span class="string">'network'</span><span class="punctuation">,</span>
+<span class="punctuation">)</span><span class="punctuation">;</span>
+</code></pre><p>Notice that tasks can only take one (string) parameter, so we are serializing the parent ID and the page number into a single string for the <code>fetchChildren</code> task (and for consistency also doing the same for the argument of the <code>fetchParents</code> task).</p><p>Notice also how we&#x27;ve categorized both tasks as &#x27;network&#x27;. We could use that to set common retry and timeout settings for both tasks in case we wanted to be tolerant to network failures:</p><pre><code>manager<span class="punctuation">.</span><span class="function"><a href="/api/tinytick/interfaces/manager/manager/methods/category/setcategory/">setCategory</a></span><span class="punctuation">(</span><span class="string">'network'</span><span class="punctuation">,</span> <span class="punctuation">{</span><span class="literal-property">maxRetries</span><span class="operator">:</span> <span class="number">3</span><span class="punctuation">,</span> <span class="literal-property">retryDelay</span><span class="operator">:</span> <span class="number">1000</span><span class="punctuation">}</span><span class="punctuation">)</span><span class="punctuation">;</span>
+</code></pre><p>Finally, schedule the first page of parent data to start the sequence. (In the output below, we assume that the network fetches are always successful and respond with the same latency).</p><pre><code>manager<span class="punctuation">.</span><span class="function"><a href="/api/tinytick/interfaces/manager/manager/methods/taskrun/scheduletaskrun/">scheduleTaskRun</a></span><span class="punctuation">(</span><span class="string">'fetchParents'</span><span class="punctuation">)</span><span class="punctuation">;</span>
+<span class="comment">// ... wait 500ms for the sequence to start and complete</span>
+<span class="comment">// -> 'Fetching https://api.org/parents?page=1'</span>
+<span class="comment">// -> 'Storing parent A'</span>
+<span class="comment">// -> 'Storing parent B'</span>
+<span class="comment">// -> 'Fetching https://api.org/children?parentId=A&amp;page=1'</span>
+<span class="comment">// -> 'Fetching https://api.org/children?parentId=B&amp;page=1'</span>
+<span class="comment">// -> 'Fetching https://api.org/parents?page=2'</span>
+<span class="comment">// -> 'Storing child a1'</span>
+<span class="comment">// -> 'Storing child a2'</span>
+<span class="comment">// -> 'Storing child b1'</span>
+<span class="comment">// -> 'Storing child b2'</span>
+<span class="comment">// -> 'Storing parent C'</span>
+<span class="comment">// -> 'Storing parent D'</span>
+<span class="comment">// -> 'Fetching https://api.org/children?parentId=A&amp;page=2'</span>
+<span class="comment">// -> 'Fetching https://api.org/children?parentId=C&amp;page=1'</span>
+<span class="comment">// -> 'Fetching https://api.org/children?parentId=D&amp;page=1'</span>
+<span class="comment">// -> 'Storing child a3'</span>
+<span class="comment">// -> 'Storing child a4'</span>
+<span class="comment">// -> 'Storing child c1'</span>
+<span class="comment">// -> 'Storing child c2'</span>
+<span class="comment">// -> 'Storing child d1'</span>
+<span class="comment">// -> 'Storing child d2'</span>
+<span class="comment">// ...</span>
+</code></pre><p>Boom.</p><p>The main thing to identify here is how we are interleaving the parent and child data fetches, giving us a blend of the breadth-first and depth-first approaches.</p><p>But without even trying, we are also getting a nice balanced parallelism for the number of concurrent fetches. And also remember that each of these fetches is fault-tolerant! If one fails, it can be put back on the schedule queue to try again.</p><p>Also, think about how things might change if you delay the start of certain tasks. For example, if you scheduled children fetches to run a few milliseconds in the future (rather than immediately, as above), you could spread the load over the two endpoints and tune the &#x27;prioritization&#x27; of parent data fetches over child data fetches.</p><p>The right balance of scheduling heuristics will be specific to your app and what data is important to the user as a function of immediacy. The same goes for retry and timeout settings - you might want different configurations for more vs less critical fetches in your app, for example.</p><p>But hopefully you get the idea!</p><h3 id="summary">Summary</h3><p>This guide has provided a view of how TinyTask can be used to build more complex fetch sequences in your application.</p><p>A final note... one thing that&#x27;s out of scope here is a discussion of how to store the data effectively. But for that you might take a look at our sister project <a href="https://tinybase.org/">TinyBase</a>. Enjoy!</p></section></article><aside></aside></main><footer><nav><a id="gh" href="https://github.com/tinyplex/tinytick" target="_blank">GitHub</a><a id="bs" href="https://bsky.app/profile/tinybase.bsky.social" target="_blank">Bluesky</a><a id="tw" href="https://x.com/tinybasejs" target="_blank">X / Twitter</a><a id="dc" href="https://discord.com/invite/mGz3mevwP8" target="_blank">Discord</a></nav><nav><a href="/">TinyTick <span id="version"></span></a> © 2025-</nav></footer></body><script async="" src="https://www.googletagmanager.com/gtag/js?id=G-D1MGR8VRWJ"></script><script>window.dataLayer=window.dataLayer||[];function g(){dataLayer.push(arguments);}g('js',new Date());g('config','G-D1MGR8VRWJ');</script></html>

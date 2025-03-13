@@ -1,0 +1,24 @@
+{
+  "ignorePaths": [
+    "*.tsv",
+    "*.webp",
+    "*.svg",
+    "*.snap",
+    "*.json",
+    "*.test.ts"
+  ],
+  "words": [
+    "atrule",
+    "attw",
+    "Deleter",
+    "onwarn",
+    "Pearce",
+    "Shantell",
+    "tinybasejs",
+    "tinydocs",
+    "tinyplex",
+    "tinytick",
+    "transpilations",
+    "VRWJ"
+  ]
+}

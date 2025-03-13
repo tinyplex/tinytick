@@ -1,0 +1,242 @@
+.glow() {
+  background: @glowColor;
+  border-radius: 50%;
+  content: '';
+  filter: blur(4rem);
+  height: 120%;
+  left: -10%;
+  position: absolute;
+  top: -10%;
+  width: 120%;
+  z-index: -1;
+}
+
+body > main > article#home {
+  display: grid;
+  grid-auto-rows: max-content;
+  grid-auto-flow: dense;
+  row-gap: 2rem;
+  padding: 2rem;
+  z-index: 0;
+  > em {
+    display: block;
+    max-width: 10rem;
+    margin: 0 auto;
+    position: relative;
+    &::before {
+      .glow();
+    }
+    img {
+      position: relative;
+      margin: -1rem 0 0;
+      max-width: 14rem;
+    }
+  }
+  > section#hero {
+    max-width: 40rem;
+    margin: auto;
+    h2 {
+      font-size: 3rem;
+      line-height: 3.6rem;
+      text-align: center;
+      em {
+        white-space: nowrap;
+      }
+    }
+    p {
+      text-align: center;
+    }
+  }
+  span#one-with {
+    color: @accentColor;
+    font-family: Shantell;
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 1.1rem;
+  }
+  > p > a {
+    display: block;
+    font-size: 1.4rem;
+    color: @text2Color;
+    font-weight: 800;
+    background: @back2Color;
+    border: 1px solid @borderColor;
+    padding: 1rem;
+    text-align: center;
+    border-radius: 0.25rem;
+    white-space: nowrap;
+    width: 16rem;
+    margin: -1rem auto;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    &:hover {
+      border-color: @accentColor;
+    }
+    &.start {
+      background: @accentColor;
+      color: @backColor;
+    }
+  }
+  h1,
+  h2,
+  pre,
+  .table {
+    margin-top: 0;
+    height: fit-content;
+  }
+  h2 {
+    font-size: 1.8rem;
+  }
+  em,
+  em a {
+    color: @accentColor;
+    font-style: normal;
+  }
+  pre {
+    font-size: 0.94rem;
+    box-shadow: @shadow;
+  }
+  img {
+    margin: 0 0 2rem;
+  }
+  .table {
+    box-shadow: @shadow;
+  }
+  > section#story,
+  > section#follow,
+  > section#family,
+  > section#users,
+  > section#sponsors,
+  > section#about {
+    text-align: center;
+  }
+  > section#family {
+    p:nth-child(1n + 3) {
+      display: inline-block;
+      vertical-align: top;
+      margin: 2rem;
+      width: 12rem;
+      a {
+        text-decoration: none;
+      }
+      img,
+      embed {
+        margin: 0.5rem auto 0;
+        height: 6rem;
+        max-width: 6rem;
+        display: block;
+        width: unset;
+      }
+    }
+  }
+  > section#follow {
+    a {
+      display: inline-block;
+      margin: 0.5rem;
+      img {
+        margin: 0;
+        vertical-align: middle;
+      }
+    }
+  }
+  > section#sponsors,
+  > section#users {
+    img {
+      display: inline-block;
+      border-radius: 50%;
+      margin: 0;
+      max-width: 3rem;
+    }
+  }
+}
+
+@media (min-width: 56rem) {
+  body > main > article#home {
+    grid-template-columns: repeat(6, 1fr);
+    padding: 4rem 8rem;
+    column-gap: 4rem;
+    row-gap: 2rem;
+    > em {
+      grid-column-end: span 2;
+      grid-row: span 2;
+      max-width: 16rem;
+    }
+    span#one-with {
+      margin: 0;
+      text-align: left;
+      transform: rotate(-5deg) translate3d(-3rem, -1rem, 0);
+      &:before {
+        content: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 200 100" stroke-width="10" stroke="rgb(216,27,96)" fill="rgb(216,27,96)"><path fill="none" d="M25 70a120 120 0 00160-50"/><path d="M30.26 54.095l-18.91 6.512 6.511 18.91z"/></svg>');
+        top: 0.9rem;
+        position: relative;
+        margin-right: 0.6rem;
+      }
+    }
+    > section,
+    > pre,
+    > img,
+    > embed,
+    > .table {
+      width: 100%;
+      grid-column-end: span 3;
+    }
+    > embed {
+      align-self: center;
+    }
+    > pre,
+    > img,
+    > .table {
+      margin-top: 0.5rem;
+    }
+    > .table th:first-child {
+      width: 45%;
+    }
+    > section:nth-of-type(2n + 3) {
+      grid-column-start: 4;
+    }
+    > section:nth-of-type(2n + 2) {
+      text-align: right;
+    }
+    > section#hero {
+      max-width: unset;
+      margin: unset;
+      grid-column-end: span 4;
+      h2,
+      p {
+        text-align: left;
+      }
+    }
+    > p:nth-of-type(1) {
+      grid-column-end: span 2;
+      column-gap: 4rem;
+    }
+    > section#family,
+    > section#follow {
+      grid-column: 1/7;
+    }
+    > section#sponsors {
+      grid-column-start: 1;
+    }
+    > section#users {
+      grid-column-start: 4;
+    }
+    > ul {
+      grid-column: 1/7;
+      column-count: 2;
+      column-gap: 6rem;
+    }
+    > hr {
+      grid-column: 1/7;
+    }
+    > p {
+      grid-column-end: span 2;
+      > a {
+        width: unset;
+        position: relative;
+      }
+    }
+  }
+}
