@@ -35,6 +35,8 @@ manager.start();
 // -> 'Hello universe!'
 ```
 
-Then read our guides and API documentation to learn more about what you can do.
+Then read our [guides](/guides/) and [API
+documentation](/api/tinytick/interfaces/manager/manager/) to learn more about
+what you can do.
 
 And we've got plans, so stay tuned!

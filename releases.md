@@ -23,4 +23,4 @@ manager.start();
 // -> 'Hello universe!'
 ```
 
-<p>Then read our guides and API documentation to learn more about what you can do.</p><p>And we&#x27;ve got plans, so stay tuned!</p>
+<p>Then read our <a href="https://tinytick.org/guides/">guides</a> and <a href="https://tinytick.org/api/tinytick/interfaces/manager/manager/">API documentation</a> to learn more about what you can do.</p><p>And we&#x27;ve got plans, so stay tuned!</p>
