@@ -42,7 +42,7 @@
       (array) => arrayMap(array, () => mathFloor(math.random() * 256));
   const isPositiveNumber = (thing) =>
     getTypeOf(thing) == 'number' && thing >= 0;
-  const isUndefined = (thing) => thing == undefined;
+  const isUndefined = (thing) => thing == void 0;
   const ifNotUndefined = (value, then, otherwise) =>
     isUndefined(value) ? otherwise?.() : then(value);
   const getUniqueId = (length = 16) =>
@@ -91,7 +91,7 @@
   const objFreeze = object.freeze;
   const objMerge = (...objs) => object.assign({}, ...objs);
   const objFilterUndefined = (obj) => {
-    objForEach(obj, (value, id) => (value === undefined ? delete obj[id] : 0));
+    objForEach(obj, (value, id) => (value === void 0 ? delete obj[id] : 0));
     return obj;
   };
   const objValidate = (obj, validateChild) => {
@@ -240,7 +240,7 @@
           taskRunId,
           now + delay,
         );
-        taskRun[ABORT_CONTROLLER] = undefined;
+        taskRun[ABORT_CONTROLLER] = void 0;
       } else {
         delTaskRun(taskRunId);
       }
@@ -317,7 +317,7 @@
       fluent((taskId2) => mapSet(taskMap, taskId2), taskId);
     const scheduleTaskRun = (taskId, arg, startAfter = 0, config2 = {}) => {
       if (status == 2) {
-        return undefined;
+        return void 0;
       }
       const taskRunId = getUniqueId();
       mapSet(taskRunMap, taskRunId, [
