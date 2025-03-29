@@ -7,16 +7,23 @@ import {NavJson} from './ui/NavJson.tsx';
 import {Page} from './ui/Page.tsx';
 import {Readme} from './ui/Readme.tsx';
 
+const internalEsm: string[] = ['tinytick'];
+const externalEsm: string[] = [];
+
 const GROUPS = ['Interfaces', '*', 'Type aliases'];
 const CATEGORIES = ['Manager', 'Task', 'TaskRun', 'Category', '*'];
 const REFLECTIONS = [/^get/, /^set/, '*', /^del/];
 
 export const build = async (
+  esbuild: any,
   outDir: string,
   api = true,
   pages = true,
 ): Promise<void> => {
-  const {version} = JSON.parse(readFileSync('./package.json', 'utf-8'));
+  const {version, peerDependencies} = JSON.parse(
+    readFileSync('./package.json', 'utf-8'),
+  );
+
   const baseUrl = version.includes('beta')
     ? 'https://beta.tinytick.org'
     : 'https://tinytick.org';
@@ -60,7 +67,44 @@ export const build = async (
       .addMarkdownForNode('/', Readme, '../readme.md')
       .addMarkdownForNode('/guides/releases/', Readme, '../../../releases.md');
   }
+
+  internalEsm.forEach((module) => {
+    const [mainModule, ...subModules] = module.split('/');
+    subModules.unshift('');
+    docs.addReplacer(
+      new RegExp(`esm\\.sh/${module}@`, 'g'),
+      `esm.sh/${mainModule}@${version}${subModules.join('/')}`,
+    );
+  });
+  externalEsm.forEach((module) => {
+    const [mainModule, ...subModules] = module.split('/');
+    subModules.unshift('');
+    const version = peerDependencies[mainModule];
+    docs.addReplacer(
+      new RegExp(`esm\\.sh/${module}@`, 'g'),
+      `esm.sh/${mainModule}@${version}${subModules.join('/')}`,
+    );
+  });
+
   docs.publish();
+
+  await Promise.all(
+    internalEsm.map(async (module) => {
+      const [mainModule, ...subModules] = module.split('/');
+      subModules.unshift('');
+      await esbuild.build({
+        entryPoints: [import.meta.resolve(module).replace('file://', '')],
+        external: externalEsm,
+        target: 'esnext',
+        bundle: true,
+        jsx: 'transform',
+        outfile:
+          `${outDir}/pseudo.esm.sh/` +
+          `${mainModule}@${version}${subModules.join('/')}/index.js`,
+        format: 'esm',
+      });
+    }),
+  );
 };
 
 const addApi = (docs: Docs): Docs => docs.addApiFile('dist/@types/index.d.ts');

@@ -163,7 +163,6 @@ describe('Documentation tests', () => {
   test.each(Object.entries(resultsByName))('%s', async (_name, getResults) => {
     const results = await getResults();
     results.forEach(([expectedResult, actualResult]) => {
-      // eslint-disable-next-line jest/no-conditional-expect
       expect(actualResult).toEqual(expectedResult);
     });
   });

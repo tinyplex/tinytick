@@ -97,7 +97,6 @@ export const Page: NoPropComponent = () => {
           src={`https://www.googletagmanager.com/gtag/js?id=${GTM_ID}`}
         />
         <script
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html:
               `window.dataLayer=window.dataLayer||[];` +

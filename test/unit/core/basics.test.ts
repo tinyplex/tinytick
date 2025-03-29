@@ -11,10 +11,8 @@ const until = (test: () => boolean, min: number, max: number): Promise<void> =>
       if (test()) {
         clearInterval(interval);
         const time = manager.getNow() - from;
-        /* eslint-disable jest/no-conditional-expect */
         expect(time).toBeGreaterThanOrEqual(min);
         expect(time).toBeLessThanOrEqual(max);
-        /* eslint-enable jest/no-conditional-expect */
         resolve();
       }
     }, 5);

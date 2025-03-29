@@ -87,13 +87,13 @@ const gzipFile = async (fileName) =>
   );
 
 const copyPackageFiles = async (forProd = false) => {
-  const targets = forProd ? [null, 'es6'] : [null];
   const mins = forProd ? [null, 'min'] : [null];
   const modules = forProd ? ALL_MODULES : TEST_MODULES;
 
   const json = JSON.parse(await promises.readFile('package.json', UTF8));
   delete json.private;
   delete json.scripts;
+  delete json.devEngines;
   delete json.devDependencies;
 
   json.main = './index.js';
@@ -101,32 +101,22 @@ const copyPackageFiles = async (forProd = false) => {
 
   json.typesVersions = {'*': {}};
   json.exports = {};
-  targets.forEach((target) => {
-    mins.forEach((min) => {
-      modules.forEach((module) => {
-        const path = [target, min, module].filter((part) => part).join('/');
-        const typesPath = ['.', '@types', module, 'index.d.']
-          .filter((part) => part)
-          .join('/');
-        const codePath = (path ? '/' : '') + path;
+  mins.forEach((min) => {
+    modules.forEach((module) => {
+      const path = [min, module].filter((part) => part).join('/');
+      const typesPath = ['.', '@types', module, 'index.d.']
+        .filter((part) => part)
+        .join('/');
+      const codePath = (path ? '/' : '') + path;
 
-        json.typesVersions['*'][path ? path : '.'] = [typesPath + 'ts'];
+      json.typesVersions['*'][path ? path : '.'] = [typesPath + 'ts'];
 
-        json.exports['.' + codePath] = {
-          ...(forProd
-            ? {
-                require: {
-                  types: typesPath + 'cts',
-                  default: './cjs' + codePath + '/index.cjs',
-                },
-              }
-            : {}),
-          default: {
-            types: typesPath + 'ts',
-            default: '.' + codePath + '/index.js',
-          },
-        };
-      });
+      json.exports['.' + codePath] = {
+        default: {
+          types: typesPath + 'ts',
+          default: '.' + codePath + '/index.js',
+        },
+      };
     });
   });
 
@@ -222,12 +212,26 @@ const execute = async (cmd) => {
 };
 
 const lintCheckFiles = async (dir) => {
+  const {default: prettier} = await import('prettier');
+  const prettierConfig = await getPrettierConfig();
+
+  const filePaths = [];
+  ['.js', '.d.ts'].forEach((extension) =>
+    forEachDeepFile(dir, (filePath) => filePaths.push(filePath), extension),
+  );
+  await allOf(filePaths, async (filePath) => {
+    const code = await promises.readFile(filePath, UTF8);
+    if (
+      !(await prettier.check(code, {...prettierConfig, filepath: filePath}))
+    ) {
+      throw `${filePath} not pretty`;
+    }
+  });
+
   const {
     default: {ESLint},
   } = await import('eslint');
-  const esLint = new ESLint({
-    extensions: ['.js', '.jsx', '.ts', '.tsx'],
-  });
+  const esLint = new ESLint({});
   const results = await esLint.lintFiles([dir]);
   if (
     results.filter((result) => result.errorCount > 0 || result.warningCount > 0)
@@ -244,7 +248,6 @@ const lintCheckDocs = async (dir) => {
     default: {ESLint},
   } = await import('eslint');
   const esLint = new ESLint({
-    extensions: [],
     overrideConfig: {
       rules: {
         'no-console': 0,
@@ -281,8 +284,21 @@ const lintCheckDocs = async (dir) => {
         if (!(await prettier.check(code, docConfig))) {
           const pretty = (await prettier.format(code, docConfig))
             .trim()
-            .replace(/^|\n/g, '\n * ');
-          throw `${filePath} not pretty:\n${code}\n\nShould be:\n${pretty}\n`;
+            .split('\n')
+            .map((line) => (line == '' ? ' *' : ' * ' + line))
+            .join('\n');
+          // eslint-disable-next-line no-console
+          console.log(
+            `${filePath} not pretty:\n${code}\n\nShould be:\n${pretty}\n`,
+          );
+          writeFileSync(
+            filePath,
+            readFileSync(filePath, UTF8).replace(
+              docBlock,
+              '\n' + pretty + '\n * ',
+            ),
+            UTF8,
+          );
         }
         const results = await esLint.lintText(code);
         if (
@@ -342,10 +358,8 @@ const tsCheck = async (dir) => {
     analyzeTsConfig(`${path.resolve(dir)}/tsconfig.json`, [
       '--excludeDeclarationFiles',
       '--excludePathsFromReport=' +
-        'build.ts;' +
-        TEST_MODULES.map(
-          (module) => `${module == '' ? 'index' : module}.ts`,
-        ).join(';'),
+        'jest/reporter.js;jest/environment.js;build.ts;ui-react/common.ts;' +
+        TEST_MODULES.map((module) => `${module}.ts`).join(';'),
     ]).unusedExports,
   )
     .map(
@@ -358,14 +372,7 @@ const tsCheck = async (dir) => {
   }
 };
 
-const compileModule = async (
-  module,
-  dir = DIST_DIR,
-  format = 'esm',
-  target = 'esnext',
-  min = '',
-) => {
-  const path = await import('path');
+const compileModule = async (module, dir = DIST_DIR, min = false) => {
   const {default: esbuild} = await import('rollup-plugin-esbuild');
   const {rollup} = await import('rollup');
   const {default: replace} = await import('@rollup/plugin-replace');
@@ -380,10 +387,13 @@ const compileModule = async (
   }
 
   const inputConfig = {
-    external: ['fs'],
     input: inputFile,
     plugins: [
-      esbuild({target, legalComments: 'inline'}),
+      esbuild({
+        target: 'esnext',
+        legalComments: 'inline',
+        jsx: 'automatic',
+      }),
       replace({
         '/*!': '\n/*',
         delimiters: ['', ''],
@@ -404,14 +414,11 @@ const compileModule = async (
 
   const moduleDir = dirname(await ensureDir(dir + '/' + module + '/-'));
 
-  const index = 'index.' + (format == 'cjs' ? 'c' : '') + 'js';
+  const index = 'index.js';
   const outputConfig = {
     dir: moduleDir,
     entryFileNames: index,
-    format,
-    globals: {
-      fs: 'fs',
-    },
+    format: 'esm',
     interop: 'default',
     name: getGlobalName(module),
   };
@@ -478,7 +485,7 @@ const test = async (
       'coverage.json',
       JSON.stringify({
         ...(countAsserts
-          ? JSON.parse(await promises.readFile('./tmp/assertion-summary.json'))
+          ? JSON.parse(await promises.readFile('./tmp/counts.json'))
           : {}),
         ...JSON.parse(await promises.readFile('./tmp/coverage-summary.json'))
           .total,
@@ -491,36 +498,15 @@ const test = async (
   }
 };
 
-const compileModulesForProd = async (fast = false) => {
+const compileModulesForProd = async () => {
   await clearDir(DIST_DIR);
   await copyPackageFiles(true);
   await copyDefinitions(DIST_DIR);
 
-  await allOf(
-    [undefined, ...(fast ? [] : ['umd', 'cjs'])],
-    async (format) =>
-      await allOf(
-        [undefined, ...(fast ? [] : ['es6'])],
-        async (target) =>
-          await allModules(
-            async (module) =>
-              await allOf(
-                [undefined, ...(fast ? [] : ['min'])],
-                async (min) =>
-                  await compileModule(
-                    module,
-                    `${DIST_DIR}/` +
-                      [format, target, min]
-                        .filter((part) => part != null)
-                        .join('/'),
-                    format,
-                    target,
-                    min,
-                  ),
-              ),
-          ),
-      ),
-  );
+  await allModules(async (module) => {
+    await compileModule(module, `${DIST_DIR}/`);
+    await compileModule(module, `${DIST_DIR}/min`, true);
+  });
 };
 
 const compileDocsAndAssets = async (api = true, pages = true) => {
@@ -538,7 +524,7 @@ const compileDocsAndAssets = async (api = true, pages = true) => {
 
   // eslint-disable-next-line import/no-unresolved
   const {build} = await import('./tmp/build.js');
-  await build(DOCS_DIR, api, pages);
+  await build(esbuild, DOCS_DIR, api, pages);
   await removeDir(TMP_DIR);
 };
 
@@ -569,7 +555,11 @@ export const compileForTest = async () => {
   });
 };
 
-export const lintFiles = async () => await lintCheckFiles('.');
+export const lintFiles = async () => {
+  await lintCheckFiles('src');
+  await lintCheckFiles('test');
+  await lintCheckFiles('site');
+};
 export const lintDocs = async () => await lintCheckDocs('src');
 export const lint = parallel(lintFiles, lintDocs);
 
@@ -630,29 +620,16 @@ export const testE2e = async () => {
 export const compileAndTestE2e = series(compileForProdAndDocs, testE2e);
 
 export const testProd = async () => {
-  await execute('attw --pack dist --format table-flipped');
+  await execute('attw --pack dist --format table-flipped --profile esm-only');
   await test(['test/prod']);
 };
 export const compileAndTestProd = series(compileForProdAndDocs, testProd);
 
 export const serveDocs = async () => {
-  const {createServer} = await import('http-server');
-  const {default: replace} = await import('buffer-replace');
-  const removeDomain = (_, res) => {
-    res._write = res.write;
-    res.write = (buffer) =>
-      res._write(replace(buffer, 'https://tinytick.org/', '/'.padStart(21)));
-    res.emit('next');
-  };
-  createServer({
-    root: DOCS_DIR,
-    cache: -1,
-    gzip: true,
-    // eslint-disable-next-line no-console
-    logFn: (req) => console.log(req.url),
-    before: [removeDomain],
-  }).listen('8081', '0.0.0.0');
+  const {createTestServer} = await import('./test/server.mjs');
+  createTestServer(DOCS_DIR, '8081');
 };
+
 
 export const preCommit = series(
   parallel(lint, spell, ts),

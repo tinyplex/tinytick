@@ -40,10 +40,5 @@ export const ExecutablePen: NoPropComponent = (): any => {
     tags: ['tinytick'],
   };
 
-  return (
-    <code
-      // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{__html: JSON.stringify(pen)}}
-    />
-  );
+  return <code dangerouslySetInnerHTML={{__html: JSON.stringify(pen)}} />;
 };
