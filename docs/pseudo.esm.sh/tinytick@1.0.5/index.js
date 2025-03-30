@@ -1,5 +1,4 @@
 // dist/index.js
-var collDel = (coll, keyOrValue) => coll.delete(keyOrValue);
 var arrayMap = (array, cb) => array.map(cb);
 var arrayReduce = (array, cb, initial) => array.reduce(cb, initial);
 var arrayForEach = (array, cb) => array.forEach(cb);
@@ -7,6 +6,7 @@ var arraySplice = (array, start, deleteCount, ...values) => array.splice(start, 
 var arrayShift = (array) => array.shift();
 var arraySplit = (string, separator) => string.split(separator);
 var arrayFilter = (array, cb) => array.filter(cb);
+var collDel = (coll, keyOrValue) => coll.delete(keyOrValue);
 var EMPTY_STRING = "";
 var getTypeOf = (thing) => typeof thing;
 var id = (key) => EMPTY_STRING + key;
