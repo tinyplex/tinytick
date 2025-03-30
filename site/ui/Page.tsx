@@ -1,3 +1,4 @@
+import type {NoPropComponent} from 'tinydocs';
 import {
   NodeSummary,
   useBaseUrl,
@@ -9,8 +10,6 @@ import {BuildContext} from './BuildContext.tsx';
 import {Footer} from './Footer.tsx';
 import {Header} from './Header.tsx';
 import {Main} from './Main.tsx';
-import type {NoPropComponent} from 'tinydocs';
-import React from 'react';
 
 const GTM_ID = 'G-14BZ56H85M';
 

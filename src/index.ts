@@ -13,7 +13,6 @@ import type {
   TimestampMs,
   createManager as createManagerDecl,
 } from './@types/index.d.ts';
-import {IdMap, mapGet, mapKeys, mapNew, mapSet} from './common/map.ts';
 import {
   arrayFilter,
   arrayMap,
@@ -21,6 +20,13 @@ import {
   arraySplice,
   arraySplit,
 } from './common/array.ts';
+import {IdMap, mapGet, mapKeys, mapNew, mapSet} from './common/map.ts';
+import {
+  objFilterUndefined,
+  objFreeze,
+  objMerge,
+  objValidate,
+} from './common/obj.ts';
 import {
   getNow,
   getUniqueId,
@@ -32,12 +38,6 @@ import {
   size,
 } from './common/other.ts';
 import {id, isString} from './common/strings.ts';
-import {
-  objFilterUndefined,
-  objFreeze,
-  objMerge,
-  objValidate,
-} from './common/obj.ts';
 
 type TimestampPair = [taskRunId: Id | null, timestamp: TimestampMs];
 

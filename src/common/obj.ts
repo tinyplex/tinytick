@@ -1,6 +1,6 @@
-import {ifNotUndefined, isUndefined} from './other.ts';
 import type {Id} from '../@types/index.d.ts';
 import {arrayForEach} from './array.ts';
+import {ifNotUndefined, isUndefined} from './other.ts';
 
 const object = Object;
 

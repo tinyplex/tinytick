@@ -1,6 +1,5 @@
 /* eslint-disable react/jsx-no-target-blank */
 import type {NoPropComponent} from 'tinydocs';
-import React from 'react';
 
 export const Footer: NoPropComponent = () => (
   <footer>

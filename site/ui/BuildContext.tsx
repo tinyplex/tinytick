@@ -1,5 +1,5 @@
-import {FunctionComponent, ReactNode, createContext, useContext} from 'react';
 import {readFileSync, statSync} from 'fs';
+import {FunctionComponent, ReactNode, createContext, useContext} from 'react';
 import {MODULES} from './common.ts';
 
 type CoverageStats = {

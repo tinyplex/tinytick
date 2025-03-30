@@ -1,6 +1,5 @@
-import {Markdown, usePageNode} from 'tinydocs';
 import type {NoPropComponent} from 'tinydocs';
-import React from 'react';
+import {Markdown, usePageNode} from 'tinydocs';
 import {useReadme} from './Readme.tsx';
 
 export const Home: NoPropComponent = (): any => {

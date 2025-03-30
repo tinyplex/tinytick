@@ -1,14 +1,14 @@
+import {transformSync} from 'esbuild';
+import * as fs from 'fs';
+import {readFileSync, readdirSync} from 'fs';
+import type {FetchMock} from 'jest-fetch-mock';
+import fm from 'jest-fetch-mock';
+import {join, resolve} from 'path';
 import * as React from 'react';
 import * as ReactDOMClient from 'react-dom/client';
 import * as ReactDOMTestUtils from 'react-dom/test-utils';
 import * as TinyTick from 'tinytick';
-import * as fs from 'fs';
-import {join, resolve} from 'path';
-import {readFileSync, readdirSync} from 'fs';
-import type {FetchMock} from 'jest-fetch-mock';
-import fm from 'jest-fetch-mock';
 import {pause} from '../common.ts';
-import {transformSync} from 'esbuild';
 
 const fetchMock = fm as any as FetchMock;
 fetchMock.enableMocks();

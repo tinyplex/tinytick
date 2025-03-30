@@ -6,7 +6,6 @@ import {
   usePageNode,
   useRootNode,
 } from 'tinydocs';
-import React from 'react';
 
 export type NavNode = {
   i: string; // id

@@ -1,6 +1,5 @@
-import {NodeBreadcrumbs, NodeSection, usePageNode, useRootNode} from 'tinydocs';
 import type {NoPropComponent} from 'tinydocs';
-import React from 'react';
+import {NodeBreadcrumbs, NodeSection, usePageNode, useRootNode} from 'tinydocs';
 
 export const ArticleInner: NoPropComponent = (): any => {
   const rootNode = useRootNode();
