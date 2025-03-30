@@ -174,7 +174,7 @@ manager.scheduleTaskRun('fetchParents');
       <br/>
       <b>TinyBase</b>
     </a>
-    <br />The reactive data store for local-first apps.
+    <br />A reactive data store and sync engine.
   </p>
 
   <p>
