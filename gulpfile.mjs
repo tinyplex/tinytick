@@ -1,5 +1,11 @@
 // All other imports are lazy so that single tasks start up fast.
-import {existsSync, promises, readdirSync} from 'fs';
+import {
+  existsSync,
+  promises,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'fs';
 import gulp from 'gulp';
 import {basename, dirname, join, resolve} from 'path';
 import {gzipSync} from 'zlib';
@@ -211,38 +217,6 @@ const execute = async (cmd) => {
   }
 };
 
-const lintCheckFiles = async (dir) => {
-  const {default: prettier} = await import('prettier');
-  const prettierConfig = await getPrettierConfig();
-
-  const filePaths = [];
-  ['.js', '.d.ts'].forEach((extension) =>
-    forEachDeepFile(dir, (filePath) => filePaths.push(filePath), extension),
-  );
-  await allOf(filePaths, async (filePath) => {
-    const code = await promises.readFile(filePath, UTF8);
-    if (
-      !(await prettier.check(code, {...prettierConfig, filepath: filePath}))
-    ) {
-      throw `${filePath} not pretty`;
-    }
-  });
-
-  const {
-    default: {ESLint},
-  } = await import('eslint');
-  const esLint = new ESLint({});
-  const results = await esLint.lintFiles([dir]);
-  if (
-    results.filter((result) => result.errorCount > 0 || result.warningCount > 0)
-      .length > 0
-  ) {
-    const formatter = await esLint.loadFormatter();
-    const errors = await formatter.format(results);
-    throw errors;
-  }
-};
-
 const lintCheckDocs = async (dir) => {
   const {
     default: {ESLint},
@@ -269,11 +243,6 @@ const lintCheckDocs = async (dir) => {
   );
   await allOf(filePaths, async (filePath) => {
     const code = await promises.readFile(filePath, UTF8);
-    if (
-      !(await prettier.check(code, {...prettierConfig, filepath: filePath}))
-    ) {
-      throw `${filePath} not pretty`;
-    }
     await allOf(
       [...(code.matchAll(LINT_BLOCKS) ?? [])],
       async ([_, hint, docBlock]) => {
@@ -281,26 +250,25 @@ const lintCheckDocs = async (dir) => {
           return; // can't lint orphaned TS methods
         }
         const code = docBlock.replace(/\n +\* ?/g, '\n').trimStart();
+        let pretty = code;
         if (!(await prettier.check(code, docConfig))) {
-          const pretty = (await prettier.format(code, docConfig))
-            .trim()
-            .split('\n')
-            .map((line) => (line == '' ? ' *' : ' * ' + line))
-            .join('\n');
-          // eslint-disable-next-line no-console
-          console.log(
-            `${filePath} not pretty:\n${code}\n\nShould be:\n${pretty}\n`,
-          );
+          pretty = await prettier.format(code, docConfig);
           writeFileSync(
             filePath,
             readFileSync(filePath, UTF8).replace(
               docBlock,
-              '\n' + pretty + '\n * ',
+              '\n' +
+                pretty
+                  .trim()
+                  .split('\n')
+                  .map((line) => (line == '' ? ' *' : ' * ' + line))
+                  .join('\n') +
+                '\n * ',
             ),
             UTF8,
           );
         }
-        const results = await esLint.lintText(code);
+        const results = await esLint.lintText(pretty);
         if (
           results.filter(
             (result) => result.errorCount > 0 || result.warningCount > 0,
@@ -308,11 +276,50 @@ const lintCheckDocs = async (dir) => {
         ) {
           const formatter = await esLint.loadFormatter();
           const errors = await formatter.format(results);
-          throw `${filePath} does not lint:\n${code}\n\n${errors}`;
+          throw `${filePath} does not lint:\n${pretty}\n\n${errors}`;
         }
       },
     );
   });
+};
+
+const lintCheckFiles = async (dir) => {
+  const {default: prettier} = await import('prettier');
+  const prettierConfig = await getPrettierConfig();
+
+  const filePaths = [];
+  ['.ts', '.tsx', '.js', '.d.ts'].forEach((extension) =>
+    forEachDeepFile(dir, (filePath) => filePaths.push(filePath), extension),
+  );
+  await allOf(filePaths, async (filePath) => {
+    const code = await promises.readFile(filePath, UTF8);
+    if (
+      !(await prettier.check(code, {...prettierConfig, filepath: filePath}))
+    ) {
+      writeFileSync(
+        filePath,
+        await prettier.format(
+          code,
+          {...prettierConfig, filepath: filePath},
+          UTF8,
+        ),
+      );
+    }
+  });
+
+  const {
+    default: {ESLint},
+  } = await import('eslint');
+  const esLint = new ESLint({});
+  const results = await esLint.lintFiles([dir]);
+  if (
+    results.filter((result) => result.errorCount > 0 || result.warningCount > 0)
+      .length > 0
+  ) {
+    const formatter = await esLint.loadFormatter();
+    const errors = await formatter.format(results);
+    throw errors;
+  }
 };
 
 const spellCheck = async (dir, deep = false) =>
@@ -561,7 +568,7 @@ export const lintFiles = async () => {
   await lintCheckFiles('site');
 };
 export const lintDocs = async () => await lintCheckDocs('src');
-export const lint = parallel(lintFiles, lintDocs);
+export const lint = series(lintDocs, lintFiles);
 
 export const spell = async () => {
   await spellCheck('.');
@@ -629,7 +636,6 @@ export const serveDocs = async () => {
   const {createTestServer} = await import('./test/server.mjs');
   createTestServer(DOCS_DIR, '8081');
 };
-
 
 export const preCommit = series(
   parallel(lint, spell, ts),
