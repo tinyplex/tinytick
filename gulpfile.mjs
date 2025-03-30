@@ -217,6 +217,45 @@ const execute = async (cmd) => {
   }
 };
 
+const lintCheckFiles = async (dir) => {
+  const {default: prettier} = await import('prettier');
+  const prettierConfig = await getPrettierConfig();
+
+  const filePaths = [];
+  ['.ts', '.tsx', '.js', '.d.ts'].forEach((extension) =>
+    forEachDeepFile(dir, (filePath) => filePaths.push(filePath), extension),
+  );
+  await allOf(filePaths, async (filePath) => {
+    const code = await promises.readFile(filePath, UTF8);
+    if (
+      !(await prettier.check(code, {...prettierConfig, filepath: filePath}))
+    ) {
+      writeFileSync(
+        filePath,
+        await prettier.format(
+          code,
+          {...prettierConfig, filepath: filePath},
+          UTF8,
+        ),
+      );
+    }
+  });
+
+  const {
+    default: {ESLint},
+  } = await import('eslint');
+  const esLint = new ESLint({});
+  const results = await esLint.lintFiles([dir]);
+  if (
+    results.filter((result) => result.errorCount > 0 || result.warningCount > 0)
+      .length > 0
+  ) {
+    const formatter = await esLint.loadFormatter();
+    const errors = await formatter.format(results);
+    throw errors;
+  }
+};
+
 const lintCheckDocs = async (dir) => {
   const {
     default: {ESLint},
@@ -281,45 +320,6 @@ const lintCheckDocs = async (dir) => {
       },
     );
   });
-};
-
-const lintCheckFiles = async (dir) => {
-  const {default: prettier} = await import('prettier');
-  const prettierConfig = await getPrettierConfig();
-
-  const filePaths = [];
-  ['.ts', '.tsx', '.js', '.d.ts'].forEach((extension) =>
-    forEachDeepFile(dir, (filePath) => filePaths.push(filePath), extension),
-  );
-  await allOf(filePaths, async (filePath) => {
-    const code = await promises.readFile(filePath, UTF8);
-    if (
-      !(await prettier.check(code, {...prettierConfig, filepath: filePath}))
-    ) {
-      writeFileSync(
-        filePath,
-        await prettier.format(
-          code,
-          {...prettierConfig, filepath: filePath},
-          UTF8,
-        ),
-      );
-    }
-  });
-
-  const {
-    default: {ESLint},
-  } = await import('eslint');
-  const esLint = new ESLint({});
-  const results = await esLint.lintFiles([dir]);
-  if (
-    results.filter((result) => result.errorCount > 0 || result.warningCount > 0)
-      .length > 0
-  ) {
-    const formatter = await esLint.loadFormatter();
-    const errors = await formatter.format(results);
-    throw errors;
-  }
 };
 
 const spellCheck = async (dir, deep = false) =>
