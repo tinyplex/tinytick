@@ -107,7 +107,10 @@ export const build = async (
   );
 };
 
-const addApi = (docs: Docs): Docs => docs.addApiFile('dist/@types/index.d.ts');
+const addApi = (docs: Docs): Docs =>
+  docs
+    .addApiFile('dist/@types/index.d.ts')
+    .addApiFile('dist/@types/ui-react/index.d.ts');
 
 const addPages = (docs: Docs): Docs =>
   docs

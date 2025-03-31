@@ -2,7 +2,7 @@ import type {DurationMs, Id, TimestampMs} from '../@types/index.d.ts';
 import {arrayMap, arrayReduce} from './array.ts';
 import {getTypeOf, strSplit} from './strings.ts';
 
-const GLOBAL = globalThis;
+export const GLOBAL = globalThis;
 const math = Math;
 const mathFloor = math.floor;
 

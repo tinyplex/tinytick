@@ -11,7 +11,7 @@ import {basename, dirname, join, resolve} from 'path';
 import {gzipSync} from 'zlib';
 
 const UTF8 = 'utf-8';
-const TEST_MODULES = [''];
+const TEST_MODULES = ['', 'ui-react'];
 const ALL_MODULES = [...TEST_MODULES];
 const ALL_DEFINITIONS = [...ALL_MODULES];
 
@@ -80,11 +80,6 @@ const forEachDirAndFile = (dir, dirCallback, fileCallback, extension = '') =>
       fileCallback?.(path);
     }
   });
-
-const copyWithReplace = async (src, [from, to], dst = src) => {
-  const file = await promises.readFile(src, UTF8);
-  await promises.writeFile(dst, file.replace(from, to), UTF8);
-};
 
 const gzipFile = async (fileName) =>
   await promises.writeFile(
@@ -194,11 +189,6 @@ const copyDefinition = async (dir, module) => {
     ),
     UTF8,
   );
-  await copyWithReplace(
-    definitionFile,
-    [/\.d\.ts/g, '.d.cts'],
-    definitionFile.replace(/index.d.ts$/, 'index.d.cts'),
-  );
 };
 
 const copyDefinitions = async (dir) => {
@@ -264,6 +254,8 @@ const lintCheckDocs = async (dir) => {
     overrideConfig: {
       rules: {
         'no-console': 0,
+        'react/prop-types': 0,
+        'react-hooks/rules-of-hooks': 0,
         '@typescript-eslint/no-unused-expressions': 0,
         'max-len': [
           2,
@@ -394,6 +386,7 @@ const compileModule = async (module, dir = DIST_DIR, min = false) => {
   }
 
   const inputConfig = {
+    external: ['react', 'react/jsx-runtime'],
     input: inputFile,
     plugins: [
       esbuild({

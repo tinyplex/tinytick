@@ -2,6 +2,8 @@ import type {Id} from '../@types/index.js';
 
 const EMPTY_STRING = '';
 
+export const TINYTICK = 'tinytick';
+
 export const getTypeOf = (thing: unknown): string => typeof thing;
 
 export const id = (key: unknown): Id => EMPTY_STRING + key;
