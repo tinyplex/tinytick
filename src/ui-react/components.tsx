@@ -1,15 +1,15 @@
 import {useMemo, type ReactNode} from 'react';
 import type {
-  Provider as ProviderDecl,
-  ProviderProps,
+  ManagerProvider as ManagerProviderDecl,
+  ManagerProviderProps,
 } from '../@types/ui-react/index.d.ts';
 import {createManager} from '../index.ts';
 import {Context} from './context.ts';
 
-export const Provider: typeof ProviderDecl = ({
+export const Provider: typeof ManagerProviderDecl = ({
   started = true,
   children,
-}: ProviderProps & {readonly children: ReactNode}): any => (
+}: ManagerProviderProps & {readonly children: ReactNode}): any => (
   <Context.Provider
     value={useMemo(
       () => createManager()[started ? 'start' : 'stop'](),
