@@ -6,7 +6,7 @@ import type {
 import {createManager} from '../index.ts';
 import {Context} from './context.ts';
 
-export const Provider: typeof ManagerProviderDecl = ({
+export const ManagerProvider: typeof ManagerProviderDecl = ({
   started = true,
   children,
 }: ManagerProviderProps & {readonly children: ReactNode}): any => (

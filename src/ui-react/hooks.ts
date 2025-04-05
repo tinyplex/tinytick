@@ -31,6 +31,7 @@ import type {
   useStart as useStartDecl,
   useStop as useStopDecl,
 } from '../@types/ui-react/index.d.ts';
+import {isUndefined} from '../common/other.ts';
 import {Context} from './context.ts';
 
 type Primitive = string | number | boolean;
@@ -66,7 +67,10 @@ const useManagerProxy = <Method extends keyof Manager>(
 ) => {
   const manager = useManager();
   return useMemo(
-    () => (manager[method] as any)(...(args ?? [])),
+    () =>
+      isUndefined(manager)
+        ? manager
+        : (manager[method] as any)(...(args ?? [])),
     // @ts-expect-error recursion is mitigated
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [manager, depLiterals ?? args ?? [], depArrays ?? []].flat(
@@ -75,13 +79,7 @@ const useManagerProxy = <Method extends keyof Manager>(
   );
 };
 
-export const useManager: typeof useManagerDecl = () => {
-  const manager = useContext(Context);
-  if (!manager) {
-    throw new Error('Hook must be called within a ManagerProvider');
-  }
-  return manager;
-};
+export const useManager: typeof useManagerDecl = () => useContext(Context);
 
 export const useSetManagerConfig: typeof useSetManagerConfigDecl = (
   config: ManagerConfig,
