@@ -14,7 +14,8 @@
 /**
  * The useManager hook returns the Manager provided by the a ManagerProvider
  * component.
- * @returns The current Manager.
+ * @returns The current Manager, or `undefined` if called from outside an active
+ * ManagerProvider.
  * @example
  * This example gets the Manager from the ManagerProvider component.
  *
@@ -29,7 +30,7 @@
  *   </ManagerProvider>
  * );
  * const Pane = () => (
- *   <span>{useManager().get}</span>
+ *   <span>{useManager().getNow()}</span>
  * );
  *
  * const app = document.createElement('div');
@@ -37,23 +38,11 @@
  * console.log(app.innerHTML);
  * // -> '<span>["color"]</span>'
  *
- * store.setCell('pets', 'fido', 'species', 'dog'); // !act
- * console.log(app.innerHTML);
- * // -> '<span>["color","species"]</span>'
- * ```
-
-
-* ```js
- * import {createManager} from 'tinytick';
- *
- * const manager = createManager();
- * console.log(manager.getNow() == Date.now());
- * // -> true
  * ```
  * @category Lifecycle hooks
  * @since v1.1.0
  */
-/// useGetNow
+/// useManager
 
 /**
  * The useSetManagerConfig hook is the equivalent of the Manager's
@@ -64,7 +53,8 @@
  * how often the Manager should check for new tasks to run, or existing ones to
  * abort.
  * @param config The ManagerConfig to set.
- * @returns A reference to the Manager.
+ * @returns A reference to the Manager, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example creates a Manager object and sets its configuration.
  *
@@ -106,7 +96,8 @@
  * configuration, including any defaults of those you have not provided.
  * @param withDefaults An optional boolean indicating whether to return the full
  * configuration, including defaults.
- * @returns The configuration as a ManagerConfig or ManagerConfigWithDefaults.
+ * @returns The configuration as a ManagerConfig or ManagerConfigWithDefaults,
+ * or `undefined` if called from outside an active ManagerProvider.
  * @example
  * This example creates a Manager object and gets its default configuration.
  * No additional configuration has been provided, so when the `withDefaults`
@@ -125,7 +116,7 @@
  * @category Manager hooks
  * @since v1.1.0
  */
-/// Manager.getManagerConfig
+/// useGetManagerConfig
 /**
  * The useSetCategory hook is the equivalent of the Manager's setCategory
  * method, and lets you create and configure a category for tasks.
@@ -138,7 +129,8 @@
  * their retry behaviors, for example.
  * @param categoryId The Id of the category to create or update.
  * @param config The TaskRunConfig to set.
- * @returns A reference to the Manager.
+ * @returns A reference to the Manager, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example creates a category called `network` with a specific maximum
  * duration.
@@ -187,7 +179,8 @@
  * @param withDefaults An optional boolean indicating whether to return the full
  * configuration, including defaults.
  * @returns The configuration as a TaskRunConfig (or `undefined` if the category
- * Id does not exist) or TaskRunConfigWithDefaults.
+ * Id does not exist) or TaskRunConfigWithDefaults, or `undefined` if called
+ * from outside an active ManagerProvider.
  * @example
  * This example creates a category called `network` with a specific maximum
  * duration. Its configuration can be accessed with or without the defaults
@@ -221,11 +214,12 @@
  * @category Category hooks
  * @since v1.1.0
  */
-/// Manager.getCategoryConfig
+/// useGetCategoryConfig
 /**
  * The useGetCategoryIds hook is the equivalent of the Manager's getCategoryIds
  * method, and returns an array containing all registered category Ids.
- * @returns An array of category Ids.
+ * @returns An array of category Ids, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example creates categories called `network` and `file`. Their Ids are
  * retrieved.
@@ -243,12 +237,13 @@
  * @category Category hooks
  * @since v1.1.0
  */
-/// Manager.getCategoryIds
+/// useGetCategoryIds
 /**
  * The useDelCategory hook is the equivalent of the Manager's delCategory
  * method, and deletes a category configuration.
  * @param categoryId The Id of the category to delete.
- * @returns A reference to the Manager.
+ * @returns A reference to the Manager, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example creates a category called `network` which is then deleted.
  *
@@ -267,7 +262,7 @@
  * @category Category hooks
  * @since v1.1.0
  */
-/// Manager.delCategory
+/// useDelCategory
 /**
  * The useSetTask hook is the equivalent of the Manager's setTask method, and
  * registers a task with the Manager, optionally associating it with a category
@@ -286,7 +281,8 @@
  * @param task The task function to register.
  * @param categoryId The optional Id of a category to associate the task with.
  * @param config An optional TaskRunConfig to set for all runs of this Task.
- * @returns A reference to the Manager.
+ * @returns A reference to the Manager, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example registers a task called `ping` that fetches content from a
  * website.
@@ -354,7 +350,8 @@
  * @param withDefaults An optional boolean indicating whether to return the full
  * configuration, including defaults.
  * @returns The configuration as a TaskRunConfig  (or `undefined` if the Task Id
- * does not exist) or TaskRunConfigWithDefaults.
+ * does not exist) or TaskRunConfigWithDefaults, or `undefined` if called from
+ * outside an active ManagerProvider.
  * @example
  * This example creates a category, and registers a task for which the
  * configuration is returned.
@@ -395,7 +392,8 @@
 /**
  * The useGetTaskIds hook is the equivalent of the Manager's getTaskIds method,
  * and returns an array containing all registered task Ids.
- * @returns An array of task Ids.
+ * @returns An array of task Ids, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example creates tasks called `ping` and `pong`. Their Ids are
  * retrieved.
@@ -418,7 +416,8 @@
  * The useDelTask hook is the equivalent of the Manager's delTask method, and
  * deletes a task registration.
  * @param taskId The Id of the task to delete.
- * @returns A reference to the Manager.
+ * @returns A reference to the Manager, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example creates a task called `ping` which is then deleted.
  *
@@ -465,7 +464,8 @@
  * @param startAfter A timestamp at, or duration after which, the task should
  * run.
  * @param config An optional TaskRunConfig to set for this run.
- * @returns A new unique Id of the scheduled task run.
+ * @returns A new unique Id of the scheduled task run, or `undefined` if called
+ * from outside an active ManagerProvider.
  * @example
  * This example registers a task that is then scheduled to run.
  *
@@ -537,7 +537,8 @@
  * @param withDefaults An optional boolean indicating whether to return the full
  * configuration including defaults.
  * @returns The configuration as a TaskRunConfig (or `undefined` if the task run
- * Id does not exist) or TaskRunConfigWithDefaults.
+ * Id does not exist) or TaskRunConfigWithDefaults, or `undefined` if called
+ * from outside an active ManagerProvider.
  * @example
  * This example registers a task that has a category and that is then
  * scheduled to run. The configuration is then returned.
@@ -585,7 +586,8 @@
  * If the task run Id does not exist, this method will return `undefined`.
  * @param taskRunId The Id of the task run to get information for.
  * @returns The TaskRunInfo for the task run, or `undefined` if the task run Id
- * does not exist.
+ * does not exist, or `undefined` if called from outside an active
+ * ManagerProvider.
  * @example
  * This example registers a task that is then scheduled to run. The info is
  * then returned.
@@ -627,7 +629,8 @@
  * The useDelTaskRun hook is the equivalent of the Manager's delTaskRun method,
  * and deletes a scheduled task run or aborts a running one.
  * @param taskRunId The Id of the task run to delete or abort.
- * @returns A reference to the Manager.
+ * @returns A reference to the Manager, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example registers a task that is then scheduled to run. The task run
  * is then deleted.
@@ -658,7 +661,8 @@
  * When first scheduled, a task run will appear in this list. Once it starts
  * running, it will disappear from this list and appear on the list of running
  * task runs, accessible instead with the getRunningTaskRunIds method.
- * @returns An array of task run Ids.
+ * @returns An array of task run Ids, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example registers a task that is then scheduled to run twice.
  *
@@ -691,7 +695,8 @@
  * appear in the list of scheduled task runs, accessible with the
  * getScheduledTaskRunIds method. Once it starts running, it will instead move
  * to appear on this list.
- * @returns An array of task run Ids.
+ * @returns An array of task run Ids, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example registers a task that is then scheduled to run. Once it runs,
  * its Id appears on the list of running tasks.
@@ -740,7 +745,8 @@
  * Though you can stop and start the Manager as many times as you like, it is
  * expected that you will only start it once at the beginning of your app's
  * lifecycle, and then stop it when it closes and you are cleaning up.
- * @returns A reference to the Manager.
+ * @returns A reference to the Manager, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example registers a task that is then scheduled to run. The Manager is
  * then started, and one `tickInterval` later, the task run starts.
@@ -782,7 +788,8 @@
  * in the schedule list and will be run if the Manager is ever started again.
  * @param force Whether to stop the Manager immediately instead of waiting for
  * all scheduled task runs to complete.
- * @returns A reference to the Manager.
+ * @returns A reference to the Manager, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @example
  * This example registers a task that is then scheduled to run twice. The
  * Manager is started, and one `tickInterval` later, stopped again. With the
@@ -829,7 +836,8 @@
  *
  * This returns a simple numeric value that indicates whether the Manager is
  * stopped (0), running (1), or stopping (2).
- * @returns The status of the Manager.
+ * @returns The status of the Manager, or `undefined` if called from outside an
+ * active ManagerProvider.
  * @category Lifecycle hooks
  * @since v1.1.0
  */
@@ -839,7 +847,8 @@
  * convenience function to get the current timestamp as seen by the Manager.
  *
  * It is simply an alias for the JavaScript `Date.now` function.
- * @returns The current timestamp in milliseconds.
+ * @returns The current timestamp in milliseconds, or `undefined` if called from
+ * outside an active ManagerProvider.
  * @example
  * This example gets the current time in milliseconds from the Manager.
  *

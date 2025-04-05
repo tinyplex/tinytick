@@ -6,8 +6,8 @@ import fm from 'jest-fetch-mock';
 import {join, resolve} from 'path';
 import * as React from 'react';
 import * as ReactDOMClient from 'react-dom/client';
-import * as ReactDOMTestUtils from 'react-dom/test-utils';
 import * as TinyTick from 'tinytick';
+import * as TinyTickUiReact from 'tinytick/ui-react';
 import {pause} from '../common.ts';
 
 const fetchMock = fm as any as FetchMock;
@@ -23,23 +23,19 @@ fetchMock.doMock(async (req) => {
   return {status: 200, body: 'It works!'};
 });
 
-// globally present; do not need to be imported in examples
-[ReactDOMTestUtils].forEach((module) =>
-  Object.entries(module).forEach(([key, value]) => {
-    (globalThis as any)[key] = value;
-  }),
-);
-
 // need to be imported in examples
 (globalThis as any).modules = {
   fs,
   react: React,
   'react-dom/client': ReactDOMClient,
   tinytick: TinyTick,
+  'tinytick/ui-react': TinyTickUiReact,
 };
 
 Object.assign(globalThis as any, {
+  IS_REACT_ACT_ENVIRONMENT: true,
   pause,
+  act: React.act,
 });
 
 type Results = [any, any][];
