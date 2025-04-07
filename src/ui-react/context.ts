@@ -7,11 +7,11 @@ import {TINYTICK} from '../common/strings.ts';
 
 const TINYTICK_CONTEXT = TINYTICK + '_uirc';
 
-export const Context: React.Context<Manager | undefined> = (GLOBAL as any)[
+export type ContextValue = [manager?: Manager];
+
+export const Context: React.Context<ContextValue> = (GLOBAL as any)[
   TINYTICK_CONTEXT
 ]
   ? /*! istanbul ignore next */
     (GLOBAL as any)[TINYTICK_CONTEXT]
-  : ((GLOBAL as any)[TINYTICK_CONTEXT] = createContext<Manager | undefined>(
-      undefined,
-    ));
+  : ((GLOBAL as any)[TINYTICK_CONTEXT] = createContext<ContextValue>([]));

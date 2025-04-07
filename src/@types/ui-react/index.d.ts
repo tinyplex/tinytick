@@ -15,6 +15,12 @@ import type {
   TimestampMs,
 } from '../index.d.ts';
 
+/// useCreateManager
+export function useCreateManager(
+  create: () => Manager,
+  createDeps?: React.DependencyList,
+): Manager;
+
 /// useManager
 export function useManager(): Manager | undefined;
 
@@ -111,15 +117,13 @@ export function useGetStatus(): ManagerStatus | undefined;
 /// useGetNow
 export function useGetNow(): TimestampMs | undefined;
 
-/// ManagerProviderProps
-export type ManagerProviderProps = {
-  /// ManagerProviderProps.started
-  readonly started?: boolean;
-  /// ManagerProviderProps.forceStop
-  readonly forceStop?: boolean;
+/// ProviderProps
+export type ProviderProps = {
+  /// ProviderProps.manager
+  readonly manager?: Manager;
 };
 
-/// ManagerProvider
-export function ManagerProvider(
-  props: ManagerProviderProps & {children: React.ReactNode},
+/// Provider
+export function Provider(
+  props: ProviderProps & {children: React.ReactNode},
 ): ReactElement<any, any>;

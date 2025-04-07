@@ -3,8 +3,7 @@
  * components to make it easy to use TinyTick in a React application.
  *
  * The hooks in this module primarily provide access to the data and structures
- * exposed by an TinyTick Manager, as initialized by the ManagerProvider
- * component.
+ * exposed by an TinyTick Manager, as initialized by the Provider component.
  * @packageDocumentation
  * @module ui-react
  * @since v1.1.0
@@ -12,31 +11,30 @@
 /// ui-react
 
 /**
- * The useManager hook returns the Manager provided by the a ManagerProvider
- * component.
+ * The useManager hook returns the Manager provided by the a Provider component.
  * @returns The current Manager, or `undefined` if called from outside an active
- * ManagerProvider.
+ * Provider.
  * @example
- * This example gets the Manager from the ManagerProvider component.
+ * This example gets the Manager from the Provider component.
  *
  * ```jsx
  * import React from 'react';
  * import {createRoot} from 'react-dom/client';
- * import {ManagerProvider, useManager} from 'tinytick/ui-react';
+ * import {Provider, useManager} from 'tinytick/ui-react';
  *
  * const App = () => (
- *   <ManagerProvider>
+ *   <Provider>
  *     <Pane />
- *   </ManagerProvider>
+ *   </Provider>
  * );
  * const Pane = () => (
- *   <span>{useManager().getNow()}</span>
+ *   <span>{useManager()?.getStatus()}</span>
  * );
  *
  * const app = document.createElement('div');
  * createRoot(app).render(<App />); // !act
  * console.log(app.innerHTML);
- * // -> '<span>["color"]</span>'
+ * // -> '<span>1</span>'
  *
  * ```
  * @category Lifecycle hooks
@@ -54,7 +52,7 @@
  * abort.
  * @param config The ManagerConfig to set.
  * @returns A reference to the Manager, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example creates a Manager object and sets its configuration.
  *
@@ -97,7 +95,7 @@
  * @param withDefaults An optional boolean indicating whether to return the full
  * configuration, including defaults.
  * @returns The configuration as a ManagerConfig or ManagerConfigWithDefaults,
- * or `undefined` if called from outside an active ManagerProvider.
+ * or `undefined` if called from outside an active Provider.
  * @example
  * This example creates a Manager object and gets its default configuration.
  * No additional configuration has been provided, so when the `withDefaults`
@@ -130,7 +128,7 @@
  * @param categoryId The Id of the category to create or update.
  * @param config The TaskRunConfig to set.
  * @returns A reference to the Manager, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example creates a category called `network` with a specific maximum
  * duration.
@@ -180,7 +178,7 @@
  * configuration, including defaults.
  * @returns The configuration as a TaskRunConfig (or `undefined` if the category
  * Id does not exist) or TaskRunConfigWithDefaults, or `undefined` if called
- * from outside an active ManagerProvider.
+ * from outside an active Provider.
  * @example
  * This example creates a category called `network` with a specific maximum
  * duration. Its configuration can be accessed with or without the defaults
@@ -219,7 +217,7 @@
  * The useGetCategoryIds hook is the equivalent of the Manager's getCategoryIds
  * method, and returns an array containing all registered category Ids.
  * @returns An array of category Ids, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example creates categories called `network` and `file`. Their Ids are
  * retrieved.
@@ -243,7 +241,7 @@
  * method, and deletes a category configuration.
  * @param categoryId The Id of the category to delete.
  * @returns A reference to the Manager, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example creates a category called `network` which is then deleted.
  *
@@ -282,7 +280,7 @@
  * @param categoryId The optional Id of a category to associate the task with.
  * @param config An optional TaskRunConfig to set for all runs of this Task.
  * @returns A reference to the Manager, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example registers a task called `ping` that fetches content from a
  * website.
@@ -351,7 +349,7 @@
  * configuration, including defaults.
  * @returns The configuration as a TaskRunConfig  (or `undefined` if the Task Id
  * does not exist) or TaskRunConfigWithDefaults, or `undefined` if called from
- * outside an active ManagerProvider.
+ * outside an active Provider.
  * @example
  * This example creates a category, and registers a task for which the
  * configuration is returned.
@@ -393,7 +391,7 @@
  * The useGetTaskIds hook is the equivalent of the Manager's getTaskIds method,
  * and returns an array containing all registered task Ids.
  * @returns An array of task Ids, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example creates tasks called `ping` and `pong`. Their Ids are
  * retrieved.
@@ -417,7 +415,7 @@
  * deletes a task registration.
  * @param taskId The Id of the task to delete.
  * @returns A reference to the Manager, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example creates a task called `ping` which is then deleted.
  *
@@ -465,7 +463,7 @@
  * run.
  * @param config An optional TaskRunConfig to set for this run.
  * @returns A new unique Id of the scheduled task run, or `undefined` if called
- * from outside an active ManagerProvider.
+ * from outside an active Provider.
  * @example
  * This example registers a task that is then scheduled to run.
  *
@@ -538,7 +536,7 @@
  * configuration including defaults.
  * @returns The configuration as a TaskRunConfig (or `undefined` if the task run
  * Id does not exist) or TaskRunConfigWithDefaults, or `undefined` if called
- * from outside an active ManagerProvider.
+ * from outside an active Provider.
  * @example
  * This example registers a task that has a category and that is then
  * scheduled to run. The configuration is then returned.
@@ -586,8 +584,7 @@
  * If the task run Id does not exist, this method will return `undefined`.
  * @param taskRunId The Id of the task run to get information for.
  * @returns The TaskRunInfo for the task run, or `undefined` if the task run Id
- * does not exist, or `undefined` if called from outside an active
- * ManagerProvider.
+ * does not exist, or `undefined` if called from outside an active Provider.
  * @example
  * This example registers a task that is then scheduled to run. The info is
  * then returned.
@@ -630,7 +627,7 @@
  * and deletes a scheduled task run or aborts a running one.
  * @param taskRunId The Id of the task run to delete or abort.
  * @returns A reference to the Manager, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example registers a task that is then scheduled to run. The task run
  * is then deleted.
@@ -662,7 +659,7 @@
  * running, it will disappear from this list and appear on the list of running
  * task runs, accessible instead with the getRunningTaskRunIds method.
  * @returns An array of task run Ids, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example registers a task that is then scheduled to run twice.
  *
@@ -696,7 +693,7 @@
  * getScheduledTaskRunIds method. Once it starts running, it will instead move
  * to appear on this list.
  * @returns An array of task run Ids, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example registers a task that is then scheduled to run. Once it runs,
  * its Id appears on the list of running tasks.
@@ -746,7 +743,7 @@
  * expected that you will only start it once at the beginning of your app's
  * lifecycle, and then stop it when it closes and you are cleaning up.
  * @returns A reference to the Manager, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example registers a task that is then scheduled to run. The Manager is
  * then started, and one `tickInterval` later, the task run starts.
@@ -789,7 +786,7 @@
  * @param force Whether to stop the Manager immediately instead of waiting for
  * all scheduled task runs to complete.
  * @returns A reference to the Manager, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @example
  * This example registers a task that is then scheduled to run twice. The
  * Manager is started, and one `tickInterval` later, stopped again. With the
@@ -837,7 +834,7 @@
  * This returns a simple numeric value that indicates whether the Manager is
  * stopped (0), running (1), or stopping (2).
  * @returns The status of the Manager, or `undefined` if called from outside an
- * active ManagerProvider.
+ * active Provider.
  * @category Lifecycle hooks
  * @since v1.1.0
  */
@@ -848,7 +845,7 @@
  *
  * It is simply an alias for the JavaScript `Date.now` function.
  * @returns The current timestamp in milliseconds, or `undefined` if called from
- * outside an active ManagerProvider.
+ * outside an active Provider.
  * @example
  * This example gets the current time in milliseconds from the Manager.
  *
@@ -864,13 +861,12 @@
  */
 /// useGetNow
 /**
- * ManagerProviderProps props are used with the Manager component, so that a
- * TinyTick Manager can be passed into the context of an application and used
- * throughout.
+ * ProviderProps props are used with the Manager component, so that a TinyTick
+ * Manager can be passed into the context of an application and used throughout.
  * @category Props
  * @since v1.1.0
  */
-/// ManagerProviderProps
+/// ProviderProps
 {
   /**
    * Whether the Manager should be started on first render, defaulting to
@@ -878,21 +874,21 @@
    * @category Prop
    * @since v1.1.0
    */
-  /// ManagerProviderProps.started
+  /// ProviderProps.started
   /**
    * Whether the Manager should be force-stopped when the context is unmounted,
    * defaulting to `true`.
    * @category Prop
    * @since v1.1.0
    */
-  /// ManagerProviderProps.forceStop
+  /// ProviderProps.forceStop
 }
 /**
- * The ManagerProvider component is used to wrap part of an application in a
- * context that provides a Manager to be used by hooks and components within.
+ * The Provider component is used to wrap part of an application in a context
+ * that provides a Manager to be used by hooks and components within.
  * @param props The props for this component.
  * @returns A rendering of the child components.
  * @category Context components
  * @since v1.1.0
  */
-/// ManagerProvider
+/// Provider

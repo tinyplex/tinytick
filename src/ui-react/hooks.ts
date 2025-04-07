@@ -9,6 +9,7 @@ import type {
   TimestampMs,
 } from '../@types/index.d.ts';
 import type {
+  useCreateManager as useCreateManagerDecl,
   useDelCategory as useDelCategoryDecl,
   useDelTask as useDelTaskDecl,
   useDelTaskRun as useDelTaskRunDecl,
@@ -34,30 +35,32 @@ import type {
 import {isUndefined} from '../common/other.ts';
 import {Context} from './context.ts';
 
+const EMPTY_ARRAY: Readonly<[]> = [];
+
 type Primitive = string | number | boolean;
 type PrimitiveParams<Params extends any[]> = Params['length'] extends 0
-  ? []
+  ? readonly []
   : Params extends [first: infer Param1, ...infer ParamsN]
     ? [Param1] extends [Primitive]
-      ? [Param1, ...PrimitiveParams<ParamsN>]
+      ? readonly [Param1, ...PrimitiveParams<ParamsN>]
       : PrimitiveParams<ParamsN>
     : Params extends [first?: infer Param1, ...infer ParamsN]
       ? [Param1] extends [Primitive]
-        ? [Param1 | undefined, ...PrimitiveParams<ParamsN>]
+        ? readonly [Param1 | undefined, ...PrimitiveParams<ParamsN>]
         : PrimitiveParams<ParamsN>
-      : [];
+      : readonly [];
 
 type DependencyParams<Params extends any[]> = Params['length'] extends 0
-  ? []
+  ? readonly []
   : Params extends [first: infer Param1, ...infer ParamsN]
     ? [Param1] extends [Primitive]
       ? DependencyParams<ParamsN>
-      : [readonly any[], ...DependencyParams<ParamsN>]
+      : readonly [readonly any[], ...DependencyParams<ParamsN>]
     : Params extends [first?: infer Param1, ...infer ParamsN]
       ? [Param1] extends [Primitive]
         ? DependencyParams<ParamsN>
-        : [readonly any[], ...DependencyParams<ParamsN>]
-      : [];
+        : readonly [readonly any[], ...DependencyParams<ParamsN>]
+      : readonly [];
 
 const useManagerProxy = <Method extends keyof Manager>(
   method: Method,
@@ -70,21 +73,29 @@ const useManagerProxy = <Method extends keyof Manager>(
     () =>
       isUndefined(manager)
         ? manager
-        : (manager[method] as any)(...(args ?? [])),
-    // @ts-expect-error recursion is mitigated
+        : (manager[method] as any)(...(args ?? EMPTY_ARRAY)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [manager, depLiterals ?? args ?? [], depArrays ?? []].flat(
-      2,
-    ) as DependencyList,
+    [
+      manager,
+      // @ts-expect-error recursion is mitigated
+      depLiterals ?? args ?? EMPTY_ARRAY,
+      depArrays ?? EMPTY_ARRAY,
+    ].flat(2) as DependencyList,
   );
 };
 
-export const useManager: typeof useManagerDecl = () => useContext(Context);
+export const useCreateManager: typeof useCreateManagerDecl = (
+  create: () => Manager,
+  createDeps: DependencyList = EMPTY_ARRAY,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+): Manager => useMemo(create, createDeps);
+
+export const useManager: typeof useManagerDecl = () => useContext(Context)[0];
 
 export const useSetManagerConfig: typeof useSetManagerConfigDecl = (
   config: ManagerConfig,
-  configDeps: DependencyList = [],
-) => useManagerProxy('setManagerConfig', [config], [], [configDeps]);
+  configDeps: DependencyList = EMPTY_ARRAY,
+) => useManagerProxy('setManagerConfig', [config], EMPTY_ARRAY, [configDeps]);
 
 export const useGetManagerConfig: typeof useGetManagerConfigDecl = (
   withDefaults?: boolean,
@@ -93,7 +104,7 @@ export const useGetManagerConfig: typeof useGetManagerConfigDecl = (
 export const useSetCategory: typeof useSetCategoryDecl = (
   categoryId: Id,
   config: TaskRunConfig,
-  configDeps: DependencyList = [],
+  configDeps: DependencyList = EMPTY_ARRAY,
 ) =>
   useManagerProxy(
     'setCategory',
@@ -116,10 +127,10 @@ export const useDelCategory: typeof useDelCategoryDecl = (categoryId: Id) =>
 export const useSetTask: typeof useSetTaskDecl = (
   taskId: Id,
   task: Task,
-  taskDeps: DependencyList = [],
+  taskDeps: DependencyList = EMPTY_ARRAY,
   categoryId?: string,
   config?: TaskRunConfig,
-  configDeps: DependencyList = [],
+  configDeps: DependencyList = EMPTY_ARRAY,
 ) =>
   useManagerProxy(
     'setTask',
@@ -144,7 +155,7 @@ export const useScheduleTaskRun: typeof useScheduleTaskRunDecl = (
   arg?: string,
   startAfter?: TimestampMs | DurationMs,
   config?: TaskRunConfig,
-  configDeps: DependencyList = [],
+  configDeps: DependencyList = EMPTY_ARRAY,
 ) =>
   useManagerProxy(
     'scheduleTaskRun',
