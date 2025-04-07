@@ -1,11 +1,39 @@
 import {render} from '@testing-library/react';
 import React, {act, StrictMode} from 'react';
-import {ManagerProvider, useManager} from 'tinytick/ui-react';
+import {createManager, type Manager} from 'tinytick';
+import {Provider, useCreateManager, useManager} from 'tinytick/ui-react';
 import {pause} from '../../common.ts';
 
+let manager: Manager;
 let didRender: jest.Mock;
 beforeEach(() => {
+  manager = createManager();
   didRender = jest.fn((rendered) => rendered);
+});
+
+test('useCreateManager', () => {
+  const initManager = jest.fn((tickInterval) =>
+    createManager().setManagerConfig({tickInterval}),
+  );
+  const Test = ({tickInterval}: {tickInterval: number}) => {
+    const manager = useCreateManager(() => initManager(tickInterval));
+    return didRender(
+      <>
+        {tickInterval},{manager.getManagerConfig(true).tickInterval}
+      </>,
+    );
+  };
+
+  const {container, rerender, unmount} = render(<Test tickInterval={200} />);
+  expect(container.textContent).toEqual('200,200');
+
+  rerender(<Test tickInterval={300} />);
+  expect(container.textContent).toEqual('300,200');
+
+  expect(didRender).toHaveBeenCalledTimes(2);
+  expect(initManager).toHaveBeenCalledTimes(1);
+
+  unmount();
 });
 
 describe('Context Hooks', () => {
@@ -15,68 +43,12 @@ describe('Context Hooks', () => {
         didRender(useManager()?.getManagerConfig(true).tickInterval);
 
       const {container, unmount} = render(
-        <ManagerProvider>
+        <Provider manager={manager}>
           <Test />
-        </ManagerProvider>,
+        </Provider>,
       );
-      expect(didRender).toHaveBeenCalledTimes(2);
+      expect(didRender).toHaveBeenCalledTimes(1);
       expect(container.textContent).toEqual('100');
-
-      unmount();
-    });
-
-    test('started', async () => {
-      let count = 0;
-      const Test = () => {
-        const manager = useManager();
-        manager?.setTask('count', async () => count++);
-        manager?.scheduleTaskRun('count', '', 0);
-        return didRender(
-          <>
-            {manager?.getStatus()},{manager?.getScheduledTaskRunIds().length}
-          </>,
-        );
-      };
-
-      const {container, unmount} = render(
-        <ManagerProvider>
-          <Test />
-        </ManagerProvider>,
-      );
-      expect(didRender).toHaveBeenCalledTimes(2);
-      expect(container.textContent).toEqual('1,1');
-      expect(count).toEqual(0);
-
-      await act(async () => await pause(100));
-      expect(count).toEqual(1);
-
-      unmount();
-    });
-
-    test('stopped', async () => {
-      let count = 0;
-      const Test = () => {
-        const manager = useManager();
-        manager?.setTask('count', async () => count++);
-        manager?.scheduleTaskRun('count', '', 0);
-        return didRender(
-          <>
-            {manager?.getStatus()},{manager?.getScheduledTaskRunIds().length}
-          </>,
-        );
-      };
-
-      const {container, unmount} = render(
-        <ManagerProvider started={false}>
-          <Test />
-        </ManagerProvider>,
-      );
-      expect(didRender).toHaveBeenCalledTimes(2);
-      expect(container.textContent).toEqual('0,1');
-      expect(count).toEqual(0);
-
-      await act(async () => await pause(100));
-      expect(count).toEqual(0);
 
       unmount();
     });
@@ -84,7 +56,7 @@ describe('Context Hooks', () => {
     test('strict mode', async () => {
       let count = 0;
       const Test = () => {
-        const manager = useManager();
+        const manager = useManager()?.start();
         manager?.setTask('count', async () => count++);
         manager?.scheduleTaskRun('count', '', 0);
         return didRender(manager?.getScheduledTaskRunIds().length);
@@ -92,13 +64,13 @@ describe('Context Hooks', () => {
 
       const {container, unmount} = render(
         <StrictMode>
-          <ManagerProvider>
+          <Provider manager={manager}>
             <Test />
-          </ManagerProvider>
+          </Provider>
         </StrictMode>,
       );
 
-      expect(didRender).toHaveBeenCalledTimes(4);
+      expect(didRender).toHaveBeenCalledTimes(2);
       expect(container.textContent).toEqual('2');
       expect(count).toEqual(0);
 
@@ -106,30 +78,6 @@ describe('Context Hooks', () => {
       expect(count).toEqual(2);
 
       unmount();
-    });
-
-    test('unmount', async () => {
-      let count = 0;
-      const Test = () => {
-        const manager = useManager();
-        manager?.setTask('count', async () => count++);
-        manager?.scheduleTaskRun('count', '', 0);
-        return didRender(manager?.getScheduledTaskRunIds().length);
-      };
-
-      const {container, unmount} = render(
-        <ManagerProvider>
-          <Test />
-        </ManagerProvider>,
-      );
-
-      expect(didRender).toHaveBeenCalledTimes(2);
-      expect(container.textContent).toEqual('1');
-      expect(count).toEqual(0);
-
-      unmount();
-      await act(async () => await pause(100));
-      expect(count).toEqual(0);
     });
   });
 });
