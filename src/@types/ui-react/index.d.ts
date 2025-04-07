@@ -115,6 +115,8 @@ export function useGetNow(): TimestampMs | undefined;
 export type ManagerProviderProps = {
   /// ManagerProviderProps.started
   readonly started?: boolean;
+  /// ManagerProviderProps.forceStop
+  readonly forceStop?: boolean;
 };
 
 /// ManagerProvider

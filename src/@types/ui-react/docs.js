@@ -879,6 +879,13 @@
    * @since v1.1.0
    */
   /// ManagerProviderProps.started
+  /**
+   * Whether the Manager should be force-stopped when the context is unmounted,
+   * defaulting to `true`.
+   * @category Prop
+   * @since v1.1.0
+   */
+  /// ManagerProviderProps.forceStop
 }
 /**
  * The ManagerProvider component is used to wrap part of an application in a
