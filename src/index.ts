@@ -400,7 +400,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       if (force) {
         status = 0;
         unscheduleTick();
-      } else {
+      } else if (status != 0) {
         status = 2;
       }
     });
