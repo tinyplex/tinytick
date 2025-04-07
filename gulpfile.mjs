@@ -457,6 +457,7 @@ const test = async (
             coverageProvider: 'babel',
             collectCoverageFrom: [
               `${DIST_DIR}/index.js`,
+              `${DIST_DIR}/ui-react/index.js`,
               // Other modules cannot be fully exercised in isolation.
             ],
             coverageReporters: ['text-summary']
