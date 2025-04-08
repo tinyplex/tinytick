@@ -357,7 +357,7 @@ const tsCheck = async (dir) => {
     analyzeTsConfig(`${path.resolve(dir)}/tsconfig.json`, [
       '--excludeDeclarationFiles',
       '--excludePathsFromReport=' +
-        'jest/reporter.js;jest/environment.js;build.ts;ui-react/common.ts;' +
+        'server.mjs;jest/reporter.js;jest/environment.js;build.ts;' +
         TEST_MODULES.map((module) => `${module}.ts`).join(';'),
     ]).unusedExports,
   )
