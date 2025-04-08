@@ -6,9 +6,9 @@
   </h2>
 </section>
 
-<a href='/guides/releases/#v1-0'><em>NEW!</em> v1.0 release</a>
+<a href='/guides/releases/#v1-1'><em>NEW!</em> v1.1 release</a>
 
-<span id="one-with">"Hello World!"</span>
+<span id="one-with">The one with basic React bindings</span>
 
 <a class='start' href='/guides/getting-started/'>Get started</a>
 

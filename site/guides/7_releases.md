@@ -5,6 +5,12 @@ highlighted features.
 
 ---
 
+# v1.1
+
+This release contains a very simple React integration. It's in the ui-react
+module and literally just adds a hook around the createManager function and a
+context component. Stay tuned for more interesting features in the future!
+
 # v1.0
 
 This is the first release! Not much to say, except welcome - and hopefully you

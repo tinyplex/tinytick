@@ -1,4 +1,4 @@
-<p>This is a reverse chronological list of the major TinyTick releases, with highlighted features.</p><hr><h1 id="v1-0">v1.0</h1><p>This is the first release! Not much to say, except welcome - and hopefully you get a chance to try TinyTick out and see if it&#x27;s useful for you.</p><p>Want to get started quickly?</p>
+<p>This is a reverse chronological list of the major TinyTick releases, with highlighted features.</p><hr><h1 id="v1-1">v1.1</h1><p>This release contains a very simple React integration. It&#x27;s in the <a href="https://tinytick.org/api/ui-react/"><code>ui-react</code></a> module and literally just adds a hook around the <a href="https://tinytick.org/api/tinytick/functions/creation/createmanager/"><code>createManager</code></a> function and a context component. Stay tuned for more interesting features in the future!</p><h1 id="v1-0">v1.0</h1><p>This is the first release! Not much to say, except welcome - and hopefully you get a chance to try TinyTick out and see if it&#x27;s useful for you.</p><p>Want to get started quickly?</p>
 
 ```sh
 npm install tinytick
