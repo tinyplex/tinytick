@@ -74,7 +74,7 @@ describe('Context Hooks', () => {
       expect(container.textContent).toEqual('2');
       expect(count).toEqual(0);
 
-      await act(async () => await pause(100));
+      await act(() => pause(100));
       expect(count).toEqual(2);
 
       unmount();
