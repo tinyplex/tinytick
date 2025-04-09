@@ -1,6 +1,6 @@
 import type {Id} from '../@types/index.js';
 
-const EMPTY_STRING = '';
+export const EMPTY_STRING = '';
 
 export const TINYTICK = 'tinytick';
 

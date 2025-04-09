@@ -72,6 +72,9 @@ export type TaskRunInfo = {
   readonly nextTimestamp: TimestampMs;
 };
 
+/// TaskRunIdsListener
+export type TaskRunIdsListener = (manager: Manager) => void;
+
 /// Manager
 export interface Manager {
   /// Manager.setManagerConfig
@@ -138,6 +141,15 @@ export interface Manager {
 
   /// Manager.getRunningTaskRunIds
   getRunningTaskRunIds(): Ids;
+
+  /// Manager.addScheduledTaskRunIdsListener
+  addScheduledTaskRunIdsListener(listener: TaskRunIdsListener): Id;
+
+  /// Manager.addRunningTaskRunIdsListener
+  addRunningTaskRunIdsListener(listener: TaskRunIdsListener): Id;
+
+  /// Manager.delListener
+  delListener(listenerId: Id): Manager;
 
   /// Manager.start
   start(): Manager;

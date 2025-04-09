@@ -9,6 +9,7 @@ import type {
   Task,
   TaskRunConfig,
   TaskRunConfigWithDefaults,
+  TaskRunIdsListener,
   TaskRunInfo,
   TimestampMs,
   createManager as createManagerDecl,
@@ -20,6 +21,7 @@ import {
   arraySplice,
   arraySplit,
 } from './common/array.ts';
+import {getListenerFunctions} from './common/listeners.ts';
 import {IdMap, mapGet, mapKeys, mapNew, mapSet} from './common/map.ts';
 import {
   objFilterUndefined,
@@ -37,6 +39,8 @@ import {
   normalizeTimestamp,
   size,
 } from './common/other.ts';
+import {Pair, pairNewMap} from './common/pairs.ts';
+import {IdSet2} from './common/set.ts';
 import {id, isString} from './common/strings.ts';
 
 type TimestampPair = [taskRunId: Id | null, timestamp: TimestampMs];
@@ -138,11 +142,30 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     [];
   const runningTaskRuns: [taskRunId: Id, finishAfterTimestamp: TimestampMs][] =
     [];
+  const taskRunIdsListeners: Pair<IdSet2> = pairNewMap();
+  const [addListener, callListeners, delListenerImpl] = getListenerFunctions(
+    () => manager,
+  );
+
+  const callTaskRunIdsListeners = (
+    scheduledTaskRunIdsChanged: boolean,
+    runningTaskRunIdsChanged: boolean,
+  ): void => {
+    if (scheduledTaskRunIdsChanged) {
+      callListeners(taskRunIdsListeners[0]);
+    }
+    if (runningTaskRunIdsChanged) {
+      callListeners(taskRunIdsListeners[1]);
+    }
+  };
 
   const tick = () => {
     const now = getNow();
+    let scheduledTaskRunIdsChanged = false;
+    let runningTaskRunIdsChanged = false;
     while (size(scheduledTaskRuns) && scheduledTaskRuns[0][1] <= now) {
       const [taskRunId] = arrayShift(scheduledTaskRuns)!;
+      scheduledTaskRunIdsChanged = true;
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) =>
         ifNotUndefined(
           mapGet(taskMap, taskRun[TASK_ID]),
@@ -165,6 +188,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
             );
             taskRun[RUNNING] = true;
             taskRun[ABORT_CONTROLLER] = new AbortController();
+            runningTaskRunIdsChanged = true;
 
             task(
               taskRun[ARG],
@@ -188,11 +212,17 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       (isUndefined(runningTaskRuns[0][0]) || runningTaskRuns[0][1] <= now)
     ) {
       const [taskRunId] = arrayShift(runningTaskRuns)!;
+      runningTaskRunIdsChanged = true;
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
         abortTaskRun(taskRun);
         rescheduleTaskRun(taskRunId, taskRun, now);
       });
     }
+
+    callTaskRunIdsListeners(
+      scheduledTaskRunIdsChanged,
+      runningTaskRunIdsChanged,
+    );
 
     if (status == 1 || (status == 2 && !isEmpty(scheduledTaskRuns))) {
       scheduleTick();
@@ -218,6 +248,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         now + delay!,
       );
       taskRun[ABORT_CONTROLLER] = undefined;
+      callTaskRunIdsListeners(true, false);
     } else {
       delTaskRun(taskRunId);
     }
@@ -352,6 +383,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         normalizeTimestamp(startAfter),
       ),
     ]);
+    callTaskRunIdsListeners(true, false);
     return taskRunId;
   };
 
@@ -381,6 +413,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
           abortTaskRun(taskRun);
           taskRun[TIMESTAMP_PAIR]![0] = null;
           mapSet(taskRunMap, taskRunId);
+          callTaskRunIdsListeners(false, true);
         }),
       taskRunId,
     );
@@ -388,6 +421,17 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const getScheduledTaskRunIds = (): Ids => getTaskRunIds(scheduledTaskRuns);
 
   const getRunningTaskRunIds = (): Ids => getTaskRunIds(runningTaskRuns);
+
+  const addScheduledTaskRunIdsListener = (listener: TaskRunIdsListener) =>
+    addListener(listener, taskRunIdsListeners[0]);
+
+  const addRunningTaskRunIdsListener = (listener: TaskRunIdsListener) =>
+    addListener(listener, taskRunIdsListeners[1]);
+
+  const delListener = (listenerId: Id): Manager => {
+    delListenerImpl(listenerId);
+    return manager;
+  };
 
   const start = (): Manager =>
     fluent(() => {
@@ -428,6 +472,10 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
     getScheduledTaskRunIds,
     getRunningTaskRunIds,
+
+    addScheduledTaskRunIdsListener,
+    addRunningTaskRunIdsListener,
+    delListener,
 
     start,
     stop,

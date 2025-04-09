@@ -96,8 +96,8 @@
  *
  * - `0`: the Manager is stopped.
  * - `1`: the Manager is running.
- * - `2`: the Manager is stopping - in other words, completing its
- *   outstanding task runs.
+ * - `2`: the Manager is stopping - in other words, completing its outstanding
+ *   task runs.
  * @category Manager
  * @since v1.0.0
  */
@@ -155,8 +155,8 @@
  * run.
  *
  * This can be provided for a specific task run (via the scheduleTaskRun
- * method), all runs of a task (via the setTask method), or for all
- * runs of tasks in a category (via the setCategory method).
+ * method), all runs of a task (via the setTask method), or for all runs of
+ * tasks in a category (via the setCategory method).
  *
  * Individual configuration items for a task run will override that of the Task,
  * which in turn override those of a task category, if any. The Manager itself
@@ -287,7 +287,20 @@
    */
   /// TaskRunInfo.nextTimestamp
 }
-
+/**
+ * The TaskRunIdsListener type describes a function that is used to listen to
+ * changes to task run Ids in the Manager.
+ *
+ * A TaskRunIdsListener is provided when using the
+ * addScheduledTaskRunIdsListener method or the addRunningTaskRunIdsListener.
+ * See those methods for specific examples.
+ *
+ * When called, a TaskRunIdsListener is given a reference to the Manager.
+ * @param manager A reference to the Manager that changed.
+ * @category Listener
+ * @since v1.2.0
+ */
+/// TaskRunIdsListener
 /**
  * The Manager interface represents the main entry point for the TinyTick API,
  * and the object with which you register each Task, and schedule them to run.
@@ -957,6 +970,57 @@
    * @since v1.0.0
    */
   /// Manager.getRunningTaskRunIds
+  /**
+   * The addScheduledTaskRunIdsListener method registers a listener function
+   * with the Manager that will be called whenever its list of scheduled task
+   * run Ids changes.
+   *
+   * The provided listener is a TaskRunIdsListener function, and will be called
+   * with a reference to the Manager.
+   * @param listener The function that will be called whenever the list of
+   * scheduled task run Ids changes.
+   * @returns A unique Id for the listener that can later be used to remove it.
+   * @example
+   * This example registers a listener that responds to new task runs being
+   * scheduled.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * const listenerId = manager.addScheduledTaskRunIdsListener(
+   *   (manager) => {
+   *     console.log(
+   *       manager.getScheduledTaskRunIds().length + ' scheduled Ids',
+   *     );
+   *   },
+   * );
+   *
+   * const taskRunId1 = manager.scheduleTaskRun('ping');
+   * // -> '1 scheduled Ids'
+   * const taskRunId2 = manager.scheduleTaskRun('ping');
+   * // -> '2 scheduled Ids'
+   *
+   * manager.delListener(listenerId);
+   * ```
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.addScheduledTaskRunIdsListener
+  /**
+   * The addRunningTaskRunIdsListener method.
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.addRunningTaskRunIdsListener
+  /**
+   * The delListener method.
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.delListener
   /**
    * The start method begins the 'ticks' of the Manager, which will start the
    * process of managing the schedules, timeouts, and retries of tasks.

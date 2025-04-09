@@ -21,6 +21,9 @@ export const arraySplice = <Value>(
   ...values: Value[]
 ) => array.splice(start, deleteCount, ...values);
 
+export const arrayPush = <Value>(array: Value[], ...values: Value[]): number =>
+  array.push(...values);
+
 export const arrayShift = <Value>(array: Value[]): Value | undefined =>
   array.shift();
 

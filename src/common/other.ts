@@ -34,6 +34,8 @@ export const ifNotUndefined = <Value, Return>(
   otherwise?: () => Return,
 ): Return | undefined => (isUndefined(value) ? otherwise?.() : then(value));
 
+export const isArray = (thing: unknown): thing is any[] => Array.isArray(thing);
+
 export const getUniqueId = (length = 16): Id =>
   arrayReduce<number, Id>(
     getRandomValues(new Uint8Array(length)) as any,
@@ -43,6 +45,9 @@ export const getUniqueId = (length = 16): Id =>
 
 export const size = (arrayOrString: string | unknown[]): number =>
   arrayOrString.length;
+
+export const test = (regex: RegExp, subject: string): boolean =>
+  regex.test(subject);
 
 export const isEmpty = (arrayOrString: string | unknown[]): boolean =>
   size(arrayOrString) == 0;
