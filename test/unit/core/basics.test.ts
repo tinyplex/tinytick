@@ -306,14 +306,14 @@ describe('taskRun', () => {
     test('invalid object', () => {
       manager.setTask('task1', task);
       // @ts-expect-error not an object
-      const taskRunId = manager.scheduleTaskRun('task1', undefined, [])!;
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, [])!;
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({});
     });
 
     test('invalid property', () => {
       manager.setTask('task1', task);
-      // @ts-expect-error property does not exist
-      const taskRunId = manager.scheduleTaskRun('task1', undefined, {
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
+        // @ts-expect-error property does not exist
         invalid: 5000,
       })!;
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({});
@@ -321,7 +321,7 @@ describe('taskRun', () => {
 
     test('invalid maxDuration', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
         maxDuration: -5000,
       })!;
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({});
@@ -339,7 +339,7 @@ describe('taskRun', () => {
 
     test('invalid maxRetries', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
         maxRetries: -5000,
       })!;
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({});
@@ -357,74 +357,39 @@ describe('taskRun', () => {
 
     test('invalid retryDelay', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
         retryDelay: -5000,
       })!;
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({});
-      const taskRunId2 = manager.scheduleTaskRun(
-        'task1',
-        undefined,
-        undefined,
-        {
-          // @ts-expect-error property is numeric
-          retryDelay: false,
-        },
-      )!;
+      const taskRunId2 = manager.scheduleTaskRun('task1', undefined, 0, {
+        // @ts-expect-error property is numeric
+        retryDelay: false,
+      })!;
       expect(manager.getTaskRunConfig(taskRunId2)).toEqual({});
 
-      const taskRunId3 = manager.scheduleTaskRun(
-        'task1',
-        undefined,
-        undefined,
-        {
-          retryDelay: ',',
-        },
-      )!;
+      const taskRunId3 = manager.scheduleTaskRun('task1', undefined, 0, {
+        retryDelay: ',',
+      })!;
       expect(manager.getTaskRunConfig(taskRunId3)).toEqual({});
-      const taskRunId4 = manager.scheduleTaskRun(
-        'task1',
-        undefined,
-        undefined,
-        {
-          retryDelay: '5,',
-        },
-      )!;
+      const taskRunId4 = manager.scheduleTaskRun('task1', undefined, 0, {
+        retryDelay: '5,',
+      })!;
       expect(manager.getTaskRunConfig(taskRunId4)).toEqual({});
-      const taskRunId5 = manager.scheduleTaskRun(
-        'task1',
-        undefined,
-        undefined,
-        {
-          retryDelay: ',5',
-        },
-      )!;
+      const taskRunId5 = manager.scheduleTaskRun('task1', undefined, 0, {
+        retryDelay: ',5',
+      })!;
       expect(manager.getTaskRunConfig(taskRunId5)).toEqual({});
-      const taskRunId6 = manager.scheduleTaskRun(
-        'task1',
-        undefined,
-        undefined,
-        {
-          retryDelay: '',
-        },
-      )!;
+      const taskRunId6 = manager.scheduleTaskRun('task1', undefined, 0, {
+        retryDelay: '',
+      })!;
       expect(manager.getTaskRunConfig(taskRunId6)).toEqual({});
-      const taskRunId7 = manager.scheduleTaskRun(
-        'task1',
-        undefined,
-        undefined,
-        {
-          retryDelay: 'a,5',
-        },
-      )!;
+      const taskRunId7 = manager.scheduleTaskRun('task1', undefined, 0, {
+        retryDelay: 'a,5',
+      })!;
       expect(manager.getTaskRunConfig(taskRunId7)).toEqual({});
-      const taskRunId8 = manager.scheduleTaskRun(
-        'task1',
-        undefined,
-        undefined,
-        {
-          retryDelay: '5.5.5',
-        },
-      )!;
+      const taskRunId8 = manager.scheduleTaskRun('task1', undefined, 0, {
+        retryDelay: '5.5.5',
+      })!;
       expect(manager.getTaskRunConfig(taskRunId8)).toEqual({});
     });
   });
@@ -432,7 +397,7 @@ describe('taskRun', () => {
   describe('getTaskRunConfig', () => {
     test('no defaults', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
         maxDuration: 5000,
       })!;
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({maxDuration: 5000});
@@ -440,7 +405,7 @@ describe('taskRun', () => {
 
     test('with defaults', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
         maxDuration: 5000,
       })!;
       expect(manager.getTaskRunConfig(taskRunId, true)).toEqual({
@@ -485,7 +450,7 @@ describe('taskRun', () => {
     test('with config, task & category defaults', () => {
       manager.setTask('task1', task, 'category1', {maxRetries: 5});
       manager.setCategory('category1', {retryDelay: 5000});
-      const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
         maxDuration: 5000,
       })!;
       expect(manager.getTaskRunConfig(taskRunId, true)).toEqual({
@@ -515,7 +480,7 @@ describe('taskRun', () => {
 
     test('immutable', () => {
       manager.setTask('task1', task);
-      const taskRunId = manager.scheduleTaskRun('task1', undefined, undefined, {
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
         maxDuration: 5000,
       })!;
       const config = manager.getTaskRunConfig(taskRunId);
