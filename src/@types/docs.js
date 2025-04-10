@@ -15,6 +15,14 @@
  */
 /// Id
 /**
+ * The IdOrNull type is a simple alias for the union of a string or `null`
+ * value, where typically `null` indicates a wildcard - such as when used in the
+ * Manager's addTaskRunListener method.
+ * @category Identity
+ * @since v1.2.0
+ */
+/// IdOrNull
+/**
  * The Ids type is a simple alias for an array of strings.
  *
  * It is used to indicate that the strings should be considered to be the keys
@@ -38,8 +46,8 @@
  * The ChangedIds type describes the Ids that were added or removed from a list
  * of Ids.
  *
- * It is a simple object that has a Ids as keys, and an IdAddedOrRemoved
- * number indicating whether Table Id was added (1) or removed (-1).
+ * It is a simple object that has a Ids as keys, and an IdAddedOrRemoved number
+ * indicating whether Table Id was added (1) or removed (-1).
  * @category Identity
  * @since v1.2.0
  */
@@ -316,6 +324,22 @@
  * @since v1.2.0
  */
 /// TaskRunIdsListener
+/**
+ * The TaskRunListener type describes a function that is used to listen to
+ * changes to a specific task run in the Manager.
+ *
+ * A TaskRunListener is provided when using the addTaskRunListener method. See
+ * that method for specific examples.
+ *
+ * When called, a TaskRunListener is given a reference to the Manager, the Id
+ * of the task, and the Id of the task run that changed.
+ * @param manager A reference to the Manager that changed.
+ * @param taskId The Id of the task for the task run that changed.
+ * @param taskRunId The Id of the task run that changed.
+ * @category Listener
+ * @since v1.2.0
+ */
+/// TaskRunListener
 /**
  * The Manager interface represents the main entry point for the TinyTick API,
  * and the object with which you register each Task, and schedule them to run.
@@ -1031,6 +1055,22 @@
    * @since v1.2.0
    */
   /// Manager.addRunningTaskRunIdsListener
+  /**
+   * The addTaskRunListener method registers a listener function with the
+   * Manager that will be called whenever there is a change to a specific task
+   * run.
+   *
+   * The provided listener is a TaskRunListener function, and will be called
+   * with a reference to the Manager, the Id of the task, and the Id of the task
+   * run that changed.
+   * @param taskRunId The Id of the task run.
+   * @param listener The function that will be called whenever the task run
+   * changes.
+   * @returns A unique Id for the listener that can later be used to remove it.
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.addTaskRunListener
   /**
    * The delListener method.
    * @category Listener

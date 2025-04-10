@@ -1,4 +1,10 @@
-import type {Id, Ids, Manager, TaskRunIdsListener} from '../@types/index.d.ts';
+import type {
+  Id,
+  Ids,
+  Manager,
+  TaskRunIdsListener,
+  TaskRunListener,
+} from '../@types/index.d.ts';
 import {arrayForEach, arrayPush} from './array.ts';
 import {collDel, collForEach, collIsEmpty} from './coll.ts';
 import {IdMap, Node, mapGet, mapNew, mapSet, visitTree} from './map.ts';
@@ -25,7 +31,7 @@ export type CallListeners = (
 ) => void;
 
 type DelListener = (id: Id) => Ids;
-type Listener = TaskRunIdsListener;
+type Listener = TaskRunIdsListener | TaskRunListener;
 
 type IdOrBoolean = Id | boolean;
 type IdOrNull = Id | null;

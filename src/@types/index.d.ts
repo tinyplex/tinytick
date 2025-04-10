@@ -3,6 +3,9 @@
 /// Id
 export type Id = string;
 
+/// IdOrNull
+export type IdOrNull = Id | null;
+
 /// Ids
 export type Ids = Id[];
 
@@ -84,6 +87,13 @@ export type TaskRunIdsListener = (
   changedIds: ChangedIds,
 ) => void;
 
+/// TaskRunListener
+export type TaskRunListener = (
+  manager: Manager,
+  taskRunId: Id,
+  reason: string,
+) => void;
+
 /// Manager
 export interface Manager {
   /// Manager.setManagerConfig
@@ -156,6 +166,9 @@ export interface Manager {
 
   /// Manager.addRunningTaskRunIdsListener
   addRunningTaskRunIdsListener(listener: TaskRunIdsListener): Id;
+
+  /// Manager.addTaskRunListener
+  addTaskRunListener(taskRunId: IdOrNull, listener: TaskRunListener): Id;
 
   /// Manager.delListener
   delListener(listenerId: Id): Manager;
