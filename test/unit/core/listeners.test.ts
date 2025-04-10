@@ -32,13 +32,21 @@ afterEach(() => manager.stop());
 describe('taskRunIds', () => {
   test('scheduled, unscheduled', async () => {
     manager.setTask('task1', task);
-    const taskRunId = manager.scheduleTaskRun('task1');
+    const taskRunId = manager.scheduleTaskRun('task1')!;
     manager.delTaskRun(taskRunId!);
 
     manager.start();
     await pauseAndMark(10, 3);
 
-    expect(scheduledLog).toEqual([10, 20, 30]);
+    expect(scheduledLog).toEqual([
+      [taskRunId],
+      {[taskRunId]: 1},
+      [],
+      {[taskRunId]: -1},
+      10,
+      20,
+      30,
+    ]);
     expect(runningLog).toEqual([10, 20, 30]);
   });
 
@@ -50,9 +58,9 @@ describe('taskRunIds', () => {
     await pauseAndMark(10, 3);
 
     expect(scheduledLog).toEqual([
-      10,
       [taskRunId],
       {[taskRunId]: 1},
+      10,
       [],
       {[taskRunId]: -1},
       20,
@@ -69,23 +77,28 @@ describe('taskRunIds', () => {
     ]);
   });
 
-  test('two normal runs', async () => {
+  test('three normal runs', async () => {
     manager.setTask('task1', task);
-    const taskRunId2 = manager.scheduleTaskRun('task1', undefined, 20)!;
+    const taskRunId3 = manager.scheduleTaskRun('task1', undefined, 20)!;
+    const taskRunId2 = manager.scheduleTaskRun('task1', undefined, 15)!;
     const taskRunId1 = manager.scheduleTaskRun('task1', undefined, 0)!;
 
     manager.start();
     await pauseAndMark(10, 4);
 
     expect(scheduledLog).toEqual([
+      [taskRunId3],
+      {[taskRunId3]: 1},
+      [taskRunId2, taskRunId3],
+      {[taskRunId2]: 1},
+      [taskRunId1, taskRunId2, taskRunId3],
+      {[taskRunId1]: 1},
       10,
-      [taskRunId1, taskRunId2],
-      {[taskRunId1]: 1, [taskRunId2]: 1},
-      [taskRunId2],
+      [taskRunId2, taskRunId3],
       {[taskRunId1]: -1},
       20,
       [],
-      {[taskRunId2]: -1},
+      {[taskRunId2]: -1, [taskRunId3]: -1},
       30,
       40,
     ]);
@@ -94,14 +107,14 @@ describe('taskRunIds', () => {
       [taskRunId1],
       {[taskRunId1]: 1},
       20,
-      [taskRunId1, taskRunId2],
-      {[taskRunId2]: 1},
+      [taskRunId1, taskRunId2, taskRunId3],
+      {[taskRunId2]: 1, [taskRunId3]: 1},
       30,
-      [taskRunId2],
+      [taskRunId2, taskRunId3],
       {[taskRunId1]: -1},
       40,
       [],
-      {[taskRunId2]: -1},
+      {[taskRunId2]: -1, [taskRunId3]: -1},
     ]);
   });
 
@@ -115,9 +128,9 @@ describe('taskRunIds', () => {
     await pauseAndMark(10, 3);
 
     expect(scheduledLog).toEqual([
-      10,
       [taskRunId],
       {[taskRunId]: 1},
+      10,
       [],
       {[taskRunId]: -1},
       20,
@@ -145,9 +158,9 @@ describe('taskRunIds', () => {
     await pauseAndMark(10, 3);
 
     expect(scheduledLog).toEqual([
-      10,
       [taskRunId],
       {[taskRunId]: 1},
+      10,
       [],
       {[taskRunId]: -1},
       20,
@@ -176,9 +189,9 @@ describe('taskRunIds', () => {
     await pauseAndMark(10, 5);
 
     expect(scheduledLog).toEqual([
-      10,
       [taskRunId],
       {[taskRunId]: 1},
+      10,
       [],
       {[taskRunId]: -1},
       20,

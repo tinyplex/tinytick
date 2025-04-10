@@ -424,6 +424,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       false,
       insertTimestampPair(0, taskRunId, normalizeTimestamp(startAfter)),
     ]);
+    callTaskRunIdsListeners();
     return taskRunId;
   };
 
@@ -453,6 +454,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
           abortTaskRun(taskRun);
           removeTimestampPair(taskRun[RUNNING] ? 1 : 0, taskRunId);
           mapSet(taskRunMap, taskRunId);
+          callTaskRunIdsListeners();
         }),
       taskRunId,
     );
