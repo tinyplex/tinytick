@@ -35,6 +35,16 @@
  */
 /// IdAddedOrRemoved
 /**
+ * The ChangedIds type describes the Ids that were added or removed from a list
+ * of Ids.
+ *
+ * It is a simple object that has a Ids as keys, and an IdAddedOrRemoved
+ * number indicating whether Table Id was added (1) or removed (-1).
+ * @category Identity
+ * @since v1.2.0
+ */
+/// ChangedIds
+/**
  * The TimestampMs type is a simple alias for a number.
  *
  * It is used to indicate that the number should be considered to be a timestamp
@@ -297,8 +307,11 @@
  * addScheduledTaskRunIdsListener method or the addRunningTaskRunIdsListener.
  * See those methods for specific examples.
  *
- * When called, a TaskRunIdsListener is given a reference to the Manager.
+ * When called, a TaskRunIdsListener is given a reference to the Manager and an
+ * object listing all the Ids that have been added or removed from the list.
  * @param manager A reference to the Manager that changed.
+ * @param idChanges An object listing all the Ids that have been added or
+ * removed from the list.
  * @category Listener
  * @since v1.2.0
  */

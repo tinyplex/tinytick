@@ -31,7 +31,7 @@ const objDel = <Value>(obj: IdObj<Value>, id: Id): IdObj<Value> => {
   return obj;
 };
 
-type IdObj<Value> = {[id: string]: Value};
+export type IdObj<Value> = {[id: string]: Value};
 
 export const objFreeze = object.freeze;
 

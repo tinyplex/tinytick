@@ -1,5 +1,6 @@
 import type {Id} from '../@types/index.js';
-import {collDel, collHas, collIsEmpty} from './coll.ts';
+import {collDel, collForEach, collHas, collIsEmpty} from './coll.ts';
+import {IdObj} from './obj.ts';
 import {ifNotUndefined, isUndefined, size} from './other.ts';
 
 export type IdMap<Value> = Map<Id, Value>;
@@ -35,6 +36,21 @@ export const mapGet = <Key, Value>(
 ): Value | undefined => map?.get(key);
 
 export const mapKeys = <Key>(map: Map<Key, unknown>): Key[] => [...map.keys()];
+
+export const mapToObj = <MapValue, ObjValue = MapValue>(
+  map: IdMap<MapValue> | undefined,
+  valueMapper?: (mapValue: MapValue, id: Id) => ObjValue,
+): IdObj<ObjValue> => {
+  const obj: IdObj<ObjValue> = {};
+  collForEach(
+    map,
+    (mapValue, id) =>
+      (obj[id] = valueMapper
+        ? valueMapper(mapValue, id)
+        : (mapValue as any as ObjValue)),
+  );
+  return obj;
+};
 
 export type Node<Path, Leaf> = Map<Path, Node<Path, Leaf> | Leaf>;
 export const visitTree = <Path, Leaf>(

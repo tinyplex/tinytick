@@ -97,8 +97,8 @@ manager.start();
 ## You can't schedule task runs when the Manager is stopping
 
 Finally, it's important to note that while the Manager is in its 'stopping'
-state, no new task runs can be scheduled. This for the case in which a task recursively schedules a new run of itself.
-Consider this:
+state, no new task runs can be scheduled. This for the case in which a task
+recursively schedules a new run of itself. Consider this:
 
 ```js
 manager.setTask('recurse', async () => manager.scheduleTaskRun('recurse'));

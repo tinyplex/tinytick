@@ -9,6 +9,9 @@ export type Ids = Id[];
 /// IdAddedOrRemoved
 export type IdAddedOrRemoved = 1 | -1;
 
+/// ChangedIds
+export type ChangedIds = {[id: Id]: IdAddedOrRemoved};
+
 /// TimestampMs
 export type TimestampMs = number;
 
@@ -76,7 +79,10 @@ export type TaskRunInfo = {
 };
 
 /// TaskRunIdsListener
-export type TaskRunIdsListener = (manager: Manager) => void;
+export type TaskRunIdsListener = (
+  manager: Manager,
+  changedIds: ChangedIds,
+) => void;
 
 /// Manager
 export interface Manager {

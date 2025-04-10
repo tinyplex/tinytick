@@ -25,7 +25,14 @@ import {
 } from './common/array.ts';
 import {collClear, collIsEmpty} from './common/coll.ts';
 import {getListenerFunctions} from './common/listeners.ts';
-import {IdMap, mapGet, mapKeys, mapNew, mapSet} from './common/map.ts';
+import {
+  IdMap,
+  mapGet,
+  mapKeys,
+  mapNew,
+  mapSet,
+  mapToObj,
+} from './common/map.ts';
 import {
   objFilterUndefined,
   objFreeze,
@@ -57,7 +64,7 @@ type TaskRun = [
   config: TaskRunConfig,
   retry: number,
   running: boolean,
-  timestampPair: TimestampPair,
+  nextTimestamp: TimestampMs,
 
   abortController?: AbortController,
   duration?: DurationMs,
@@ -68,7 +75,7 @@ const TASK_ID = 0;
 const ARG = 1;
 const RETRY = 4;
 const RUNNING = 5;
-const TIMESTAMP_PAIR = 6;
+const NEXT_TIMESTAMP = 6;
 const ABORT_CONTROLLER = 7;
 const DURATION = 8;
 const RETRIES = 9;
@@ -150,7 +157,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     scheduledOrRunning: 0 | 1,
     taskRunId: Id,
     timestamp: TimestampMs,
-  ): TimestampPair => {
+  ): TimestampMs => {
     const taskRunTimestampPairs = allTaskRunTimestampPairs[scheduledOrRunning];
     const nextIndex = taskRunTimestampPairs.findIndex(
       ([, existingTimestamp]) => existingTimestamp > timestamp,
@@ -163,12 +170,25 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       timestampPair,
     );
     idsChanged(allTaskRunIdsChanged[scheduledOrRunning], taskRunId, 1);
-    return timestampPair;
+    return timestamp;
+  };
+
+  const removeTimestampPair = (
+    scheduledOrRunning: 0 | 1,
+    taskRunId: Id,
+  ): void => {
+    const taskRunTimestampPairs = allTaskRunTimestampPairs[scheduledOrRunning];
+    const index = taskRunTimestampPairs.findIndex(([id]) => id == taskRunId);
+    if (index != -1) {
+      arraySplice(taskRunTimestampPairs, index, 1);
+      idsChanged(allTaskRunIdsChanged[scheduledOrRunning], taskRunId, -1);
+    }
   };
 
   const shiftTimestampPair = (scheduledOrRunning: 0 | 1): Id => {
-    const taskRunTimestampPairs = allTaskRunTimestampPairs[scheduledOrRunning];
-    const [taskRunId] = arrayShift(taskRunTimestampPairs)!;
+    const [taskRunId] = arrayShift(
+      allTaskRunTimestampPairs[scheduledOrRunning],
+    )!;
     idsChanged(allTaskRunIdsChanged[scheduledOrRunning], taskRunId, -1);
     return taskRunId;
   };
@@ -185,18 +205,23 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const callTaskRunIdsListeners = (): void =>
     arrayForEach(allTaskRunIdsChanged, (taskRunIdsChanged, i) => {
       if (!collIsEmpty(taskRunIdsChanged)) {
-        callListeners(taskRunIdsListeners[i]);
+        callListeners(
+          taskRunIdsListeners[i],
+          undefined,
+          mapToObj(taskRunIdsChanged),
+        );
         collClear(taskRunIdsChanged);
       }
     });
 
   const tick = () => {
     const now = getNow();
-    callTaskRunIdsListeners();
     const [scheduledTaskRuns, runningTaskRuns] = allTaskRunTimestampPairs;
+    callTaskRunIdsListeners();
+
+    // Check for scheduled task runs overdue to start
     while (size(scheduledTaskRuns) && scheduledTaskRuns[0][1] <= now) {
       const taskRunId = shiftTimestampPair(0);
-      mapSet(allTaskRunIdsChanged[0], taskRunId, 1);
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) =>
         ifNotUndefined(
           mapGet(taskMap, taskRun[TASK_ID]),
@@ -212,14 +237,13 @@ export const createManager: typeof createManagerDecl = (): Manager => {
                   )
                 : [retryDelay];
             }
-            taskRun[TIMESTAMP_PAIR] = insertTimestampPair(
+            taskRun[NEXT_TIMESTAMP] = insertTimestampPair(
               1,
               taskRunId,
               now + taskRun[DURATION],
             );
             taskRun[RUNNING] = true;
             taskRun[ABORT_CONTROLLER] = new AbortController();
-            mapSet(allTaskRunIdsChanged[1], taskRunId, 1);
 
             task(
               taskRun[ARG],
@@ -228,7 +252,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
             )
               .then(() => {
                 if (taskRun[RUNNING]) {
-                  taskRun[TIMESTAMP_PAIR]![0] = null;
+                  removeTimestampPair(1, taskRunId);
                   mapSet(taskRunMap, taskRunId);
                 }
               })
@@ -238,12 +262,10 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         ),
       );
     }
-    while (
-      size(runningTaskRuns) &&
-      (isUndefined(runningTaskRuns[0][0]) || runningTaskRuns[0][1] <= now)
-    ) {
+
+    // Check for running task runs overdue to finish
+    while (size(runningTaskRuns) && runningTaskRuns[0][1] <= now) {
       const taskRunId = shiftTimestampPair(1)!;
-      mapSet(allTaskRunIdsChanged[1], taskRunId, 1);
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
         abortTaskRun(taskRun);
         rescheduleTaskRun(taskRunId, taskRun, now);
@@ -270,7 +292,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       const delay = size(delays) > 1 ? delays.shift() : delays[0];
       taskRun[RETRY]++;
       taskRun[RUNNING] = false;
-      taskRun[TIMESTAMP_PAIR] = insertTimestampPair(0, taskRunId, now + delay!);
+      taskRun[NEXT_TIMESTAMP] = insertTimestampPair(0, taskRunId, now + delay!);
       taskRun[ABORT_CONTROLLER] = undefined;
     } else {
       delTaskRun(taskRunId);
@@ -287,7 +309,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const getTaskRunInfoFromTaskRun = (
     taskRunId: Id,
-    [taskId, arg, , , retry, running, [, nextTimestamp]]: TaskRun,
+    [taskId, arg, , , retry, running, nextTimestamp]: TaskRun,
   ): TaskRunInfo =>
     objFilterUndefined({
       manager,
@@ -429,7 +451,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       (taskRunId) =>
         ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
           abortTaskRun(taskRun);
-          taskRun[TIMESTAMP_PAIR]![0] = null;
+          removeTimestampPair(taskRun[RUNNING] ? 1 : 0, taskRunId);
           mapSet(taskRunMap, taskRunId);
         }),
       taskRunId,
