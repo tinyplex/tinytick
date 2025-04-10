@@ -29,7 +29,7 @@ beforeEach(() => {
 
 afterEach(() => manager.stop());
 
-describe('taskRunIdsListener', () => {
+describe('taskRunIds', () => {
   test('scheduled, unscheduled', async () => {
     manager.setTask('task1', task);
     const taskRunId = manager.scheduleTaskRun('task1');
@@ -110,6 +110,36 @@ describe('taskRunIdsListener', () => {
     const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
       maxDuration: 5,
     })!;
+
+    manager.start();
+    await pauseAndMark(10, 3);
+
+    expect(scheduledLog).toEqual([
+      10,
+      [taskRunId],
+      {[taskRunId]: 1},
+      [],
+      {[taskRunId]: -1},
+      20,
+      30,
+    ]);
+    expect(runningLog).toEqual([
+      10,
+      [taskRunId],
+      {[taskRunId]: 1},
+      20,
+      [],
+      {[taskRunId]: -1},
+      30,
+    ]);
+  });
+
+  test('failing run', async () => {
+    manager.setTask('task1', async () => {
+      await pause(5);
+      throw new Error('');
+    });
+    const taskRunId = manager.scheduleTaskRun('task1')!;
 
     manager.start();
     await pauseAndMark(10, 3);
