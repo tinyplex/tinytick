@@ -21,3 +21,5 @@ export const collForEach = <Value>(
   coll: Coll<Value> | undefined,
   cb: (value: Value, key: any) => void,
 ): void => coll?.forEach(cb);
+
+export const collClear = (coll: Coll<unknown>): void => coll.clear();

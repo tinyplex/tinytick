@@ -6,6 +6,9 @@ export type Id = string;
 /// Ids
 export type Ids = Id[];
 
+/// IdAddedOrRemoved
+export type IdAddedOrRemoved = 1 | -1;
+
 /// TimestampMs
 export type TimestampMs = number;
 

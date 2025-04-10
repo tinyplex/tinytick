@@ -5,7 +5,6 @@
  * @since v1.0.0
  */
 /// tinytick
-
 /**
  * The Id type is a simple alias for a string.
  *
@@ -15,7 +14,6 @@
  * @since v1.0.0
  */
 /// Id
-
 /**
  * The Ids type is a simple alias for an array of strings.
  *
@@ -25,7 +23,17 @@
  * @since v1.0.0
  */
 /// Ids
-
+/**
+ * The IdAddedOrRemoved type describes a change made to an Id in a list of Ids.
+ *
+ * This type is used in other types like ChangedTaskRunIds.
+ *
+ * It is a simple number: a 1 indicates that a given Id was added to a list of
+ * Ids, and a -1 indicates that it was removed.
+ * @category Identity
+ * @since v1.2.0
+ */
+/// IdAddedOrRemoved
 /**
  * The TimestampMs type is a simple alias for a number.
  *
@@ -45,7 +53,6 @@
  * @since v1.0.0
  */
 /// TimestampMs
-
 /**
  * The DurationMs type.
  *
@@ -65,7 +72,6 @@
  * @since v1.0.0
  */
 /// DurationMs
-
 /**
  * The Task type represents a task function that has been registered with the
  * Manager.
@@ -88,7 +94,6 @@
  * @since v1.0.0
  */
 /// Task
-
 /**
  * The ManagerStatus type represents the current status of the Manager.
  *
@@ -102,7 +107,6 @@
  * @since v1.0.0
  */
 /// ManagerStatus
-
 /**
  * The ManagerConfig type represents a configuration you can provide for the
  * Manager as a whole.
@@ -126,7 +130,6 @@
    */
   /// ManagerConfig.tickInterval
 }
-
 /**
  * The ManagerConfigWithDefaults type represents the full configuration for the
  * Manager as a whole, including any defaults of those you yourself have not
@@ -149,7 +152,6 @@
    */
   /// ManagerConfigWithDefaults.tickInterval
 }
-
 /**
  * The TaskRunConfig type represents a configuration you can provide for a task
  * run.
@@ -987,7 +989,7 @@
    * ```js
    * import {createManager} from 'tinytick';
    *
-   * const manager = createManager();
+   * const manager = createManager().start();
    * manager.setTask('ping', async () => await fetch('https://example.org'));
    *
    * const listenerId = manager.addScheduledTaskRunIdsListener(
@@ -998,9 +1000,10 @@
    *   },
    * );
    *
-   * const taskRunId1 = manager.scheduleTaskRun('ping');
-   * // -> '1 scheduled Ids'
-   * const taskRunId2 = manager.scheduleTaskRun('ping');
+   * const taskRunId1 = manager.scheduleTaskRun('ping', '', 200);
+   * const taskRunId2 = manager.scheduleTaskRun('ping', '', 400);
+   *
+   * // ... wait 100ms for first tick
    * // -> '2 scheduled Ids'
    *
    * manager.delListener(listenerId);
@@ -1146,7 +1149,6 @@
    */
   /// Manager.getNow
 }
-
 /**
  * The createManager function creates a Manager, and is the main entry point
  * into the tinytick module.
