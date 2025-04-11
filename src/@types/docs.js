@@ -1076,9 +1076,8 @@
    * );
    *
    * const taskRunId1 = manager.scheduleTaskRun('ping', '', 200);
+   * // -> '1 scheduled Ids'
    * const taskRunId2 = manager.scheduleTaskRun('ping', '', 400);
-   *
-   * // ... wait 100ms for first tick
    * // -> '2 scheduled Ids'
    *
    * manager.delListener(listenerId);
