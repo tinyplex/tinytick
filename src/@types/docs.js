@@ -308,6 +308,18 @@
   /// TaskRunInfo.nextTimestamp
 }
 /**
+ * The TickListener type describes a function that is used to listen to the fact
+ * that the Manager is either about to tick or did just tick.
+ *
+ * A TickListener is provided when using the addWillTickListener method or the
+ * addDidTickListener method. See those methods for specific examples.
+ * @param manager A reference to the Manager that is either about to tick or did
+ * just tick.
+ * @category Listener
+ * @since v1.2.0
+ */
+/// TickListener
+/**
  * The TaskRunIdsListener type describes a function that is used to listen to
  * changes to task run Ids in the Manager.
  *
@@ -331,8 +343,8 @@
  * A TaskRunListener is provided when using the addTaskRunListener method. See
  * that method for specific examples.
  *
- * When called, a TaskRunListener is given a reference to the Manager, the Id
- * of the task, and the Id of the task run that changed.
+ * When called, a TaskRunListener is given a reference to the Manager, the Id of
+ * the task, and the Id of the task run that changed.
  * @param manager A reference to the Manager that changed.
  * @param taskId The Id of the task for the task run that changed.
  * @param taskRunId The Id of the task run that changed.
@@ -1009,6 +1021,32 @@
    * @since v1.0.0
    */
   /// Manager.getRunningTaskRunIds
+  /**
+   * The addWillTickListener method registers a listener function with the
+   * Manager that will be called just before the Manager ticks.
+   *
+   * The provided listener is a TickListener function, and will be called with a
+   * reference to the Manager.
+   * @param listener The function that will be called just before the Manager
+   * ticks.
+   * @returns A unique Id for the listener that can later be used to remove it.
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.addWillTickListener
+  /**
+   * The addDidTickListener method registers a listener function with the
+   * Manager that will be called just after the Manager ticks.
+   *
+   * The provided listener is a TickListener function, and will be called with a
+   * reference to the Manager.
+   * @param listener The function that will be called just after the Manager
+   * ticks.
+   * @returns A unique Id for the listener that can later be used to remove it.
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.addDidTickListener
   /**
    * The addScheduledTaskRunIdsListener method registers a listener function
    * with the Manager that will be called whenever its list of scheduled task
