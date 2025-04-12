@@ -87,10 +87,11 @@ const enum TaskRunReason {
   Errored = 3,
 }
 
-type TaskRunPointer = [taskRunId: Id, timestamp: TimestampMs];
+type TaskRunPointer = [taskId: Id, taskRunId: Id, timestamp: TimestampMs];
 const enum TaskRunPointerPositions {
-  TaskRunId = 0,
-  Timestamp = 1,
+  TaskId = 0,
+  TaskRunId = 1,
+  Timestamp = 2,
 }
 
 type TaskRun = [
@@ -174,8 +175,8 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   );
 
   const allTaskRunPointers: [
-    scheduled: [taskRunId: Id, startAfterTimestamp: TimestampMs][],
-    running: [taskRunId: Id, finishAfterTimestamp: TimestampMs][],
+    scheduled: TaskRunPointer[],
+    running: TaskRunPointer[],
   ] = [[], []];
 
   const allTaskRunIdsChanged: [
@@ -186,17 +187,19 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const insertTaskRunPointer = (
     taskRunState: TaskRunState,
+    taskId: Id,
     taskRunId: Id,
     timestamp: TimestampMs,
   ): TimestampMs => {
-    const taskRunTaskRunPointers = allTaskRunPointers[taskRunState];
-    const nextIndex = taskRunTaskRunPointers.findIndex(
-      ([, existingTimestamp]) => existingTimestamp > timestamp,
+    const taskRunPointers = allTaskRunPointers[taskRunState];
+    const nextIndex = taskRunPointers.findIndex(
+      (existingPointer) =>
+        existingPointer[TaskRunPointerPositions.Timestamp] > timestamp,
     );
-    const taskRunPointer: TaskRunPointer = [taskRunId, timestamp];
+    const taskRunPointer: TaskRunPointer = [taskId, taskRunId, timestamp];
     arraySplice(
-      taskRunTaskRunPointers,
-      nextIndex == -1 ? size(taskRunTaskRunPointers) : nextIndex,
+      taskRunPointers,
+      nextIndex == -1 ? size(taskRunPointers) : nextIndex,
       0,
       taskRunPointer,
     );
@@ -208,23 +211,30 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     taskRunState: TaskRunState,
     taskRunId: Id,
   ): void => {
-    const taskRunTaskRunPointers = allTaskRunPointers[taskRunState];
-    const index = taskRunTaskRunPointers.findIndex(([id]) => id == taskRunId);
+    const taskRunPointers = allTaskRunPointers[taskRunState];
+    const index = taskRunPointers.findIndex(
+      (pointer) => pointer[TaskRunPointerPositions.TaskRunId] == taskRunId,
+    );
     if (index != -1) {
-      arraySplice(taskRunTaskRunPointers, index, 1);
+      arraySplice(taskRunPointers, index, 1);
       taskRunChanged(taskRunState, taskRunId, IdChange.Removed);
     }
   };
 
   const shiftTaskRunPointer = (taskRunState: TaskRunState): Id => {
-    const [taskRunId] = arrayShift(allTaskRunPointers[taskRunState])!;
+    const taskRunId = arrayShift(allTaskRunPointers[taskRunState])![
+      TaskRunPointerPositions.TaskRunId
+    ];
     taskRunChanged(taskRunState, taskRunId, IdChange.Removed);
     return taskRunId;
   };
 
   const getTaskRunIds = (taskRunState: TaskRunState): Ids =>
     arrayFilter(
-      arrayMap(allTaskRunPointers[taskRunState], ([taskRunId]) => taskRunId),
+      arrayMap(
+        allTaskRunPointers[taskRunState],
+        (taskRunPointer) => taskRunPointer[TaskRunPointerPositions.TaskRunId],
+      ),
       isString,
     ) as Ids;
 
@@ -263,14 +273,15 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const tick = () => {
     const now = getNow();
-    const [scheduledTaskRuns, runningTaskRuns] = allTaskRunPointers;
+    const [scheduledTaskRunPointers, runningTaskRunPointers] =
+      allTaskRunPointers;
 
     callListeners(tickListeners[TickPhase.Will]);
 
     // Check for scheduled task runs overdue to start
     while (
-      size(scheduledTaskRuns) &&
-      scheduledTaskRuns[0][TaskRunPointerPositions.Timestamp] <= now
+      size(scheduledTaskRunPointers) &&
+      scheduledTaskRunPointers[0][TaskRunPointerPositions.Timestamp] <= now
     ) {
       const taskRunId = shiftTaskRunPointer(TaskRunState.Scheduled);
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) =>
@@ -290,6 +301,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
             }
             taskRun[TaskRunPositions.NextTimestamp] = insertTaskRunPointer(
               TaskRunState.Running,
+              taskRun[TaskRunPositions.TaskId],
               taskRunId,
               now + taskRun[TaskRunPositions.Duration],
             );
@@ -321,10 +333,10 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
     // Check for running task runs overdue to finish
     while (
-      size(runningTaskRuns) &&
-      runningTaskRuns[0][TaskRunPointerPositions.Timestamp] <= now
+      size(runningTaskRunPointers) &&
+      runningTaskRunPointers[0][TaskRunPointerPositions.Timestamp] <= now
     ) {
-      const taskRunId = shiftTaskRunPointer(TaskRunState.Running)!;
+      const taskRunId = shiftTaskRunPointer(TaskRunState.Running);
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
         abortTaskRun(taskRun);
         rescheduleTaskRun(taskRunId, taskRun, now);
@@ -334,7 +346,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     callChangeListeners();
     callListeners(tickListeners[TickPhase.Did]);
 
-    if (status == 1 || (status == 2 && !isEmpty(scheduledTaskRuns))) {
+    if (status == 1 || (status == 2 && !isEmpty(scheduledTaskRunPointers))) {
       scheduleTick();
     } else {
       unscheduleTick();
@@ -354,6 +366,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       taskRun[TaskRunPositions.Running] = false;
       taskRun[TaskRunPositions.NextTimestamp] = insertTaskRunPointer(
         TaskRunState.Scheduled,
+        taskRun[TaskRunPositions.TaskId],
         taskRunId,
         now + delay!,
       );
@@ -500,6 +513,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       false,
       insertTaskRunPointer(
         TaskRunState.Scheduled,
+        id(taskId),
         taskRunId,
         normalizeTimestamp(startAfter),
       ),
