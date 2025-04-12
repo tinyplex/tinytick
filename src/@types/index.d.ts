@@ -81,6 +81,28 @@ export type TaskRunInfo = {
   readonly nextTimestamp: TimestampMs;
 };
 
+//-/ TaskRunChange
+export const enum TaskRunChange {
+  //-/ TaskRunChange.Scheduled
+  Scheduled = 0,
+  //-/ TaskRunChange.Started
+  Started = 1,
+  //-/ TaskRunChange.Finished
+  Finished = 2,
+}
+
+//-/ TaskRunReason
+export const enum TaskRunReason {
+  //-/ TaskRunReason.None
+  None = 0,
+  //-/ TaskRunReason.Success
+  Success = 1,
+  //-/ TaskRunReason.TimedOut
+  TimedOut = 2,
+  //-/ TaskRunReason.Errored
+  Errored = 3,
+}
+
 /// TickListener
 export type TickListener = (manager: Manager) => void;
 
@@ -93,8 +115,10 @@ export type TaskRunIdsListener = (
 /// TaskRunListener
 export type TaskRunListener = (
   manager: Manager,
+  taskId: Id,
   taskRunId: Id,
-  reason: string,
+  change: TaskRunChange,
+  reason: TaskRunReason,
 ) => void;
 
 /// Manager

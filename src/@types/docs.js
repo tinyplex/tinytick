@@ -346,7 +346,6 @@
  * When called, a TaskRunListener is given a reference to the Manager, the Id of
  * the task, and the Id of the task run that changed.
  * @param manager A reference to the Manager that changed.
- * @param taskId The Id of the task for the task run that changed.
  * @param taskRunId The Id of the task run that changed.
  * @category Listener
  * @since v1.2.0
