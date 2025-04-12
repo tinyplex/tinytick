@@ -17,7 +17,7 @@
 /**
  * The IdOrNull type is a simple alias for the union of a string or `null`
  * value, where typically `null` indicates a wildcard - such as when used in the
- * Manager's addTaskRunListener method.
+ * Manager's addScheduledTaskRunListener method.
  * @category Identity
  * @since v1.2.0
  */
@@ -308,6 +308,49 @@
   /// TaskRunInfo.nextTimestamp
 }
 /**
+ * The TaskRunReason enum is used to indicate why a task run changed, most
+ * usefully when it finishes.
+ *
+ * The enum is used to listen to just certain types of task run completions
+ * (success, timeouts, or errors), and is also passed to a TaskRunListener
+ * function.
+ * @category TaskRun
+ * @since v1.2.0
+ */
+/// TaskRunReason
+{
+  /**
+   * Indicates that the task run was scheduled.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// TaskRunReason.Scheduled
+  /**
+   * Indicates that the task run was started.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// TaskRunReason.Started
+  /**
+   * Indicates that the task run finished successfully.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// TaskRunReason.Succeeded
+  /**
+   * Indicates that the task run finished because it timed out.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// TaskRunReason.TimedOut
+  /**
+   * Indicates that the task run finished because it threw an error.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// TaskRunReason.Errored
+}
+/**
  * The TickListener type describes a function that is used to listen to the fact
  * that the Manager is either about to tick or did just tick.
  *
@@ -340,13 +383,16 @@
  * The TaskRunListener type describes a function that is used to listen to
  * changes to a specific task run in the Manager.
  *
- * A TaskRunListener is provided when using the addTaskRunListener method. See
- * that method for specific examples.
+ * A TaskRunListener is provided when using the addScheduledTaskRunListener
+ * method, the addStartedTaskRunListener method, and the
+ * addFinishedTaskRunListener method. See those methods for specific examples.
  *
  * When called, a TaskRunListener is given a reference to the Manager, the Id of
- * the task, and the Id of the task run that changed.
+ * the task, the Id of the task run that changed, and the reason for the change.
  * @param manager A reference to the Manager that changed.
+ * @param taskId The Id of the task that changed.
  * @param taskRunId The Id of the task run that changed.
+ * @param reason The reason the task run changed.
  * @category Listener
  * @since v1.2.0
  */
@@ -1092,21 +1138,73 @@
    */
   /// Manager.addRunningTaskRunIdsListener
   /**
-   * The addTaskRunListener method registers a listener function with the
-   * Manager that will be called whenever there is a change to a specific task
-   * run.
+   * The addScheduledTaskRunListener method registers a listener function with
+   * the Manager that will be called whenever a relevant task run is scheduled.
    *
    * The provided listener is a TaskRunListener function, and will be called
-   * with a reference to the Manager, the Id of the task, and the Id of the task
-   * run that changed.
-   * @param taskRunId The Id of the task run.
-   * @param listener The function that will be called whenever the task run
-   * changes.
+   * with a reference to the Manager, the Id of the task, the Id of the task run
+   * that was scheduled, and the reason for the test run's change (which will
+   * always be `0`, meaning 'scheduled').
+   *
+   * You can either listen for a run of a single task being scheduled (by
+   * specifying the task Id as the method's first parameter) or for a run of any
+   * task being scheduled (by providing a `null` wildcard).
+   * @param taskId The Id of the task, or `null` as a wildcard.
+   * @param listener The function that will be called whenever a matching task
+   * run has been scheduled.
    * @returns A unique Id for the listener that can later be used to remove it.
    * @category Listener
    * @since v1.2.0
    */
-  /// Manager.addTaskRunListener
+  /// Manager.addScheduledTaskRunListener
+  /**
+   * The addStartedTaskRunListener method registers a listener function with the
+   * Manager that will be called whenever a relevant task run is started.
+   *
+   * The provided listener is a TaskRunListener function, and will be called
+   * with a reference to the Manager, the Id of the task, the Id of the task
+   * run that was started, and the reason for the test run's change (which will
+   * always be `1`, meaning 'started').
+   *
+   * You can either listen for a run of a single task starting (by specifying
+   * the task Id as the method's first parameter) or for a run of any task
+   * starting (by providing a `null` wildcard). You can also specify a specific
+   * task run Id to listen for with the second parameter, or `null` to listen
+   * for any matching task run starting.
+   * @param taskId The Id of the task, or `null` as a wildcard.
+   * @param taskRunId The Id of the task run, or `null` as a wildcard.
+   * @param listener The function that will be called whenever a matching task
+   * run has been started.
+   * @returns A unique Id for the listener that can later be used to remove it.
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.addStartedTaskRunListener
+  /**
+   * The addFinishedTaskRunListener method registers a listener function with
+   * the Manager that will be called whenever a relevant task run is finished.
+   *
+   * The provided listener is a TaskRunListener function, and will be called
+   * with a reference to the Manager, the Id of the task, the Id of the task run
+   * that was finished, and the reason for its completion. This will indicate
+   * either success or failure (from timing out or throwing an error).
+   *
+   * You can either listen for a run of a single task finishing (by specifying
+   * the task Id as the method's first parameter) or for a run of any task
+   * finishing (by providing a `null` wildcard). You can also specify a specific
+   * task run Id to listen for with the second parameter, or `null` to listen
+   * for any matching task run finishing. And finally, you can choose to listen
+   * only to task runs that have finished for a specific reason.
+   * @param taskId The Id of the task, or `null` as a wildcard.
+   * @param taskRunId The Id of the task run, or `null` as a wildcard.
+   * @param reason The reason the task run finished, or `null` as a wildcard.
+   * @param listener The function that will be called whenever a matching task
+   * run has finished.
+   * @returns A unique Id for the listener that can later be used to remove it.
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.addFinishedTaskRunListener
   /**
    * The delListener method.
    * @category Listener

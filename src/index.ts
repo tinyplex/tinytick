@@ -74,17 +74,12 @@ const enum TaskRunState {
   Running = 1,
 }
 
-const enum TaskRunChange {
+const enum TaskRunReason {
   Scheduled = 0,
   Started = 1,
-  Finished = 2,
-}
-
-const enum TaskRunReason {
-  None = 0,
-  Success = 1,
-  TimedOut = 2,
-  Errored = 3,
+  Succeeded = 2,
+  TimedOut = 3,
+  Errored = 4,
 }
 
 type TaskRunPointer = [taskId: Id, taskRunId: Id, timestamp: TimestampMs];

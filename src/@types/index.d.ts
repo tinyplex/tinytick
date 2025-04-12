@@ -81,16 +81,18 @@ export type TaskRunInfo = {
   readonly nextTimestamp: TimestampMs;
 };
 
-//-/ TaskRunReason
+/// TaskRunReason
 export const enum TaskRunReason {
-  //-/ TaskRunReason.None
-  None = 0,
-  //-/ TaskRunReason.Success
-  Success = 1,
-  //-/ TaskRunReason.TimedOut
-  TimedOut = 2,
-  //-/ TaskRunReason.Errored
-  Errored = 3,
+  /// TaskRunReason.Scheduled
+  Scheduled = 0,
+  /// TaskRunReason.Started
+  Started = 1,
+  /// TaskRunReason.Succeeded
+  Succeeded = 2,
+  /// TaskRunReason.TimedOut
+  TimedOut = 3,
+  /// TaskRunReason.Errored
+  Errored = 4,
 }
 
 /// TickListener
@@ -189,8 +191,23 @@ export interface Manager {
   /// Manager.addRunningTaskRunIdsListener
   addRunningTaskRunIdsListener(listener: TaskRunIdsListener): Id;
 
-  /// Manager.addTaskRunListener
-  addTaskRunListener(taskRunId: IdOrNull, listener: TaskRunListener): Id;
+  /// Manager.addScheduledTaskRunListener
+  addScheduledTaskRunListener(taskId: IdOrNull, listener: TaskRunListener): Id;
+
+  /// Manager.addStartedTaskRunListener
+  addStartedTaskRunListener(
+    taskId: IdOrNull,
+    taskRunId: IdOrNull,
+    listener: TaskRunListener,
+  ): Id;
+
+  /// Manager.addFinishedTaskRunListener
+  addFinishedTaskRunListener(
+    taskId: IdOrNull,
+    taskRunId: IdOrNull,
+    reason: TaskRunReason | null,
+    listener: TaskRunListener,
+  ): Id;
 
   /// Manager.delListener
   delListener(listenerId: Id): Manager;
