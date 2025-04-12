@@ -203,12 +203,13 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       0,
       taskRunPointer,
     );
-    taskRunChanged(taskRunState, taskRunId, IdChange.Added);
+    taskRunChanged(taskRunState, taskId, taskRunId, IdChange.Added);
     return timestamp;
   };
 
   const removeTaskRunPointer = (
     taskRunState: TaskRunState,
+    taskId: Id,
     taskRunId: Id,
   ): void => {
     const taskRunPointers = allTaskRunPointers[taskRunState];
@@ -217,16 +218,14 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     );
     if (index != -1) {
       arraySplice(taskRunPointers, index, 1);
-      taskRunChanged(taskRunState, taskRunId, IdChange.Removed);
+      taskRunChanged(taskRunState, taskId, taskRunId, IdChange.Removed);
     }
   };
 
-  const shiftTaskRunPointer = (taskRunState: TaskRunState): Id => {
-    const taskRunId = arrayShift(allTaskRunPointers[taskRunState])![
-      TaskRunPointerPositions.TaskRunId
-    ];
-    taskRunChanged(taskRunState, taskRunId, IdChange.Removed);
-    return taskRunId;
+  const shiftTaskRunPointer = (taskRunState: TaskRunState): [Id, Id] => {
+    const [taskId, taskRunId] = arrayShift(allTaskRunPointers[taskRunState])!;
+    taskRunChanged(taskRunState, taskId, taskRunId, IdChange.Removed);
+    return [taskId, taskRunId];
   };
 
   const getTaskRunIds = (taskRunState: TaskRunState): Ids =>
@@ -240,6 +239,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const taskRunChanged = (
     taskRunState: TaskRunState,
+    taskId: Id,
     taskRunId: Id,
     addedOrRemoved: IdAddedOrRemoved,
   ): void => {
@@ -283,10 +283,10 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       size(scheduledTaskRunPointers) &&
       scheduledTaskRunPointers[0][TaskRunPointerPositions.Timestamp] <= now
     ) {
-      const taskRunId = shiftTaskRunPointer(TaskRunState.Scheduled);
+      const [taskId, taskRunId] = shiftTaskRunPointer(TaskRunState.Scheduled);
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) =>
         ifNotUndefined(
-          mapGet(taskMap, taskRun[TaskRunPositions.TaskId]),
+          mapGet(taskMap, taskId),
           ([task]) => {
             if (isUndefined(taskRun[TaskRunPositions.Duration])) {
               const config = getTaskRunConfig(taskRunId, true);
@@ -301,7 +301,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
             }
             taskRun[TaskRunPositions.NextTimestamp] = insertTaskRunPointer(
               TaskRunState.Running,
-              taskRun[TaskRunPositions.TaskId],
+              taskId,
               taskRunId,
               now + taskRun[TaskRunPositions.Duration],
             );
@@ -315,7 +315,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
             )
               .then(() => {
                 if (taskRun[TaskRunPositions.Running]) {
-                  removeTaskRunPointer(TaskRunState.Running, taskRunId);
+                  removeTaskRunPointer(TaskRunState.Running, taskId, taskRunId);
                   callChangeListeners();
                   mapSet(taskRunMap, taskRunId);
                 }
@@ -336,7 +336,9 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       size(runningTaskRunPointers) &&
       runningTaskRunPointers[0][TaskRunPointerPositions.Timestamp] <= now
     ) {
-      const taskRunId = shiftTaskRunPointer(TaskRunState.Running);
+      const taskRunId = shiftTaskRunPointer(TaskRunState.Running)[
+        TaskRunPointerPositions.TaskRunId
+      ];
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
         abortTaskRun(taskRun);
         rescheduleTaskRun(taskRunId, taskRun, now);
@@ -383,6 +385,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         taskRun[TaskRunPositions.Running]
           ? TaskRunState.Running
           : TaskRunState.Scheduled,
+        taskRun[TaskRunPositions.TaskId],
         taskRunId,
       );
       mapSet(taskRunMap, taskRunId);

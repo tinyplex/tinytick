@@ -45,7 +45,7 @@ describe('ticks', () => {
   });
 });
 
-describe('taskRunIds', () => {
+describe('common sequences', () => {
   beforeEach(() => {
     manager.addScheduledTaskRunIdsListener((manager, changedIds) =>
       log.push({scheduledIds: manager.getScheduledTaskRunIds()}, {changedIds}),

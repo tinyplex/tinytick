@@ -81,16 +81,6 @@ export type TaskRunInfo = {
   readonly nextTimestamp: TimestampMs;
 };
 
-//-/ TaskRunChange
-export const enum TaskRunChange {
-  //-/ TaskRunChange.Scheduled
-  Scheduled = 0,
-  //-/ TaskRunChange.Started
-  Started = 1,
-  //-/ TaskRunChange.Finished
-  Finished = 2,
-}
-
 //-/ TaskRunReason
 export const enum TaskRunReason {
   //-/ TaskRunReason.None
@@ -117,7 +107,6 @@ export type TaskRunListener = (
   manager: Manager,
   taskId: Id,
   taskRunId: Id,
-  change: TaskRunChange,
   reason: TaskRunReason,
 ) => void;
 
