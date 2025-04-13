@@ -326,6 +326,13 @@
    */
   /// TaskRunReason.Scheduled
   /**
+   * Indicates that the task run was unscheduled - in other words, deleted while
+   * scheduled.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// TaskRunReason.Unscheduled
+  /**
    * Indicates that the task run was started.
    * @category Enum
    * @since v1.2.0
@@ -349,6 +356,13 @@
    * @since v1.2.0
    */
   /// TaskRunReason.Errored
+  /**
+   * Indicates that the task run finished because the task run was deleted while
+   * running.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// TaskRunReason.Deleted
 }
 /**
  * The TickListener type describes a function that is used to listen to the fact

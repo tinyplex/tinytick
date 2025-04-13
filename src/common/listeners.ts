@@ -1,5 +1,6 @@
 import type {
   Id,
+  IdOrNull,
   Ids,
   Manager,
   TaskRunIdsListener,
@@ -15,30 +16,25 @@ import {EMPTY_STRING} from './strings.ts';
 
 export type IdSetNode = Node<IdOrNull, IdSet> | IdSet;
 export type ListenerArgument = IdOrNull | boolean | number | undefined;
-export type PathGetters = ((...ids: Ids) => Ids)[];
-export type ExtraArgsGetter = (ids: Ids) => any[];
 export type AddListener = (
   listener: Listener,
   idSetNode: IdSetNode,
   path?: ListenerArgument[],
-  pathGetters?: PathGetters,
-  extraArgsGetter?: ExtraArgsGetter,
 ) => Id;
 export type CallListeners = (
   idSetNode: IdSetNode,
-  ids?: Ids,
+  ids?: IdOrNumber[],
   ...extra: any[]
 ) => void;
 
 type DelListener = (id: Id) => Ids;
 type Listener = TaskRunIdsListener | TaskRunListener;
 
-type IdOrBoolean = Id | boolean;
-type IdOrNull = Id | null;
+type IdOrNumber = Id | number;
 
 const getWildcardedLeaves = (
   deepIdSet: IdSetNode,
-  path: IdOrBoolean[] = [EMPTY_STRING],
+  path: IdOrNumber[] = [EMPTY_STRING],
 ): IdSet[] => {
   const leaves: IdSet[] = [];
   const deep = (node: IdSetNode, p: number): number | void =>
@@ -65,26 +61,17 @@ export const getListenerFunctions = (
   let thing: Manager;
 
   const [getId, releaseId] = getPoolFunctions();
-  const allListeners: IdMap<
-    [Listener, IdSetNode, ListenerArgument[], PathGetters, ExtraArgsGetter]
-  > = mapNew();
+  const allListeners: IdMap<[Listener, IdSetNode, ListenerArgument[]]> =
+    mapNew();
 
   const addListener = (
     listener: Listener,
     idSetNode: IdSetNode,
     path?: ListenerArgument[],
-    pathGetters: PathGetters = [],
-    extraArgsGetter: ExtraArgsGetter = () => [],
   ): Id => {
     thing ??= getThing();
     const id = getId(1);
-    mapSet(allListeners, id, [
-      listener,
-      idSetNode,
-      path,
-      pathGetters,
-      extraArgsGetter,
-    ]);
+    mapSet(allListeners, id, [listener, idSetNode, path]);
     setAdd(
       visitTree(
         idSetNode as Node<IdOrNull, IdSet>,
@@ -98,7 +85,7 @@ export const getListenerFunctions = (
 
   const callListeners = (
     idSetNode: IdSetNode,
-    ids?: Ids,
+    ids?: IdOrNumber[],
     ...extraArgs: any[]
   ): void =>
     arrayForEach(getWildcardedLeaves(idSetNode, ids), (set) =>

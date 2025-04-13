@@ -85,14 +85,18 @@ export type TaskRunInfo = {
 export const enum TaskRunReason {
   /// TaskRunReason.Scheduled
   Scheduled = 0,
+  /// TaskRunReason.Unscheduled
+  Unscheduled = 1,
   /// TaskRunReason.Started
-  Started = 1,
+  Started = 2,
   /// TaskRunReason.Succeeded
-  Succeeded = 2,
+  Succeeded = 3,
   /// TaskRunReason.TimedOut
-  TimedOut = 3,
+  TimedOut = 4,
   /// TaskRunReason.Errored
-  Errored = 4,
+  Errored = 5,
+  /// TaskRunReason.Deleted
+  Deleted = 6,
 }
 
 /// TickListener
