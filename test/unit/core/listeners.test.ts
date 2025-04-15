@@ -53,6 +53,19 @@ describe('common sequences', () => {
     manager.addRunningTaskRunIdsListener((manager, changedIds) =>
       log.push({runningIds: manager.getRunningTaskRunIds()}, {changedIds}),
     );
+    // manager.addStartedTaskRunListener(
+    //   null,
+    //   null,
+    //   (manager, taskId, taskRunId, reason) =>
+    //     log.push({started: [taskId, taskRunId, reason]}),
+    // );
+    // manager.addFinishedTaskRunListener(
+    //   null,
+    //   null,
+    //   null,
+    //   (manager, taskId, taskRunId, reason) =>
+    //     log.push({started: [taskId, taskRunId, reason]}),
+    // );
   });
 
   test('scheduled, unscheduled', async () => {

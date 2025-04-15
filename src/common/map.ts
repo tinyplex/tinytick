@@ -6,6 +6,7 @@ import {ifNotUndefined, isUndefined, size} from './other.ts';
 export type IdMap<Value> = Map<Id, Value>;
 export type IdMap2<Value> = IdMap<IdMap<Value>>;
 export type IdMap3<Value> = IdMap<IdMap2<Value>>;
+export type IdMap4<Value> = IdMap<IdMap3<Value>>;
 
 export const mapNew = /* @__PURE__ */ <Key, Value>(
   entries?: [Key, Value][],
