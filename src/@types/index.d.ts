@@ -89,8 +89,10 @@ export const enum TaskRunChange {
   Started = 1,
   /// TaskRunChange.Finished
   Finished = 2,
+  /// TaskRunChange.Unscheduled
+  Unscheduled = 3,
   /// TaskRunChange.Deleted
-  Deleted = 3,
+  Deleted = 4,
 }
 
 /// TaskRunReason

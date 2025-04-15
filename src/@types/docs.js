@@ -340,6 +340,12 @@
    */
   /// TaskRunChange.Finished
   /**
+   * Indicates that the task run was unscheduled by being deleted.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// TaskRunChange.Unscheduled
+  /**
    * Indicates that the task run was removed, because it previously finished
    * (with no further retries) or was explicitly deleted.
    * @category Enum

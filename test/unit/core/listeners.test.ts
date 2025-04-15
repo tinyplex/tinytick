@@ -53,19 +53,14 @@ describe('common sequences', () => {
     manager.addRunningTaskRunIdsListener((manager, changedIds) =>
       log.push({runningIds: manager.getRunningTaskRunIds()}, {changedIds}),
     );
-    // manager.addStartedTaskRunListener(
-    //   null,
-    //   null,
-    //   (manager, taskId, taskRunId, reason) =>
-    //     log.push({started: [taskId, taskRunId, reason]}),
-    // );
-    // manager.addFinishedTaskRunListener(
-    //   null,
-    //   null,
-    //   null,
-    //   (manager, taskId, taskRunId, reason) =>
-    //     log.push({started: [taskId, taskRunId, reason]}),
-    // );
+    manager.addTaskRunListener(
+      null,
+      null,
+      null,
+      null,
+      (manager, taskId, taskRunId, change, reason) =>
+        log.push({taskRun: [taskId, taskRunId, change, reason]}),
+    );
   });
 
   test('scheduled, unscheduled', async () => {
@@ -79,14 +74,16 @@ describe('common sequences', () => {
     expect(log).toEqual([
       {scheduledIds: [taskRunId]},
       {changedIds: {[taskRunId]: 1}},
+      {taskRun: ['task1', taskRunId, 0, 0]},
       {scheduledIds: []},
       {changedIds: {[taskRunId]: -1}},
+      {taskRun: ['task1', taskRunId, 3, 5]},
       {willTick: 1},
       {didTick: 1},
     ]);
   });
 
-  test('normal run', async () => {
+  test.only('normal run', async () => {
     manager.setTask('task1', task);
     const taskRunId = manager.scheduleTaskRun('task1')!;
 
@@ -96,14 +93,17 @@ describe('common sequences', () => {
     expect(log).toEqual([
       {scheduledIds: [taskRunId]},
       {changedIds: {[taskRunId]: 1}},
+      {taskRun: ['task1', taskRunId, 0, 0]},
       {willTick: 1},
       {scheduledIds: []},
       {changedIds: {[taskRunId]: -1}},
       {runningIds: [taskRunId]},
       {changedIds: {[taskRunId]: 1}},
+      {taskRun: ['task1', taskRunId, 1, 1]},
       {didTick: 1},
       {runningIds: []},
       {changedIds: {[taskRunId]: -1}},
+      {taskRun: ['task1', taskRunId, 2, 2]},
       {willTick: 2},
       {didTick: 2},
     ]);

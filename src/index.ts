@@ -79,7 +79,8 @@ const enum TaskRunChangeValues {
   Scheduled = 0,
   Started = 1,
   Finished = 2,
-  Deleted = 3,
+  Unscheduled = 3,
+  Deleted = 4,
 }
 
 const enum TaskRunReasonValues {
@@ -341,7 +342,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
               taskId,
               taskRunId,
               now + taskRun[TaskRunPositions.Duration],
-              [TaskRunChangeValues.Started, TaskRunReasonValues.Succeeded],
+              [TaskRunChangeValues.Started, TaskRunReasonValues.Started],
             );
             taskRun[TaskRunPositions.Running] = true;
             taskRun[TaskRunPositions.AbortController] = new AbortController();
@@ -438,8 +439,10 @@ export const createManager: typeof createManagerDecl = (): Manager => {
           : TaskRunState.Scheduled,
         taskRun[TaskRunPositions.TaskId],
         taskRunId,
-        hasReason && taskRun[TaskRunPositions.Running]
-          ? [TaskRunChangeValues.Finished, TaskRunReasonValues.Deleted]
+        hasReason
+          ? taskRun[TaskRunPositions.Running]
+            ? [TaskRunChangeValues.Finished, TaskRunReasonValues.Deleted]
+            : [TaskRunChangeValues.Unscheduled, TaskRunReasonValues.Deleted]
           : undefined,
       );
       mapSet(taskRunMap, taskRunId);
@@ -573,6 +576,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         id(taskId),
         taskRunId,
         normalizeTimestamp(startAfter),
+        [TaskRunChangeValues.Scheduled, TaskRunReasonValues.Scheduled],
       ),
     ]);
     callChangeListeners();
