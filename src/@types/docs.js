@@ -1152,33 +1152,13 @@
    */
   /// Manager.addRunningTaskRunIdsListener
   /**
-   * The addScheduledTaskRunListener method registers a listener function with
-   * the Manager that will be called whenever a relevant task run is scheduled.
-   *
-   * The provided listener is a TaskRunListener function, and will be called
-   * with a reference to the Manager, the Id of the task, the Id of the task run
-   * that was scheduled, and the reason for the test run's change (which will
-   * always be `0`, meaning 'scheduled').
-   *
-   * You can either listen for a run of a single task being scheduled (by
-   * specifying the task Id as the method's first parameter) or for a run of any
-   * task being scheduled (by providing a `null` wildcard).
-   * @param taskId The Id of the task, or `null` as a wildcard.
-   * @param listener The function that will be called whenever a matching task
-   * run has been scheduled.
-   * @returns A unique Id for the listener that can later be used to remove it.
-   * @category Listener
-   * @since v1.2.0
-   */
-  /// Manager.addScheduledTaskRunListener
-  /**
    * The addStartedTaskRunListener method registers a listener function with the
    * Manager that will be called whenever a relevant task run is started.
    *
    * The provided listener is a TaskRunListener function, and will be called
    * with a reference to the Manager, the Id of the task, the Id of the task
    * run that was started, and the reason for the test run's change (which will
-   * always be `1`, meaning 'started').
+   * always be `0`, meaning 'success').
    *
    * You can either listen for a run of a single task starting (by specifying
    * the task Id as the method's first parameter) or for a run of any task
@@ -1201,7 +1181,8 @@
    * The provided listener is a TaskRunListener function, and will be called
    * with a reference to the Manager, the Id of the task, the Id of the task run
    * that was finished, and the reason for its completion. This will indicate
-   * either success or failure (from timing out or throwing an error).
+   * either success or failure (from timing out, throwing an error, or being
+   * deleted while running).
    *
    * You can either listen for a run of a single task finishing (by specifying
    * the task Id as the method's first parameter) or for a run of any task

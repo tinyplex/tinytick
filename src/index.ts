@@ -54,8 +54,8 @@ import {
   normalizeTimestamp,
   size,
 } from './common/other.ts';
-import {Pair, pairNewMap} from './common/pairs.ts';
-import {IdSet, IdSet2, setAdd, setNew} from './common/set.ts';
+import {Pair, pairNewMap, pairNewSet} from './common/pairs.ts';
+import {IdSet, IdSet2, setAdd} from './common/set.ts';
 import {id, isString} from './common/strings.ts';
 
 type ChangedIdsMap = IdMap<IdAddedOrRemoved>;
@@ -74,14 +74,16 @@ const enum TaskRunState {
   Running = 1,
 }
 
+const enum TaskRunReasonGroups {
+  Started = 0,
+  Finished = 1,
+}
+
 const enum TaskRunReasonValues {
-  Scheduled = 0,
-  Unscheduled = 1,
-  Started = 2,
-  Succeeded = 3,
-  TimedOut = 4,
-  Errored = 5,
-  Deleted = 6,
+  Succeeded = 0,
+  TimedOut = 1,
+  Errored = 2,
+  Deleted = 3,
 }
 
 type TaskRunPointer = [taskId: Id, taskRunId: Id, timestamp: TimestampMs];
@@ -165,7 +167,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const taskRunMap: IdMap<TaskRun> = mapNew();
   const tickListeners: Pair<IdSet2> = pairNewMap();
   const taskRunIdsListeners: Pair<IdSet2> = pairNewMap();
-  const taskRunListeners: IdMap3<IdSet> = mapNew();
+  const taskRunListeners: Pair<IdMap3<IdSet>> = pairNewMap();
 
   const [addListener, callListeners, delListenerImpl] = getListenerFunctions(
     () => manager,
@@ -179,17 +181,17 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const allTaskRunIdsChanged: [
     scheduled: ChangedIdsMap,
     running: ChangedIdsMap,
-  ] = [mapNew(), mapNew()];
-  const taskRunChanges: Set<
-    [taskId: Id, taskRunId: Id, reason: TaskRunReasonValues]
-  > = setNew();
+  ] = pairNewMap();
+  const allTaskRunChanges: Pair<
+    Set<[taskId: Id, taskRunId: Id, reason: TaskRunReasonValues]>
+  > = pairNewSet();
 
   const insertTaskRunPointer = (
     taskRunState: TaskRunState,
     taskId: Id,
     taskRunId: Id,
     timestamp: TimestampMs,
-    reason: TaskRunReasonValues,
+    groupAndReason?: [TaskRunReasonGroups, TaskRunReasonValues],
   ): TimestampMs => {
     const taskRunPointers = allTaskRunPointers[taskRunState];
     const nextIndex = taskRunPointers.findIndex(
@@ -203,7 +205,13 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       0,
       taskRunPointer,
     );
-    taskRunChanged(taskRunState, taskId, taskRunId, IdChange.Added, reason);
+    taskRunChanged(
+      taskRunState,
+      taskId,
+      taskRunId,
+      IdChange.Added,
+      groupAndReason,
+    );
     return timestamp;
   };
 
@@ -211,7 +219,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     taskRunState: TaskRunState,
     taskId: Id,
     taskRunId: Id,
-    reason?: TaskRunReasonValues,
+    groupAndReason?: [TaskRunReasonGroups, TaskRunReasonValues],
   ): void => {
     const taskRunPointers = allTaskRunPointers[taskRunState];
     const index = taskRunPointers.findIndex(
@@ -219,16 +227,28 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     );
     if (index != -1) {
       arraySplice(taskRunPointers, index, 1);
-      taskRunChanged(taskRunState, taskId, taskRunId, IdChange.Removed, reason);
+      taskRunChanged(
+        taskRunState,
+        taskId,
+        taskRunId,
+        IdChange.Removed,
+        groupAndReason,
+      );
     }
   };
 
   const shiftTaskRunPointer = (
     taskRunState: TaskRunState,
-    reason?: TaskRunReasonValues,
+    groupAndReason?: [TaskRunReasonGroups, TaskRunReasonValues],
   ): [Id, Id] => {
     const [taskId, taskRunId] = arrayShift(allTaskRunPointers[taskRunState])!;
-    taskRunChanged(taskRunState, taskId, taskRunId, IdChange.Removed, reason);
+    taskRunChanged(
+      taskRunState,
+      taskId,
+      taskRunId,
+      IdChange.Removed,
+      groupAndReason,
+    );
     return [taskId, taskRunId];
   };
 
@@ -246,7 +266,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     taskId: Id,
     taskRunId: Id,
     addedOrRemoved: IdAddedOrRemoved,
-    reason?: TaskRunReasonValues,
+    groupAndReason?: [TaskRunReasonGroups, TaskRunReasonValues],
   ): void => {
     const taskRunIdsChanged = allTaskRunIdsChanged[taskRunState];
     mapSet(
@@ -256,9 +276,9 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         ? undefined
         : addedOrRemoved,
     );
-    if (!isUndefined(reason)) {
-      setAdd(taskRunChanges, [taskId, taskRunId, reason]);
-    }
+    ifNotUndefined(groupAndReason, ([group, reason]) => {
+      setAdd(allTaskRunChanges[group], [taskId, taskRunId, reason]);
+    });
   };
 
   const callChangeListeners = (): void => {
@@ -272,10 +292,12 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         collClear(taskRunIdsChanged);
       }
     });
-    collForEach(taskRunChanges, ([taskId, taskRunId, reason]) =>
-      callListeners(taskRunListeners, [taskId, taskRunId, reason]),
-    );
-    collClear(taskRunChanges);
+    arrayForEach(allTaskRunChanges, (taskRunChanges, group) => {
+      collForEach(taskRunChanges, (taskRunChange) =>
+        callListeners(taskRunListeners[group], taskRunChange),
+      );
+      collClear(taskRunChanges);
+    });
   };
 
   const tick = () => {
@@ -311,7 +333,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
               taskId,
               taskRunId,
               now + taskRun[TaskRunPositions.Duration],
-              TaskRunReasonValues.Started,
+              [TaskRunReasonGroups.Started, TaskRunReasonValues.Succeeded],
             );
             taskRun[TaskRunPositions.Running] = true;
             taskRun[TaskRunPositions.AbortController] = new AbortController();
@@ -327,19 +349,20 @@ export const createManager: typeof createManagerDecl = (): Manager => {
                     TaskRunState.Running,
                     taskId,
                     taskRunId,
-                    TaskRunReasonValues.Succeeded,
+                    [
+                      TaskRunReasonGroups.Finished,
+                      TaskRunReasonValues.Succeeded,
+                    ],
                   );
                   callChangeListeners();
                   mapSet(taskRunMap, taskRunId);
                 }
               })
               .catch(() => {
-                removeTaskRunPointer(
-                  TaskRunState.Running,
-                  taskId,
-                  taskRunId,
+                removeTaskRunPointer(TaskRunState.Running, taskId, taskRunId, [
+                  TaskRunReasonGroups.Finished,
                   TaskRunReasonValues.Errored,
-                );
+                ]);
                 rescheduleTaskRun(taskRunId, taskRun, getNow());
                 callChangeListeners();
               });
@@ -355,10 +378,10 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       size(runningTaskRunPointers) &&
       runningTaskRunPointers[0][TaskRunPointerPositions.Timestamp] <= now
     ) {
-      const taskRunId = shiftTaskRunPointer(
-        TaskRunState.Running,
+      const taskRunId = shiftTaskRunPointer(TaskRunState.Running, [
+        TaskRunReasonGroups.Finished,
         TaskRunReasonValues.TimedOut,
-      )[TaskRunPointerPositions.TaskRunId];
+      ])[TaskRunPointerPositions.TaskRunId];
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
         abortTaskRun(taskRun);
         rescheduleTaskRun(taskRunId, taskRun, now);
@@ -391,7 +414,6 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         taskRun[TaskRunPositions.TaskId],
         taskRunId,
         now + delay!,
-        TaskRunReasonValues.Scheduled,
       );
       taskRun[TaskRunPositions.AbortController] = undefined;
     } else {
@@ -408,10 +430,8 @@ export const createManager: typeof createManagerDecl = (): Manager => {
           : TaskRunState.Scheduled,
         taskRun[TaskRunPositions.TaskId],
         taskRunId,
-        hasReason
-          ? taskRun[TaskRunPositions.Running]
-            ? TaskRunReasonValues.Deleted
-            : TaskRunReasonValues.Unscheduled
+        hasReason && taskRun[TaskRunPositions.Running]
+          ? [TaskRunReasonGroups.Finished, TaskRunReasonValues.Deleted]
           : undefined,
       );
       mapSet(taskRunMap, taskRunId);
@@ -545,7 +565,6 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         id(taskId),
         taskRunId,
         normalizeTimestamp(startAfter),
-        TaskRunReasonValues.Scheduled,
       ),
     ]);
     callChangeListeners();
@@ -593,25 +612,15 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const addRunningTaskRunIdsListener = (listener: TaskRunIdsListener) =>
     addListener(listener, taskRunIdsListeners[TaskRunState.Running]);
 
-  const addScheduledTaskRunListener = (
-    taskId: IdOrNull,
-    listener: TaskRunListener,
-  ) =>
-    addListener(listener, taskRunListeners, [
-      taskId,
-      null,
-      TaskRunReasonValues.Scheduled,
-    ]);
-
   const addStartedTaskRunListener = (
     taskId: IdOrNull,
     taskRunId: IdOrNull,
     listener: TaskRunListener,
   ) =>
-    addListener(listener, taskRunListeners, [
+    addListener(listener, taskRunListeners[TaskRunReasonGroups.Started], [
       taskId,
       taskRunId,
-      TaskRunReasonValues.Started,
+      TaskRunReasonValues.Succeeded,
     ]);
 
   const addFinishedTaskRunListener = (
@@ -619,7 +628,12 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     taskRunId: IdOrNull,
     reason: TaskRunReason | null,
     listener: TaskRunListener,
-  ) => addListener(listener, taskRunListeners, [taskId, taskRunId, reason]);
+  ) =>
+    addListener(listener, taskRunListeners[TaskRunReasonGroups.Started], [
+      taskId,
+      taskRunId,
+      reason,
+    ]);
 
   const delListener = (listenerId: Id): Manager => {
     delListenerImpl(listenerId);
@@ -670,7 +684,6 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     addDidTickListener,
     addScheduledTaskRunIdsListener,
     addRunningTaskRunIdsListener,
-    addScheduledTaskRunListener,
     addStartedTaskRunListener,
     addFinishedTaskRunListener,
     delListener,

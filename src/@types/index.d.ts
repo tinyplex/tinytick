@@ -83,20 +83,14 @@ export type TaskRunInfo = {
 
 /// TaskRunReason
 export const enum TaskRunReason {
-  /// TaskRunReason.Scheduled
-  Scheduled = 0,
-  /// TaskRunReason.Unscheduled
-  Unscheduled = 1,
-  /// TaskRunReason.Started
-  Started = 2,
   /// TaskRunReason.Succeeded
-  Succeeded = 3,
+  Succeeded = 0,
   /// TaskRunReason.TimedOut
-  TimedOut = 4,
+  TimedOut = 1,
   /// TaskRunReason.Errored
-  Errored = 5,
+  Errored = 2,
   /// TaskRunReason.Deleted
-  Deleted = 6,
+  Deleted = 3,
 }
 
 /// TickListener
@@ -194,9 +188,6 @@ export interface Manager {
 
   /// Manager.addRunningTaskRunIdsListener
   addRunningTaskRunIdsListener(listener: TaskRunIdsListener): Id;
-
-  /// Manager.addScheduledTaskRunListener
-  addScheduledTaskRunListener(taskId: IdOrNull, listener: TaskRunListener): Id;
 
   /// Manager.addStartedTaskRunListener
   addStartedTaskRunListener(
