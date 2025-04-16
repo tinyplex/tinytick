@@ -220,7 +220,7 @@ describe('common sequences', () => {
     ]);
   });
 
-  test.only('retrying run', async () => {
+  test('retrying run', async () => {
     manager.setTask('task1', async () => await pause(50));
     const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
       maxDuration: 1,
