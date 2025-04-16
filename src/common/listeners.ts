@@ -3,6 +3,7 @@ import type {
   IdOrNull,
   Ids,
   Manager,
+  TaskRunFailedListener,
   TaskRunIdsListener,
   TaskRunListener,
 } from '../@types/index.d.ts';
@@ -28,7 +29,7 @@ export type CallListeners = (
 ) => void;
 
 type DelListener = (id: Id) => Ids;
-type Listener = TaskRunIdsListener | TaskRunListener;
+type Listener = TaskRunIdsListener | TaskRunListener | TaskRunFailedListener;
 
 type IdOrNumber = Id | number;
 

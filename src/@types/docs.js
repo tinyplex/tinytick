@@ -407,6 +407,26 @@
  */
 /// TaskRunListener
 /**
+ * The TaskRunFailedListener type describes a function that is used to listen to
+ * a failing task run, whether because of timeout, error, or deletion.
+ *
+ * A TaskRunFailedListener is provided when using the addTaskRunFailedListener
+ * method. See that method for specific examples.
+ *
+ * When called, a TaskRunFailedListener is given a reference to the Manager, the
+ * Id of the task, the Id of the task run that changed, the reason it
+ * failed, and a string message (in the case of an error being thrown).
+ * @param manager A reference to the Manager that changed.
+ * @param taskId The Id of the task that changed.
+ * @param taskRunId The Id of the task run that changed.
+ * @param reason The reason the task run failed.
+ * @param message A string message indicating the reason for the failure (in the
+ * case of an error being thrown).
+ * @category Listener
+ * @since v1.2.0
+ */
+/// TaskRunFailedListener
+/**
  * The Manager interface represents the main entry point for the TinyTick API,
  * and the object with which you register each Task, and schedule them to run.
  *
@@ -1169,6 +1189,30 @@
    * @since v1.2.0
    */
   /// Manager.addTaskRunListener
+  /**
+   * The addTaskRunFailedListener method registers a listener function with the
+   * Manager that will be called whenever a task run fails, whether because of
+   * timeout, error, or deletion.
+   *
+   * The provided listener is a TaskRunFailedListener function, and will be
+   * called with a reference to the Manager, the Id of the task, the Id of the
+   * task run that changed, the reason it failed, and a string message (in the
+   * case of an error being thrown).
+   *
+   * You can either listen for a run of a single task starting (by specifying
+   * the task Id as the method's first parameter) or for a run of any task
+   * starting (by providing a `null` wildcard). You can specify a specific task
+   * run Id to listen for with the second parameter, or `null` to listen for any
+   * matching task run starting.
+   * @param taskId The Id of the task, or `null` as a wildcard.
+   * @param taskRunId The Id of the task run, or `null` as a wildcard.
+   * @param listener The function that will be called whenever a matching task
+   * run has failed.
+   * @returns A unique Id for the listener that can later be used to remove it.
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.addTaskRunFailedListener
   /**
    * The delListener method.
    * @category Listener

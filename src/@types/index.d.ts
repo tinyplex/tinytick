@@ -115,6 +115,15 @@ export type TaskRunListener = (
   reason: TaskRunReason,
 ) => void;
 
+/// TaskRunFailedListener
+export type TaskRunFailedListener = (
+  manager: Manager,
+  taskId: Id,
+  taskRunId: Id,
+  reason: TaskRunReason,
+  message: string,
+) => void;
+
 /// Manager
 export interface Manager {
   /// Manager.setManagerConfig
@@ -199,6 +208,13 @@ export interface Manager {
     taskId: IdOrNull,
     taskRunId: IdOrNull,
     listener: TaskRunListener,
+  ): Id;
+
+  /// Manager.addTaskRunFailedListener
+  addTaskRunFailedListener(
+    taskId: IdOrNull,
+    taskRunId: IdOrNull,
+    listener: TaskRunFailedListener,
   ): Id;
 
   /// Manager.delListener

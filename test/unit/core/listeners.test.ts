@@ -56,8 +56,14 @@ describe('common sequences', () => {
     manager.addTaskRunListener(
       null,
       null,
-      (manager, taskId, taskRunId, running, reason) =>
+      (_manager, taskId, taskRunId, running, reason) =>
         log.push({taskRun: [taskId, taskRunId, running, reason]}),
+    );
+    manager.addTaskRunFailedListener(
+      null,
+      null,
+      (_manager, taskId, taskRunId, reason, message) =>
+        log.push({taskRunFailed: [taskId, taskRunId, reason, message]}),
     );
   });
 
@@ -185,6 +191,7 @@ describe('common sequences', () => {
       {runningIds: []},
       {changedIds: {[taskRunId]: -1}},
       {taskRun: ['task1', taskRunId, undefined, 3]},
+      {taskRunFailed: ['task1', taskRunId, 3, '']},
       {didTick: 2},
       {willTick: 3},
       {didTick: 3},
@@ -194,7 +201,7 @@ describe('common sequences', () => {
   test('failing run', async () => {
     manager.setTask('task1', async () => {
       await pause(5);
-      throw new Error('');
+      throw new Error('broken');
     });
     const taskRunId = manager.scheduleTaskRun('task1')!;
 
@@ -215,6 +222,7 @@ describe('common sequences', () => {
       {runningIds: []},
       {changedIds: {[taskRunId]: -1}},
       {taskRun: ['task1', taskRunId, undefined, 4]},
+      {taskRunFailed: ['task1', taskRunId, 4, 'broken']},
       {willTick: 2},
       {didTick: 2},
     ]);
@@ -248,6 +256,7 @@ describe('common sequences', () => {
       {runningIds: []},
       {changedIds: {[taskRunId]: -1}},
       {taskRun: ['task1', taskRunId, false, 3]},
+      {taskRunFailed: ['task1', taskRunId, 3, '']},
       {didTick: 2},
       {willTick: 3},
       {scheduledIds: []},
@@ -260,6 +269,7 @@ describe('common sequences', () => {
       {runningIds: []},
       {changedIds: {[taskRunId]: -1}},
       {taskRun: ['task1', taskRunId, undefined, 3]},
+      {taskRunFailed: ['task1', taskRunId, 3, '']},
       {didTick: 4},
       {willTick: 5},
       {didTick: 5},
