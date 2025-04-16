@@ -308,52 +308,6 @@
   /// TaskRunInfo.nextTimestamp
 }
 /**
- * The TaskRunChange enum is used to indicate the way in which a task run
- * changed.
- *
- * The enum is used to listen to just certain types of task run changes
- * (scheduling, starting, finishing), and is also passed to a TaskRunListener
- * function.
- * @category TaskRun
- * @since v1.2.0
- */
-/// TaskRunChange
-{
-  /**
-   * Indicates that the task run was scheduled.
-   * @category Enum
-   * @since v1.2.0
-   */
-  /// TaskRunChange.Scheduled
-  /**
-   * Indicates that the task run was started.
-   * @category Enum
-   * @since v1.2.0
-   */
-  /// TaskRunChange.Started
-  /**
-   * Indicates that the task run was finished, either successfully, because it
-   * timed out, with an error, or because it was deleted. Use the TaskRunReason
-   * enum values to understand why it finished.
-   * @category Enum
-   * @since v1.2.0
-   */
-  /// TaskRunChange.Finished
-  /**
-   * Indicates that the task run was unscheduled by being deleted.
-   * @category Enum
-   * @since v1.2.0
-   */
-  /// TaskRunChange.Unscheduled
-  /**
-   * Indicates that the task run was removed, because it previously finished
-   * (with no further retries) or was explicitly deleted.
-   * @category Enum
-   * @since v1.2.0
-   */
-  /// TaskRunChange.Deleted
-}
-/**
  * The TaskRunReason enum is used to indicate why a task run changed, most
  * usefully when it finishes.
  *
@@ -436,15 +390,17 @@
  * The TaskRunListener type describes a function that is used to listen to
  * changes to a specific task run in the Manager.
  *
- * A TaskRunListener is provided when using the addScheduledTaskRunListener
- * method, the addStartedTaskRunListener method, and the
- * addFinishedTaskRunListener method. See those methods for specific examples.
+ * A TaskRunListener is provided when using the addTaskRunListener method. See
+ * that method for specific examples.
  *
  * When called, a TaskRunListener is given a reference to the Manager, the Id of
- * the task, the Id of the task run that changed, and the reason for the change.
+ * the task, the Id of the task run that changed, the way in which it changed,
+ * and the reason for that change.
  * @param manager A reference to the Manager that changed.
  * @param taskId The Id of the task that changed.
  * @param taskRunId The Id of the task run that changed.
+ * @param running Whether the task run is now running (`true`), scheduled
+ * (`false`), or deleted (`undefined`).
  * @param reason The reason the task run changed.
  * @category Listener
  * @since v1.2.0
@@ -1203,15 +1159,11 @@
    * the task Id as the method's first parameter) or for a run of any task
    * starting (by providing a `null` wildcard). You can specify a specific task
    * run Id to listen for with the second parameter, or `null` to listen for any
-   * matching task run starting. And you can also specify to listen only to
-   * particular changes and reasons.
+   * matching task run starting.
    * @param taskId The Id of the task, or `null` as a wildcard.
    * @param taskRunId The Id of the task run, or `null` as a wildcard.
-   * @param change The way in which the task run changed, or `null` as a
-   * wildcard.
-   * @param reason The reason the task run changed, or `null` as a wildcard.
    * @param listener The function that will be called whenever a matching task
-   * run has been started.
+   * run has changed.
    * @returns A unique Id for the listener that can later be used to remove it.
    * @category Listener
    * @since v1.2.0

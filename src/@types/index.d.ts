@@ -81,20 +81,6 @@ export type TaskRunInfo = {
   readonly nextTimestamp: TimestampMs;
 };
 
-/// TaskRunChange
-export const enum TaskRunChange {
-  /// TaskRunChange.Scheduled
-  Scheduled = 0,
-  /// TaskRunChange.Started
-  Started = 1,
-  /// TaskRunChange.Finished
-  Finished = 2,
-  /// TaskRunChange.Unscheduled
-  Unscheduled = 3,
-  /// TaskRunChange.Deleted
-  Deleted = 4,
-}
-
 /// TaskRunReason
 export const enum TaskRunReason {
   /// TaskRunReason.Scheduled
@@ -125,7 +111,7 @@ export type TaskRunListener = (
   manager: Manager,
   taskId: Id,
   taskRunId: Id,
-  change: TaskRunChange,
+  running: boolean | undefined,
   reason: TaskRunReason,
 ) => void;
 
@@ -212,8 +198,6 @@ export interface Manager {
   addTaskRunListener(
     taskId: IdOrNull,
     taskRunId: IdOrNull,
-    change: TaskRunChange | null,
-    reason: TaskRunReason | null,
     listener: TaskRunListener,
   ): Id;
 

@@ -56,10 +56,8 @@ describe('common sequences', () => {
     manager.addTaskRunListener(
       null,
       null,
-      null,
-      null,
-      (manager, taskId, taskRunId, change, reason) =>
-        log.push({taskRun: [taskId, taskRunId, change, reason]}),
+      (manager, taskId, taskRunId, running, reason) =>
+        log.push({taskRun: [taskId, taskRunId, running, reason]}),
     );
   });
 
@@ -74,10 +72,10 @@ describe('common sequences', () => {
     expect(log).toEqual([
       {scheduledIds: [taskRunId]},
       {changedIds: {[taskRunId]: 1}},
-      {taskRun: ['task1', taskRunId, 0, 0]},
+      {taskRun: ['task1', taskRunId, false, 0]},
       {scheduledIds: []},
       {changedIds: {[taskRunId]: -1}},
-      {taskRun: ['task1', taskRunId, 3, 5]},
+      {taskRun: ['task1', taskRunId, undefined, 5]},
       {willTick: 1},
       {didTick: 1},
     ]);
@@ -93,17 +91,17 @@ describe('common sequences', () => {
     expect(log).toEqual([
       {scheduledIds: [taskRunId]},
       {changedIds: {[taskRunId]: 1}},
-      {taskRun: ['task1', taskRunId, 0, 0]},
+      {taskRun: ['task1', taskRunId, false, 0]},
       {willTick: 1},
       {scheduledIds: []},
       {changedIds: {[taskRunId]: -1}},
       {runningIds: [taskRunId]},
       {changedIds: {[taskRunId]: 1}},
-      {taskRun: ['task1', taskRunId, 1, 1]},
+      {taskRun: ['task1', taskRunId, true, 1]},
       {didTick: 1},
       {runningIds: []},
       {changedIds: {[taskRunId]: -1}},
-      {taskRun: ['task1', taskRunId, 2, 2]},
+      {taskRun: ['task1', taskRunId, undefined, 2]},
       {willTick: 2},
       {didTick: 2},
     ]);
