@@ -276,3 +276,61 @@ describe('common sequences', () => {
     ]);
   });
 });
+
+test('failing runs, selective listeners', async () => {
+  manager.setTask('task1', async () => {
+    await pause(5);
+    throw new Error('broken1');
+  });
+  manager.setTask('task2', async () => {
+    await pause(5);
+    throw new Error('broken2');
+  });
+
+  manager.addTaskRunListener(
+    'task1',
+    null,
+    (_manager, taskId, taskRunId, running, reason) =>
+      log.push({task1: [taskId, taskRunId, running, reason]}),
+  );
+  manager.addTaskRunFailedListener(
+    'task1',
+    null,
+    (_manager, taskId, taskRunId, reason, message) =>
+      log.push({task1Failed: [taskId, taskRunId, reason, message]}),
+  );
+
+  const taskRunId1 = manager.scheduleTaskRun('task1')!;
+  const taskRunId2 = manager.scheduleTaskRun('task2')!;
+  manager.scheduleTaskRun('task2')!;
+
+  manager.addTaskRunListener(
+    null,
+    taskRunId2,
+    (_manager, taskId, taskRunId, running, reason) =>
+      log.push({taskRun2: [taskId, taskRunId, running, reason]}),
+  );
+  manager.addTaskRunFailedListener(
+    null,
+    taskRunId2,
+    (_manager, taskId, taskRunId, reason, message) =>
+      log.push({taskRun2Failed: [taskId, taskRunId, reason, message]}),
+  );
+
+  manager.start();
+  await pause(30);
+
+  expect(log).toEqual([
+    {task1: ['task1', taskRunId1, false, 0]},
+    {willTick: 1},
+    {task1: ['task1', taskRunId1, true, 1]},
+    {taskRun2: ['task2', taskRunId2, true, 1]},
+    {didTick: 1},
+    {task1: ['task1', taskRunId1, undefined, 4]},
+    {task1Failed: ['task1', taskRunId1, 4, 'broken1']},
+    {taskRun2: ['task2', taskRunId2, undefined, 4]},
+    {taskRun2Failed: ['task2', taskRunId2, 4, 'broken2']},
+    {willTick: 2},
+    {didTick: 2},
+  ]);
+});
