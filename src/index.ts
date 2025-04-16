@@ -226,6 +226,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     const index = taskRunPointers.findIndex(
       (pointer) => pointer[TaskRunPointerPositions.TaskRunId] == taskRunId,
     );
+
     if (index != -1) {
       arraySplice(taskRunPointers, index, 1);
       taskRunChanged(
@@ -359,7 +360,12 @@ export const createManager: typeof createManagerDecl = (): Manager => {
                   undefined,
                   TaskRunReasonValues.Errored,
                 ]);
-                rescheduleTaskRun(taskRunId, taskRun, getNow());
+                rescheduleTaskRun(
+                  taskRunId,
+                  taskRun,
+                  getNow(),
+                  TaskRunReasonValues.Errored,
+                );
                 callChangeListeners();
               });
           },
@@ -374,13 +380,17 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       size(runningTaskRunPointers) &&
       runningTaskRunPointers[0][TaskRunPointerPositions.Timestamp] <= now
     ) {
-      const taskRunId = shiftTaskRunPointer(TaskRunState.Running, [
-        undefined,
-        TaskRunReasonValues.TimedOut,
-      ])[TaskRunPointerPositions.TaskRunId];
+      const taskRunId = shiftTaskRunPointer(TaskRunState.Running)[
+        TaskRunPointerPositions.TaskRunId
+      ];
       ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
         abortTaskRun(taskRun);
-        rescheduleTaskRun(taskRunId, taskRun, now);
+        rescheduleTaskRun(
+          taskRunId,
+          taskRun,
+          now,
+          TaskRunReasonValues.TimedOut,
+        );
       });
     }
 
@@ -399,6 +409,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     taskRunId: Id,
     taskRun: TaskRun,
     now: TimestampMs,
+    reason: TaskRunReasonValues,
   ): void => {
     if (taskRun[TaskRunPositions.Retries]!-- > 0) {
       const delays = taskRun[TaskRunPositions.Delays]!;
@@ -410,14 +421,18 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         taskRun[TaskRunPositions.TaskId],
         taskRunId,
         now + delay!,
+        [false, reason],
       );
       taskRun[TaskRunPositions.AbortController] = undefined;
     } else {
-      delTaskRunImpl(taskRunId, false);
+      delTaskRunImpl(taskRunId, reason);
     }
   };
 
-  const delTaskRunImpl = (taskRunId: Id, hasReason = true) =>
+  const delTaskRunImpl = (
+    taskRunId: Id,
+    reason = TaskRunReasonValues.Deleted,
+  ) =>
     ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
       abortTaskRun(taskRun);
       removeTaskRunPointer(
@@ -426,7 +441,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
           : TaskRunState.Scheduled,
         taskRun[TaskRunPositions.TaskId],
         taskRunId,
-        hasReason ? [undefined, TaskRunReasonValues.Deleted] : undefined,
+        [undefined, reason],
       );
       mapSet(taskRunMap, taskRunId);
     });
