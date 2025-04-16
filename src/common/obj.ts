@@ -10,11 +10,6 @@ const objFrozen = object.isFrozen;
 
 const objEntries = object.entries;
 
-const objForEach = <Value>(
-  obj: IdObj<Value>,
-  cb: (value: Value, id: string) => void,
-): void => arrayForEach(objEntries(obj), ([id, value]) => cb(value, id));
-
 const isObject = (obj: unknown): boolean =>
   !isUndefined(obj) &&
   (ifNotUndefined(
@@ -34,6 +29,11 @@ const objDel = <Value>(obj: IdObj<Value>, id: Id): IdObj<Value> => {
 export type IdObj<Value> = {[id: string]: Value};
 
 export const objFreeze = object.freeze;
+
+export const objForEach = <Value>(
+  obj: IdObj<Value>,
+  cb: (value: Value, id: string) => void,
+): void => arrayForEach(objEntries(obj), ([id, value]) => cb(value, id));
 
 export const objMerge = (...objs: IdObj<unknown>[]) =>
   object.assign({}, ...objs);

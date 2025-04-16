@@ -40,6 +40,7 @@ import {
 } from './common/map.ts';
 import {
   objFilterUndefined,
+  objForEach,
   objFreeze,
   objMerge,
   objValidate,
@@ -153,6 +154,9 @@ const validatedTestRunConfig = (config: TaskRunConfig): TaskRunConfig =>
 const abortTaskRun = (taskRun: TaskRun): void =>
   taskRun[TaskRunPositions.AbortController]?.abort();
 
+const updateTaskRun = (obj1: TaskRun, obj2: {[position: number]: unknown}) =>
+  objForEach(obj2, (value, id) => ((obj1 as any)[id] = value));
+
 export const createManager: typeof createManagerDecl = (): Manager => {
   let config: ManagerConfig = {};
   let tickHandle: NodeJS.Timeout;
@@ -189,7 +193,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     taskRunId: Id,
     timestamp: TimestampMs,
     reason: TaskRunReasonValues,
-  ): TimestampMs => {
+  ): void => {
     const taskRunPointers = allTaskRunPointers[taskRunState];
     const nextIndex = taskRunPointers.findIndex(
       (existingPointer) =>
@@ -206,7 +210,6 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       taskRunState == TaskRunState.Running,
       reason,
     ]);
-    return timestamp;
   };
 
   const removeTaskRunPointer = (
@@ -231,13 +234,13 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const shiftTaskRunPointer = (
     taskRunState: TaskRunState,
     reason: TaskRunReasonValues,
-  ): [Id, Id] => {
+  ): [Id, Id, TaskRun] => {
     const [taskId, taskRunId] = arrayShift(allTaskRunPointers[taskRunState])!;
     taskRunChanged(taskRunState, taskId, taskRunId, IdChange.Removed, [
       undefined,
       reason,
     ]);
-    return [taskId, taskRunId];
+    return [taskId, taskRunId, mapGet(taskRunMap, taskRunId)!];
   };
 
   const getTaskRunIds = (taskRunState: TaskRunState): Ids =>
@@ -304,70 +307,76 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       size(scheduledTaskRunPointers) &&
       scheduledTaskRunPointers[0][TaskRunPointerPositions.Timestamp] <= now
     ) {
-      const [taskId, taskRunId] = shiftTaskRunPointer(
+      const [taskId, taskRunId, taskRun] = shiftTaskRunPointer(
         TaskRunState.Scheduled,
         TaskRunReasonValues.Started,
       );
-      ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) =>
-        ifNotUndefined(
-          mapGet(taskMap, taskId),
-          ([task]) => {
-            if (isUndefined(taskRun[TaskRunPositions.Duration])) {
-              const config = getTaskRunConfig(taskRunId, true);
-              const retryDelay = config[RETRY_DELAY];
-              taskRun[TaskRunPositions.Duration] = config[MAX_DURATION];
-              taskRun[TaskRunPositions.Retries] = config[MAX_RETRIES];
-              taskRun[TaskRunPositions.Delays] = isString(retryDelay)
+      ifNotUndefined(
+        mapGet(taskMap, taskId),
+        ([task]) => {
+          if (isUndefined(taskRun[TaskRunPositions.Duration])) {
+            const config = getTaskRunConfig(taskRunId, true);
+            const retryDelay = config[RETRY_DELAY];
+            updateTaskRun(taskRun, {
+              [TaskRunPositions.Duration]: config[MAX_DURATION],
+              [TaskRunPositions.Retries]: config[MAX_RETRIES],
+              [TaskRunPositions.Delays]: isString(retryDelay)
                 ? arrayMap(arraySplit(retryDelay, ','), (number) =>
                     parseInt(number),
                   )
-                : [retryDelay];
-            }
-            taskRun[TaskRunPositions.NextTimestamp] = insertTaskRunPointer(
-              TaskRunState.Running,
-              taskId,
-              taskRunId,
-              now + taskRun[TaskRunPositions.Duration],
-              TaskRunReasonValues.Started,
-            );
-            taskRun[TaskRunPositions.Running] = true;
-            taskRun[TaskRunPositions.AbortController] = new AbortController();
+                : [retryDelay],
+            });
+          }
 
-            task(
-              taskRun[TaskRunPositions.Arg],
-              taskRun[TaskRunPositions.AbortController].signal,
-              getTaskRunInfoFromTaskRun(taskRunId, taskRun),
-            )
-              .then(() => {
-                if (taskRun[TaskRunPositions.Running]) {
-                  removeTaskRunPointer(
-                    TaskRunState.Running,
-                    taskId,
-                    taskRunId,
-                    TaskRunReasonValues.Succeeded,
-                  );
-                  callChangeListeners();
-                  mapSet(taskRunMap, taskRunId);
-                }
-              })
-              .catch(() => {
+          const finishTimestamp = now + taskRun[TaskRunPositions.Duration]!;
+          const abortController = new AbortController();
+          updateTaskRun(taskRun, {
+            [TaskRunPositions.NextTimestamp]: finishTimestamp,
+            [TaskRunPositions.Running]: true,
+            [TaskRunPositions.AbortController]: abortController,
+          });
+          insertTaskRunPointer(
+            TaskRunState.Running,
+            taskId,
+            taskRunId,
+            finishTimestamp,
+            TaskRunReasonValues.Started,
+          );
+
+          task(
+            taskRun[TaskRunPositions.Arg],
+            abortController.signal,
+            getTaskRunInfoFromTaskRun(taskRunId, taskRun),
+          )
+            .then(() => {
+              if (taskRun[TaskRunPositions.Running]) {
                 removeTaskRunPointer(
                   TaskRunState.Running,
                   taskId,
                   taskRunId,
-                  TaskRunReasonValues.Errored,
-                );
-                rescheduleTaskRun(
-                  taskRunId,
-                  taskRun,
-                  getNow(),
-                  TaskRunReasonValues.Errored,
+                  TaskRunReasonValues.Succeeded,
                 );
                 callChangeListeners();
-              });
-          },
-          () => delTaskRun(taskRunId) as any,
-        ),
+                mapSet(taskRunMap, taskRunId);
+              }
+            })
+            .catch(() => {
+              removeTaskRunPointer(
+                TaskRunState.Running,
+                taskId,
+                taskRunId,
+                TaskRunReasonValues.Errored,
+              );
+              rescheduleTaskRun(
+                taskRunId,
+                taskRun,
+                getNow(),
+                TaskRunReasonValues.Errored,
+              );
+              callChangeListeners();
+            });
+        },
+        () => delTaskRunImpl(taskRunId),
       );
     }
     callChangeListeners();
@@ -377,19 +386,12 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       size(runningTaskRunPointers) &&
       runningTaskRunPointers[0][TaskRunPointerPositions.Timestamp] <= now
     ) {
-      const taskRunId = shiftTaskRunPointer(
+      const [, taskRunId, taskRun] = shiftTaskRunPointer(
         TaskRunState.Running,
         TaskRunReasonValues.TimedOut,
-      )[TaskRunPointerPositions.TaskRunId];
-      ifNotUndefined(mapGet(taskRunMap, taskRunId), (taskRun) => {
-        abortTaskRun(taskRun);
-        rescheduleTaskRun(
-          taskRunId,
-          taskRun,
-          now,
-          TaskRunReasonValues.TimedOut,
-        );
-      });
+      );
+      abortTaskRun(taskRun);
+      rescheduleTaskRun(taskRunId, taskRun, now, TaskRunReasonValues.TimedOut);
     }
 
     callChangeListeners();
@@ -412,16 +414,20 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     if (taskRun[TaskRunPositions.Retries]!-- > 0) {
       const delays = taskRun[TaskRunPositions.Delays]!;
       const delay = size(delays) > 1 ? delays.shift() : delays[0];
-      taskRun[TaskRunPositions.Retry]++;
-      taskRun[TaskRunPositions.Running] = false;
-      taskRun[TaskRunPositions.NextTimestamp] = insertTaskRunPointer(
+      const startTimestamp = now + delay!;
+      updateTaskRun(taskRun, {
+        [TaskRunPositions.Retry]: taskRun[TaskRunPositions.Retry] + 1,
+        [TaskRunPositions.Running]: false,
+        [TaskRunPositions.NextTimestamp]: startTimestamp,
+        [TaskRunPositions.AbortController]: undefined,
+      });
+      insertTaskRunPointer(
         TaskRunState.Scheduled,
         taskRun[TaskRunPositions.TaskId],
         taskRunId,
-        now + delay!,
+        startTimestamp,
         reason,
       );
-      taskRun[TaskRunPositions.AbortController] = undefined;
     } else {
       delTaskRunImpl(taskRunId, reason);
     }
@@ -560,21 +566,23 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       return undefined;
     }
     const taskRunId = getUniqueId();
+    const startTimestamp = normalizeTimestamp(startAfter);
     mapSet(taskRunMap, taskRunId, [
       id(taskId),
       arg,
-      normalizeTimestamp(startAfter),
+      startTimestamp,
       validatedTestRunConfig(config),
       0,
       false,
-      insertTaskRunPointer(
-        TaskRunState.Scheduled,
-        id(taskId),
-        taskRunId,
-        normalizeTimestamp(startAfter),
-        TaskRunReasonValues.Scheduled,
-      ),
+      startTimestamp,
     ]);
+    insertTaskRunPointer(
+      TaskRunState.Scheduled,
+      id(taskId),
+      taskRunId,
+      startTimestamp,
+      TaskRunReasonValues.Scheduled,
+    );
     callChangeListeners();
     return taskRunId;
   };
