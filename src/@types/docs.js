@@ -113,18 +113,32 @@
  */
 /// Task
 /**
- * The ManagerStatus type represents the current status of the Manager.
- *
- * The value of this signifies the following:
- *
- * - `0`: the Manager is stopped.
- * - `1`: the Manager is running.
- * - `2`: the Manager is stopping - in other words, completing its outstanding
- *   task runs.
+ * The ManagerStatus enum represents the current status of the Manager.
  * @category Manager
  * @since v1.0.0
  */
 /// ManagerStatus
+{
+  /**
+   * Indicates that the Manager is stopped.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// ManagerStatus.Stopped
+  /**
+   * Indicates that the Manager is running.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// ManagerStatus.Running
+  /**
+   * Indicates that the Manager is stopping - in other words, completing its
+   * outstanding task runs.
+   * @category Enum
+   * @since v1.2.0
+   */
+  /// ManagerStatus.Stopping
+}
 /**
  * The ManagerConfig type represents a configuration you can provide for the
  * Manager as a whole.

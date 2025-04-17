@@ -29,7 +29,14 @@ export type Task = (
 ) => Promise<unknown>;
 
 /// ManagerStatus
-export type ManagerStatus = 0 | 1 | 2;
+export const enum ManagerStatus {
+  /// ManagerStatus.Stopped
+  Stopped = 0,
+  /// ManagerStatus.Running
+  Running = 1,
+  /// ManagerStatus.Stopping
+  Stopping = 2,
+}
 
 /// ManagerConfig
 export type ManagerConfig = {

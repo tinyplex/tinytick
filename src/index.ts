@@ -66,6 +66,12 @@ const enum IdChange {
   Removed = -1,
 }
 
+const enum ManagerStatusValues {
+  Stopped = 0,
+  Running = 1,
+  Stopping = 2,
+}
+
 const enum TickPhase {
   Will = 0,
   Did = 1,
@@ -161,7 +167,7 @@ const updateTaskRun = (obj1: TaskRun, obj2: {[position: number]: unknown}) =>
 export const createManager: typeof createManagerDecl = (): Manager => {
   let config: ManagerConfig = {};
   let tickHandle: NodeJS.Timeout;
-  let status: ManagerStatus = 0;
+  let status: ManagerStatusValues = ManagerStatusValues.Stopped;
   const categoryMap: IdMap<TaskRunConfig> = mapNew();
   const taskMap: IdMap<
     [task: Task, categoryId: Id | undefined, config: TaskRunConfig]
@@ -423,11 +429,15 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     callAllListeners();
     callListeners(tickListeners[TickPhase.Did]);
 
-    if (status == 1 || (status == 2 && !isEmpty(scheduledTaskRunPointers))) {
+    if (
+      status == ManagerStatusValues.Running ||
+      (status == ManagerStatusValues.Stopping &&
+        !isEmpty(scheduledTaskRunPointers))
+    ) {
       scheduleTick();
     } else {
       unscheduleTick();
-      status = 0;
+      status = ManagerStatusValues.Stopped;
     }
   };
 
@@ -588,7 +598,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     startAfter: TimestampMs | DurationMs = 0,
     config: TaskRunConfig = {},
   ): Id | undefined => {
-    if (status == 2) {
+    if (status == ManagerStatusValues.Stopping) {
       return undefined;
     }
     const taskRunId = getUniqueId();
@@ -673,21 +683,21 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const start = (): Manager =>
     fluent(() => {
-      status = 1;
+      status = ManagerStatusValues.Running;
       scheduleTick();
     });
 
   const stop = (force = false): Manager =>
     fluent(() => {
       if (force) {
-        status = 0;
+        status = ManagerStatusValues.Stopped;
         unscheduleTick();
-      } else if (status != 0) {
-        status = 2;
+      } else if (status != ManagerStatusValues.Stopped) {
+        status = ManagerStatusValues.Stopping;
       }
     });
 
-  const getStatus = (): ManagerStatus => status;
+  const getStatus = (): ManagerStatus => status as any;
 
   const manager: Manager = {
     setManagerConfig,
