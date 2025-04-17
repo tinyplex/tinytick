@@ -8,6 +8,7 @@ import type {
   ManagerConfig,
   ManagerConfigWithDefaults,
   ManagerStatus,
+  StatusListener,
   Task,
   TaskRunConfig,
   TaskRunConfigWithDefaults,
@@ -173,6 +174,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     [task: Task, categoryId: Id | undefined, config: TaskRunConfig]
   > = mapNew();
   const taskRunMap: IdMap<TaskRun> = mapNew();
+  const statusListeners: IdSet2 = mapNew();
   const tickListeners: Pair<IdSet2> = pairNewMap();
   const taskRunIdsListeners: Pair<IdSet2> = pairNewMap();
   const taskRunListeners: IdMap2<IdSet> = mapNew();
@@ -262,6 +264,9 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       ),
       isString,
     ) as Ids;
+
+  const changeStatus = (newStatus: ManagerStatusValues) =>
+    callListeners(statusListeners, undefined, (status = newStatus));
 
   const taskRunChanged = (
     taskRunState: TaskRunState,
@@ -437,7 +442,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       scheduleTick();
     } else {
       unscheduleTick();
-      status = ManagerStatusValues.Stopped;
+      changeStatus(ManagerStatusValues.Stopped);
     }
   };
 
@@ -652,6 +657,9 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const getRunningTaskRunIds = (): Ids => getTaskRunIds(1);
 
+  const addStatusListener = (listener: StatusListener) =>
+    addListener(listener, statusListeners);
+
   const addWillTickListener = (listener: TickListener) =>
     addListener(listener, tickListeners[TickPhase.Will]);
 
@@ -683,17 +691,17 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   const start = (): Manager =>
     fluent(() => {
-      status = ManagerStatusValues.Running;
+      changeStatus(ManagerStatusValues.Running);
       scheduleTick();
     });
 
   const stop = (force = false): Manager =>
     fluent(() => {
       if (force) {
-        status = ManagerStatusValues.Stopped;
+        changeStatus(ManagerStatusValues.Stopped);
         unscheduleTick();
       } else if (status != ManagerStatusValues.Stopped) {
-        status = ManagerStatusValues.Stopping;
+        changeStatus(ManagerStatusValues.Stopping);
       }
     });
 
@@ -721,6 +729,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     getScheduledTaskRunIds,
     getRunningTaskRunIds,
 
+    addStatusListener,
     addWillTickListener,
     addDidTickListener,
     addScheduledTaskRunIdsListener,

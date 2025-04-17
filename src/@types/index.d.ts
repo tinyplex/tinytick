@@ -104,6 +104,9 @@ export const enum TaskRunReason {
   Deleted = 5,
 }
 
+/// StatusListener
+export type StatusListener = (manager: Manager, status: ManagerStatus) => void;
+
 /// TickListener
 export type TickListener = (manager: Manager) => void;
 
@@ -197,6 +200,9 @@ export interface Manager {
 
   /// Manager.getRunningTaskRunIds
   getRunningTaskRunIds(): Ids;
+
+  /// Manager.addStatusListener
+  addStatusListener(listener: StatusListener): Id;
 
   /// Manager.addWillTickListener
   addWillTickListener(listener: TickListener): Id;

@@ -372,6 +372,18 @@
   /// TaskRunReason.Deleted
 }
 /**
+ * The StatusListener type describes a function that is used to listen to the
+ * fact that the Manager changed status from stopped to started, or vice-versa.
+ *
+ * A StatusListener is provided when using the addStatusListener method. See
+ * that method for specific examples.
+ * @param manager A reference to the Manager that changed status.
+ * @param status The new status of the Manager.
+ * @category Listener
+ * @since v1.2.0
+ */
+/// StatusListener
+/**
  * The TickListener type describes a function that is used to listen to the fact
  * that the Manager is either about to tick or did just tick.
  *
@@ -1109,6 +1121,20 @@
    * @since v1.0.0
    */
   /// Manager.getRunningTaskRunIds
+  /**
+   * The addStatusListener method registers a listener function with the Manager
+   * that will be called when the Manager changes status from stopped to
+   * started, or vice-versa.
+   *
+   * The provided listener is a StatusListener function, and will be called with
+   * a reference to the Manager and the new status.
+   * @param listener The function that will be called when the Manager has
+   * changed status.
+   * @returns A unique Id for the listener that can later be used to remove it.
+   * @category Listener
+   * @since v1.2.0
+   */
+  /// Manager.addStatusListener
   /**
    * The addWillTickListener method registers a listener function with the
    * Manager that will be called just before the Manager ticks.

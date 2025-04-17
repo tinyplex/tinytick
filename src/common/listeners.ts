@@ -3,9 +3,11 @@ import type {
   IdOrNull,
   Ids,
   Manager,
+  StatusListener,
   TaskRunFailedListener,
   TaskRunIdsListener,
   TaskRunListener,
+  TickListener,
 } from '../@types/index.d.ts';
 import {arrayForEach, arrayPush} from './array.ts';
 import {collDel, collForEach, collIsEmpty} from './coll.ts';
@@ -29,7 +31,12 @@ export type CallListeners = (
 ) => void;
 
 type DelListener = (id: Id) => Ids;
-type Listener = TaskRunIdsListener | TaskRunListener | TaskRunFailedListener;
+type Listener =
+  | StatusListener
+  | TickListener
+  | TaskRunIdsListener
+  | TaskRunListener
+  | TaskRunFailedListener;
 
 type IdOrNumber = Id | number;
 
