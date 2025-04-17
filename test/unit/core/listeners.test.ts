@@ -46,25 +46,42 @@ describe('ticks', () => {
 });
 
 describe('common sequences', () => {
+  let scheduledTaskRunIdsListenerId: string;
+  let runningTaskRunIdsListenerId: string;
+  let taskRunListenerId: string;
+  let taskRunFailedListenerId: string;
+
   beforeEach(() => {
-    manager.addScheduledTaskRunIdsListener((manager, changedIds) =>
-      log.push({scheduledIds: manager.getScheduledTaskRunIds()}, {changedIds}),
+    scheduledTaskRunIdsListenerId = manager.addScheduledTaskRunIdsListener(
+      (manager, changedIds) =>
+        log.push(
+          {scheduledIds: manager.getScheduledTaskRunIds()},
+          {changedIds},
+        ),
     );
-    manager.addRunningTaskRunIdsListener((manager, changedIds) =>
-      log.push({runningIds: manager.getRunningTaskRunIds()}, {changedIds}),
+    runningTaskRunIdsListenerId = manager.addRunningTaskRunIdsListener(
+      (manager, changedIds) =>
+        log.push({runningIds: manager.getRunningTaskRunIds()}, {changedIds}),
     );
-    manager.addTaskRunListener(
+    taskRunListenerId = manager.addTaskRunListener(
       null,
       null,
       (_manager, taskId, taskRunId, running, reason) =>
         log.push({taskRun: [taskId, taskRunId, running, reason]}),
     );
-    manager.addTaskRunFailedListener(
+    taskRunFailedListenerId = manager.addTaskRunFailedListener(
       null,
       null,
       (_manager, taskId, taskRunId, reason, message) =>
         log.push({taskRunFailed: [taskId, taskRunId, reason, message]}),
     );
+  });
+
+  afterEach(() => {
+    manager.delListener(scheduledTaskRunIdsListenerId);
+    manager.delListener(runningTaskRunIdsListenerId);
+    manager.delListener(taskRunListenerId);
+    manager.delListener(taskRunFailedListenerId);
   });
 
   test('scheduled, unscheduled', async () => {
@@ -287,13 +304,13 @@ test('failing runs, selective listeners', async () => {
     throw new Error('broken2');
   });
 
-  manager.addTaskRunListener(
+  const taskRunListenerId1 = manager.addTaskRunListener(
     'task1',
     null,
     (_manager, taskId, taskRunId, running, reason) =>
       log.push({task1: [taskId, taskRunId, running, reason]}),
   );
-  manager.addTaskRunFailedListener(
+  const taskRunFailedListenerId1 = manager.addTaskRunFailedListener(
     'task1',
     null,
     (_manager, taskId, taskRunId, reason, message) =>
@@ -304,13 +321,13 @@ test('failing runs, selective listeners', async () => {
   const taskRunId2 = manager.scheduleTaskRun('task2')!;
   manager.scheduleTaskRun('task2')!;
 
-  manager.addTaskRunListener(
+  const taskRunListenerId2 = manager.addTaskRunListener(
     null,
     taskRunId2,
     (_manager, taskId, taskRunId, running, reason) =>
       log.push({taskRun2: [taskId, taskRunId, running, reason]}),
   );
-  manager.addTaskRunFailedListener(
+  const taskRunFailedListenerId2 = manager.addTaskRunFailedListener(
     null,
     taskRunId2,
     (_manager, taskId, taskRunId, reason, message) =>
@@ -333,4 +350,31 @@ test('failing runs, selective listeners', async () => {
     {willTick: 2},
     {didTick: 2},
   ]);
+
+  manager.delListener(taskRunListenerId1);
+  manager.delListener(taskRunFailedListenerId1);
+  manager.delListener(taskRunListenerId2);
+  manager.delListener(taskRunFailedListenerId2);
+});
+
+test('fills listenerId pool', () => {
+  const manager = createManager();
+  for (let i = 0; i < 1100; i++) {
+    manager.addWillTickListener(() => 0);
+  }
+  expect(manager.addWillTickListener(() => 0)).toEqual('1100');
+  for (let i = 0; i < 1100; i++) {
+    manager.delListener(i.toString());
+  }
+  expect(manager.addWillTickListener(() => 0)).toEqual('0');
+  expect(manager.addWillTickListener(() => 0)).toEqual('1');
+  for (let i = 0; i < 998; i++) {
+    manager.addWillTickListener(() => 0);
+  }
+  expect(manager.addWillTickListener(() => 0)).toEqual('1101');
+
+  manager.delListener('555');
+  manager.delListener('666');
+  expect(manager.addWillTickListener(() => 0)).toEqual('555');
+  expect(manager.addWillTickListener(() => 0)).toEqual('666');
 });

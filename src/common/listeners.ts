@@ -41,13 +41,9 @@ const getWildcardedLeaves = (
   const deep = (node: IdSetNode, p: number): number | void =>
     p == size(path)
       ? arrayPush(leaves, node)
-      : path[p] === null
-        ? collForEach(node as Node<IdOrNull, IdSet>, (node) =>
-            deep(node, p + 1),
-          )
-        : arrayForEach([path[p], null], (id) =>
-            deep(mapGet(node as Node<IdOrNull, IdSet>, id) as IdSetNode, p + 1),
-          );
+      : arrayForEach([path[p], null], (id) =>
+          deep(mapGet(node as Node<IdOrNull, IdSet>, id) as IdSetNode, p + 1),
+        );
   deep(deepIdSet, 0);
   return leaves;
 };
@@ -71,7 +67,7 @@ export const getListenerFunctions = (
     path?: ListenerArgument[],
   ): Id => {
     thing ??= getThing();
-    const id = getId(1);
+    const id = getId();
     mapSet(allListeners, id, [listener, idSetNode, path]);
     setAdd(
       visitTree(

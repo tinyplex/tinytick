@@ -262,23 +262,15 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     taskId: Id,
     taskRunId: Id,
     addedOrRemoved: IdAddedOrRemoved,
-    runningAndReason?: [boolean | undefined, TaskRunReasonValues],
+    runningAndReason: [boolean | undefined, TaskRunReasonValues],
   ): void => {
     const taskRunIdsChanged = allTaskRunIdsChanged[taskRunState];
+    mapSet(taskRunIdsChanged, taskRunId, addedOrRemoved);
     mapSet(
-      taskRunIdsChanged,
+      mapEnsure(taskRunChanges, taskId, mapNew),
       taskRunId,
-      mapGet(taskRunIdsChanged, taskRunId) == -addedOrRemoved
-        ? undefined
-        : addedOrRemoved,
+      runningAndReason,
     );
-    if (!isUndefined(runningAndReason)) {
-      mapSet(
-        mapEnsure(taskRunChanges, taskId, mapNew),
-        taskRunId,
-        runningAndReason,
-      );
-    }
   };
 
   const taskRunFailed = (

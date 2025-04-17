@@ -303,6 +303,12 @@ describe('taskRun', () => {
       expect(taskRunId).toBeDefined();
     });
 
+    test('invalid start', () => {
+      manager.setTask('task1', task);
+      const taskRunId = manager.scheduleTaskRun('task1', undefined, -1);
+      expect(taskRunId).toBeDefined();
+    });
+
     test('invalid object', () => {
       manager.setTask('task1', task);
       // @ts-expect-error not an object
