@@ -1265,6 +1265,35 @@
   /// Manager.addScheduledTaskRunIdsListener
   /**
    * The addRunningTaskRunIdsListener method.
+   *
+   * The provided listener is a TaskRunIdsListener function, and will be called
+   * with a reference to the Manager.
+   * @param listener The function that will be called whenever the list of
+   * running task run Ids changes.
+   * @returns A unique Id for the listener that can later be used to remove it.
+   * @example
+   * This example registers a listener that responds to task runs starting and
+   * completing.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager().start();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * const listenerId = manager.addRunningTaskRunIdsListener(
+   *   (manager) =>
+   *     console.log(manager.getRunningTaskRunIds().length + ' running Ids'),
+   * );
+   *
+   * manager.scheduleTaskRun('ping');
+   * // ... wait 150ms for task to start
+   * // -> '1 running Ids'
+   * // ... wait 150ms again for task to complete
+   * // -> '0 running Ids'
+   *
+   * manager.delListener(listenerId);
+   * ```
    * @category Listener
    * @since v1.2.0
    */
