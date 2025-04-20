@@ -106,7 +106,38 @@
  * The useManager hook returns the Manager provided by the a Provider component.
  * @returns The current Manager, or `undefined` if called from outside an active
  * Provider.
- * @category Lifecycle hooks
+ * @example
+ * This example shows how to use the `useManager` hook within a component that's
+ * nested inside a Provider.
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useManager} from 'tinytick/ui-react';
+ *
+ * const StatusComponent = () => {
+ *   const manager = useManager();
+ *   return <div>Status: {manager ? manager.getStatus() : 'unknown'}</div>;
+ * };
+ *
+ * const App = () => {
+ *   const manager = createManager().start();
+ *   return (
+ *     <Provider manager={manager}>
+ *       <StatusComponent />
+ *     </Provider>
+ *   );
+ * };
+ *
+ * const app = document.createElement('div');
+ * const root = createRoot(app);
+ * root.render(<App />); // !act
+ *
+ * console.log(app.innerHTML);
+ * // -> '<div>Status: 1</div>'
+ * ```
+ * @category Manager hooks
  * @since v1.1.0
  */
 /// useManager
@@ -131,6 +162,35 @@
  * that provides a Manager to be used by hooks and components within.
  * @param props The props for this component.
  * @returns A rendering of the child components.
+ * @example
+ * This example creates a Provider context into which a Manager is made
+ * available to the whole app.
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useCreateManager, useManager} from 'tinytick/ui-react';
+ *
+ * const App = () => {
+ *   const manager = useCreateManager(() => createManager().start());
+ *   return (
+ *     <Provider manager={manager}>
+ *       <Pane />
+ *     </Provider>
+ *   );
+ * };
+ * const Pane = () => {
+ *   const manager = useManager();
+ *   return <span>Status: {manager.getStatus()}</span>;
+ * };
+ *
+ * const app = document.createElement('div');
+ * const root = createRoot(app);
+ * root.render(<App />); // !act
+ * console.log(app.innerHTML);
+ * // -> '<span>Status: 1</span>'
+ * ```
  * @category Context components
  * @since v1.1.0
  */
