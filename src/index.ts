@@ -49,7 +49,6 @@ import {
 } from './common/obj.ts';
 import {
   getNow,
-  getUniqueId,
   ifNotUndefined,
   isEmpty,
   isPositiveNumber,
@@ -58,6 +57,7 @@ import {
   size,
 } from './common/other.ts';
 import {Pair, pairNewMap} from './common/pairs.ts';
+import {getUniqueId} from './common/random.ts';
 import {IdSet, IdSet2} from './common/set.ts';
 import {EMPTY_STRING, id, isString} from './common/strings.ts';
 

@@ -1,3 +1,5 @@
+import {size} from './other.ts';
+
 export const arrayMap = <Value, Return>(
   array: Value[],
   cb: (value: Value, index: number, array: Value[]) => Return,
@@ -34,3 +36,12 @@ export const arrayFilter = <Value>(
   array: Value[],
   cb: (value: Value) => boolean,
 ): Value[] => array.filter(cb);
+
+export const arrayEvery = <Value>(
+  array: Value[],
+  cb: (value: Value, index: number) => boolean | 0 | 1,
+): boolean => array.every(cb);
+
+export const arrayIsEqual = (array1: unknown[], array2: unknown[]): boolean =>
+  size(array1) === size(array2) &&
+  arrayEvery(array1, (value1, index) => array2[index] === value1);

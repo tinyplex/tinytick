@@ -1,6 +1,6 @@
 /// ui-react
 import {ReactElement} from 'react';
-import type {Manager} from '../index.d.ts';
+import type {Manager, ManagerStatus} from '../index.d.ts';
 
 /// useCreateManager
 export function useCreateManager(
@@ -10,6 +10,9 @@ export function useCreateManager(
 
 /// useManager
 export function useManager(): Manager | undefined;
+
+/// useStatus
+export function useStatus(): ManagerStatus | undefined;
 
 /// ProviderProps
 export type ProviderProps = {

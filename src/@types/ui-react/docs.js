@@ -116,7 +116,7 @@
  * import {createManager} from 'tinytick';
  * import {Provider, useManager} from 'tinytick/ui-react';
  *
- * const StatusComponent = () => {
+ * const Pane = () => {
  *   const manager = useManager();
  *   return <div>Status: {manager ? manager.getStatus() : 'unknown'}</div>;
  * };
@@ -125,7 +125,7 @@
  *   const manager = createManager().start();
  *   return (
  *     <Provider manager={manager}>
- *       <StatusComponent />
+ *       <Pane />
  *     </Provider>
  *   );
  * };
@@ -141,6 +141,47 @@
  * @since v1.1.0
  */
 /// useManager
+/**
+ * The useStatus hook returns the current status of the Manager provided by a
+ * Provider component.
+ * @returns The current status of the Manager, or `undefined` if called from
+ * outside an active Provider.
+ * @example
+ * This example shows how to use the useStatus hook within a component that's
+ * nested inside a Provider. Because the hook is reactive, a change to the
+ * status will rerender the component
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useStatus} from 'tinytick/ui-react';
+ *
+ * const Pane = () => (<span>Status: {useStatus()}</span>);
+ *
+ * const App = ({manager}) => (
+ *   <Provider manager={manager}>
+ *     <Pane />
+ *   </Provider>
+ * );
+ *
+ * const app = document.createElement('div');
+ * const root = createRoot(app);
+ * const manager = createManager();
+ * root.render(<App manager={manager} />); // !act
+ *
+ * console.log(app.innerHTML);
+ * // -> '<span>Status: 0</span>'
+ *
+ * manager.start(); // !act
+ *
+ * console.log(app.innerHTML);
+ * // -> '<span>Status: 1</span>'
+ * ```
+ * @category Manager hooks
+ * @since v1.1.0
+ */
+/// useStatus
 /**
  * ProviderProps props are used with the Manager component, so that a TinyTick
  * Manager can be passed into the context of an application and used throughout.
@@ -180,10 +221,7 @@
  *     </Provider>
  *   );
  * };
- * const Pane = () => {
- *   const manager = useManager();
- *   return <span>Status: {manager.getStatus()}</span>;
- * };
+ * const Pane = () => (<span>Status: {useManager().getStatus()}</span>);
  *
  * const app = document.createElement('div');
  * const root = createRoot(app);
