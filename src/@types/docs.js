@@ -1131,6 +1131,29 @@
    * @param listener The function that will be called when the Manager has
    * changed status.
    * @returns A unique Id for the listener that can later be used to remove it.
+   * @example
+   * This example registers a listener that responds to the Manager's status
+   * changes.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * const listenerId = manager.addStatusListener(
+   *   (manager, status) => {
+   *     console.log(`Manager status changed to: ${status}`);
+   *   },
+   * );
+   *
+   * manager.start();
+   * // -> 'Manager status changed to: 1'
+   * manager.stop();
+   * // -> 'Manager status changed to: 2'
+   * // ... wait 100ms for the final tick to stop the manager
+   * // -> 'Manager status changed to: 0'
+   *
+   * manager.delListener(listenerId);
+   * ```
    * @category Listener
    * @since v1.2.0
    */
@@ -1144,6 +1167,26 @@
    * @param listener The function that will be called just before the Manager
    * ticks.
    * @returns A unique Id for the listener that can later be used to remove it.
+   * @example
+   * This example registers a listener that is called just before each Manager
+   * tick.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * const listenerId = manager.addWillTickListener(
+   *   () => console.log('Manager will tick'),
+   * );
+   *
+   * manager.start();
+   * // ... wait 250ms, long enough for two ticks to occur
+   * // -> 'Manager will tick'
+   * // -> 'Manager will tick'
+   *
+   * manager.stop();
+   * manager.delListener(listenerId);
+   * ```
    * @category Listener
    * @since v1.2.0
    */
@@ -1157,6 +1200,26 @@
    * @param listener The function that will be called just after the Manager
    * ticks.
    * @returns A unique Id for the listener that can later be used to remove it.
+   * @example
+   * This example registers a listener that is called just after each Manager
+   * tick.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * const listenerId = manager.addDidTickListener(
+   *   () => console.log('Manager did tick'),
+   * );
+   *
+   * manager.start();
+   * // ... wait 250ms, long enough for two ticks to occur
+   * // -> 'Manager did tick'
+   * // -> 'Manager did tick'
+   *
+   * manager.stop();
+   * manager.delListener(listenerId);
+   * ```
    * @category Listener
    * @since v1.2.0
    */
@@ -1225,6 +1288,34 @@
    * @param listener The function that will be called whenever a matching task
    * run has changed.
    * @returns A unique Id for the listener that can later be used to remove it.
+   * @example
+   * This example registers a listener that responds to all state changes of any
+   * run of the 'ping' task run.
+   *
+   * ```js
+   * import {createManager, TaskRunReason} from 'tinytick';
+   *
+   * const manager = createManager().start();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * const listenerId = manager.addTaskRunListener(
+   *   'ping',
+   *   null,
+   *   (manager, taskId, taskRunId, running, reason) => console.log(
+   *     `Task '${taskId}'; running: ${running}, reason: ${reason}`,
+   *   ),
+   * );
+   *
+   * const taskRunId = manager.scheduleTaskRun('ping');
+   * // -> "Task 'ping'; running: false, reason: 0"
+   *
+   * // ... wait 100ms for task to start
+   * // -> "Task 'ping'; running: true, reason: 1"
+   * // ... wait 100ms for task to complete
+   * // -> "Task 'ping'; running: undefined, reason: 2"
+   *
+   * manager.delListener(listenerId);
+   * ```
    * @category Listener
    * @since v1.2.0
    */
@@ -1249,12 +1340,96 @@
    * @param listener The function that will be called whenever a matching task
    * run has failed.
    * @returns A unique Id for the listener that can later be used to remove it.
+   * @example
+   * This example registers a listener that responds to failures of any run of
+   * the 'ping' task.
+   *
+   * ```js
+   * import {createManager, TaskRunReason} from 'tinytick';
+   *
+   * const manager = createManager().start();
+   * manager.setTask('ping', async () => { throw new Error('Network error'); });
+   *
+   * const listenerId = manager.addTaskRunFailedListener(
+   *   'ping',
+   *   null,
+   *   (manager, taskId, taskRunId, reason, message) => console.log(
+   *     `Task '${taskId}' failed with reason: ${reason}, message: ${message}`,
+   *   ),
+   * );
+   *
+   * const taskRunId = manager.scheduleTaskRun('ping');
+   * // ... wait 100ms for task to start and fail
+   * // -> "Task 'ping' failed with reason: 4, message: Network error"
+   *
+   * manager.delListener(listenerId);
+   * ```
+   * @example
+   * This example registers a listener that responds to the inevitable timeouts
+   * of the 'takesTwoSeconds' task run.
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager().start();
+   * manager.setTask('takesTwoSeconds', async () => {
+   *   await new Promise(resolve => setTimeout(resolve, 2000));
+   * }, undefined, {maxDuration: 50});
+   *
+   * const listenerId = manager.addTaskRunFailedListener(
+   *   'takesTwoSeconds',
+   *   null,
+   *   (manager, taskId, taskRunId, reason, message) => console.log(
+   *     `Task '${taskId}' timed out (reason: ${reason})`,
+   *   ),
+   * );
+   *
+   * const taskRunId = manager.scheduleTaskRun('takesTwoSeconds');
+   * // ... wait 250ms for task to start and time out
+   * // -> "Task 'takesTwoSeconds' timed out (reason: 3)",
+   *
+   * manager.delListener(listenerId);
+   * ```
    * @category Listener
    * @since v1.2.0
    */
   /// Manager.addTaskRunFailedListener
   /**
-   * The delListener method.
+   * The delListener method removes a listener that was previously added to the
+   * Manager.
+   *
+   * Use the Id returned by whichever method was used to add the listener. Note
+   * that the Manager may re-use this Id for future listeners added to it.
+   * @param listenerId The Id of the listener to remove.
+   * @returns A reference to the Manager.
+   * @example
+   * This example registers a task run listener and then removes it using the
+   * delListener method.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager().start();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * // Add a listener to track task runs
+   * const listenerId = manager.addTaskRunListener(
+   *   'ping',
+   *   null,
+   *   (manager, taskId, taskRunId, running, reason) => console.log(
+   *     `Task '${taskId}'; running: ${running}, reason: ${reason}`,
+   *   ),
+   * );
+   *
+   * // Schedule a task run
+   * manager.scheduleTaskRun('ping');
+   * // -> "Task 'ping'; running: false, reason: 0"
+   *
+   * manager.delListener(listenerId);
+   *
+   * manager.scheduleTaskRun('ping');
+   * // -> undefined
+   * // The listener is not called.
+   * ```
    * @category Listener
    * @since v1.2.0
    */
@@ -1359,6 +1534,29 @@
    * This returns a simple numeric value that indicates whether the Manager is
    * stopped (0), running (1), or stopping (2).
    * @returns The status of the Manager.
+   * @example
+   * This example demonstrates getting the status of a Manager as it transitions
+   * through different states.
+   *
+   * ```js
+   * import {createManager, ManagerStatus} from 'tinytick';
+   *
+   * const manager = createManager();
+   * console.log(manager.getStatus());
+   * // -> 0
+   *
+   * manager.start();
+   * console.log(manager.getStatus());
+   * // -> 1
+   *
+   * manager.stop();
+   * console.log(manager.getStatus());
+   * // -> 2
+   *
+   * manager.stop(true); // force stop
+   * console.log(manager.getStatus());
+   * // -> 0
+   * ```
    * @category Lifecycle
    * @since v1.0.0
    */
