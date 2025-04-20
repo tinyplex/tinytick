@@ -1,7 +1,12 @@
 import {render} from '@testing-library/react';
 import React, {act, StrictMode} from 'react';
 import {createManager, type Manager} from 'tinytick';
-import {Provider, useCreateManager, useManager} from 'tinytick/ui-react';
+import {
+  Provider,
+  useCreateManager,
+  useManager,
+  useStatus,
+} from 'tinytick/ui-react';
 import {pause} from '../../common.ts';
 
 let manager: Manager;
@@ -79,5 +84,45 @@ describe('Context Hooks', () => {
 
       unmount();
     });
+  });
+});
+
+describe('Read Hooks', () => {
+  test('useStatus, no manager', () => {
+    const Test = () => didRender(useStatus() ?? 'undefined');
+
+    const {container, unmount} = render(
+      <Provider>
+        <Test />
+      </Provider>,
+    );
+    expect(container.textContent).toEqual('undefined');
+    unmount();
+  });
+  test('useStatus', () => {
+    const Test = () => didRender(useStatus());
+
+    const {container, unmount} = render(
+      <Provider manager={manager}>
+        <Test />
+      </Provider>,
+    );
+
+    expect(container.textContent).toEqual('0');
+
+    act(() => manager.start());
+    expect(container.textContent).toEqual('1');
+
+    act(() => manager.stop());
+    expect(container.textContent).toEqual('2');
+
+    act(() => manager.start());
+    expect(container.textContent).toEqual('1');
+
+    act(() => manager.stop(true));
+    expect(container.textContent).toEqual('0');
+
+    expect(didRender).toHaveBeenCalledTimes(5);
+    unmount();
   });
 });

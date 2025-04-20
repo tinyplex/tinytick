@@ -13,6 +13,7 @@ import type {
   useStatus as useStatusDecl,
 } from '../@types/ui-react/index.d.ts';
 import {arrayIsEqual} from '../common/array.ts';
+import {isUndefined} from '../common/other.ts';
 import {Context} from './context.ts';
 
 const EMPTY_ARRAY: Readonly<[]> = [];
@@ -36,9 +37,10 @@ const useListenable = (
   const lastResult = useRef(DEFAULTS[returnType]);
   const getResult = useCallback(
     () => {
-      const nextResult =
-        (manager as any)?.['get' + listenable]?.(...args) ??
-        DEFAULTS[returnType];
+      const nextResult = isUndefined(manager)
+        ? undefined
+        : ((manager as any)['get' + listenable]?.(...args) ??
+          DEFAULTS[returnType]);
       return !IS_EQUALS[returnType](nextResult, lastResult.current)
         ? (lastResult.current = nextResult)
         : lastResult.current;
