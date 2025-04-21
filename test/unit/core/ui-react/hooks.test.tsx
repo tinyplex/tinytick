@@ -5,6 +5,8 @@ import {
   Provider,
   useCreateManager,
   useManager,
+  useRunningTaskRunIds,
+  useScheduledTaskRunIds,
   useStatus,
 } from 'tinytick/ui-react';
 import {pause} from '../../common.ts';
@@ -99,6 +101,7 @@ describe('Read Hooks', () => {
     expect(container.textContent).toEqual('undefined');
     unmount();
   });
+
   test('useStatus', () => {
     const Test = () => didRender(useStatus());
 
@@ -123,6 +126,80 @@ describe('Read Hooks', () => {
     expect(container.textContent).toEqual('0');
 
     expect(didRender).toHaveBeenCalledTimes(5);
+    unmount();
+  });
+
+  test('useScheduledTaskRunIds, no manager', () => {
+    const Test = () => didRender(useScheduledTaskRunIds() ?? 'undefined');
+
+    const {container, unmount} = render(
+      <Provider>
+        <Test />
+      </Provider>,
+    );
+    expect(container.textContent).toEqual('undefined');
+    unmount();
+  });
+
+  test('useScheduledTaskRunIds', () => {
+    const Test = () => didRender(useScheduledTaskRunIds()?.length);
+    manager.setTask('ping', async () => await fetch('https://example.org'));
+
+    const {container, unmount} = render(
+      <Provider manager={manager}>
+        <Test />
+      </Provider>,
+    );
+
+    expect(container.textContent).toEqual('0');
+
+    act(() => manager.scheduleTaskRun('ping'));
+    expect(container.textContent).toEqual('1');
+
+    act(() => manager.scheduleTaskRun('ping'));
+    expect(container.textContent).toEqual('2');
+
+    expect(didRender).toHaveBeenCalledTimes(3);
+    unmount();
+  });
+
+  test('useRunningTaskRunIds, no manager', () => {
+    const Test = () => didRender(useRunningTaskRunIds() ?? 'undefined');
+
+    const {container, unmount} = render(
+      <Provider>
+        <Test />
+      </Provider>,
+    );
+    expect(container.textContent).toEqual('undefined');
+    unmount();
+  });
+
+  test('useRunningTaskRunIds', async () => {
+    const Test = () => didRender(useRunningTaskRunIds()?.length);
+    manager.setTask('task1', async () => await pause(200));
+
+    const {container, unmount} = render(
+      <Provider manager={manager}>
+        <Test />
+      </Provider>,
+    );
+
+    expect(container.textContent).toEqual('0');
+
+    act(() => {
+      manager.start();
+      manager.scheduleTaskRun('task1');
+    });
+    expect(container.textContent).toEqual('0');
+
+    await act(async () => await pause(50));
+    expect(container.textContent).toEqual('1');
+
+    await act(async () => await pause(200));
+    expect(container.textContent).toEqual('0');
+
+    expect(didRender).toHaveBeenCalledTimes(3);
     unmount();
   });
 });

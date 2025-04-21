@@ -165,9 +165,10 @@
  *   </Provider>
  * );
  *
+ * const manager = createManager();
+ *
  * const app = document.createElement('div');
  * const root = createRoot(app);
- * const manager = createManager();
  * root.render(<App manager={manager} />); // !act
  *
  * console.log(app.innerHTML);
@@ -179,9 +180,112 @@
  * // -> '<span>Status: 1</span>'
  * ```
  * @category Manager hooks
- * @since v1.1.0
+ * @since v1.2.0
  */
 /// useStatus
+/**
+ * The useScheduledTaskRunIds hook returns the current scheduled task run Ids
+ * of the Manager provided by a Provider component.
+ * @returns The current scheduled task run Ids of the Manager, or `undefined` if
+ * called from outside an active Provider.
+ * @example
+ * This example shows how to use the useScheduledTaskRunIds hook within a
+ * component that's nested inside a Provider. Because the hook is reactive, a
+ * change to the scheduled task run Ids will rerender the component
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useScheduledTaskRunIds} from 'tinytick/ui-react';
+ *
+ * const Pane = () => (
+ *   <span>Scheduled task run Ids: {useScheduledTaskRunIds().length}</span>
+ * );
+ *
+ * const App = ({manager}) => (
+ *   <Provider manager={manager}>
+ *     <Pane />
+ *   </Provider>
+ * );
+ *
+ * const manager = createManager();
+ * manager.setTask('ping', async () => await fetch('https://example.org'));
+ *
+ * const app = document.createElement('div');
+ * const root = createRoot(app);
+ * root.render(<App manager={manager} />); // !act
+ *
+ * console.log(app.innerHTML);
+ * // -> '<span>Scheduled task run Ids: 0</span>'
+ *
+ * manager.scheduleTaskRun('ping', 200); // !act
+ * console.log(app.innerHTML);
+ * // -> '<span>Scheduled task run Ids: 1</span>'
+ *
+ * manager.scheduleTaskRun('ping', 400); // !act
+ * console.log(app.innerHTML);
+ * // -> '<span>Scheduled task run Ids: 2</span>'
+ * ```
+ * @category Manager hooks
+ * @since v1.2.0
+ */
+/// useScheduledTaskRunIds
+/**
+ * The useRunningTaskRunIds hook returns the current running task run Ids of the
+ * Manager provided by a Provider component.
+ * @returns The current running task run Ids of the Manager, or `undefined` if
+ * called from outside an active Provider.
+ * @example
+ * This example shows how to use the useRunningTaskRunIds hook within a
+ * component that's nested inside a Provider. Because the hook is reactive, a
+ * change to the running task run Ids will rerender the component
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useRunningTaskRunIds} from 'tinytick/ui-react';
+ *
+ * const Pane = () => (
+ *   <span>Running task run Ids: {useRunningTaskRunIds().length}</span>
+ * );
+ *
+ * const App = ({manager}) => (
+ *   <Provider manager={manager}>
+ *     <Pane />
+ *   </Provider>
+ * );
+ *
+ * const manager = createManager().start();
+ * manager.setTask('takes200ms',
+ *   async () => await new Promise(resolve => setTimeout(resolve, 200)),
+ * );
+ *
+ * const app = document.createElement('div');
+ * const root = createRoot(app);
+ * root.render(<App manager={manager} />); // !act
+ *
+ * console.log(app.innerHTML);
+ * // -> '<span>Running task run Ids: 0</span>'
+ *
+ * manager.scheduleTaskRun('takes200ms'); // !act
+ * console.log(app.innerHTML);
+ * // -> '<span>Running task run Ids: 0</span>'
+ *
+ * // ... wait 100ms for task run to start // !act
+ *
+ * console.log(app.innerHTML);
+ * // -> '<span>Running task run Ids: 1</span>'
+ *
+ * // ... wait 200ms for task run to stop // !act
+ * console.log(app.innerHTML);
+ * // -> '<span>Running task run Ids: 0</span>'
+ * ```
+ * @category Manager hooks
+ * @since v1.2.0
+ */
+/// useRunningTaskRunIds
 /**
  * ProviderProps props are used with the Manager component, so that a TinyTick
  * Manager can be passed into the context of an application and used throughout.

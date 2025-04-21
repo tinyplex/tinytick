@@ -1400,9 +1400,11 @@
    * import {createManager} from 'tinytick';
    *
    * const manager = createManager().start();
-   * manager.setTask('takesTwoSeconds', async () => {
-   *   await new Promise(resolve => setTimeout(resolve, 2000));
-   * }, undefined, {maxDuration: 50});
+   * manager.setTask('takesTwoSeconds',
+   *   async () => await new Promise(resolve => setTimeout(resolve, 2000)),
+   *   undefined,
+   *   {maxDuration: 50},
+   * );
    *
    * const listenerId = manager.addTaskRunFailedListener(
    *   'takesTwoSeconds',

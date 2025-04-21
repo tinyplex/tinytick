@@ -10,6 +10,8 @@ import type {Ids, Manager} from '../@types/index.d.ts';
 import type {
   useCreateManager as useCreateManagerDecl,
   useManager as useManagerDecl,
+  useRunningTaskRunIds as useRunningTaskRunIdsDecl,
+  useScheduledTaskRunIds as useScheduledTaskRunIdsDecl,
   useStatus as useStatusDecl,
 } from '../@types/ui-react/index.d.ts';
 import {arrayIsEqual} from '../common/array.ts';
@@ -72,3 +74,9 @@ export const useManager: typeof useManagerDecl = () => useContext(Context)[0];
 
 export const useStatus: typeof useStatusDecl = () =>
   useListenable('Status', ReturnType.Number);
+
+export const useScheduledTaskRunIds: typeof useScheduledTaskRunIdsDecl = () =>
+  useListenable('ScheduledTaskRunIds', ReturnType.Array);
+
+export const useRunningTaskRunIds: typeof useRunningTaskRunIdsDecl = () =>
+  useListenable('RunningTaskRunIds', ReturnType.Array);

@@ -110,6 +110,10 @@ const prepareTestResultsFromBlock = (block: string, prefix: string): void => {
           'await act(async () => {await pause();});\n',
         )
         ?.replace(/\/\/ \.\.\.$/gm, 'await pause();\n')
+        ?.replace(
+          /\/\/ \.\.\. wait (\d+)ms.* !act$/gm,
+          'await act(async () => {await pause($1);});\n',
+        )
         ?.replace(/\/\/ \.\.\. wait (\d+)ms.*$/gm, 'await pause($1);\n')
         ?.replace(/^(.*?) \/\/ !act$/gm, 'act(() => {$1});')
         ?.replace(/^(.*?) \/\/ !yolo$/gm, '')

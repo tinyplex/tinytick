@@ -1,4 +1,4 @@
-import {size} from './other.ts';
+import {isUndefined, size} from './other.ts';
 
 export const arrayMap = <Value, Return>(
   array: Value[],
@@ -42,6 +42,11 @@ export const arrayEvery = <Value>(
   cb: (value: Value, index: number) => boolean | 0 | 1,
 ): boolean => array.every(cb);
 
-export const arrayIsEqual = (array1: unknown[], array2: unknown[]): boolean =>
+export const arrayIsEqual = (
+  array1: unknown[] | undefined,
+  array2: unknown[] | undefined,
+): boolean =>
+  !isUndefined(array1) &&
+  !isUndefined(array2) &&
   size(array1) === size(array2) &&
   arrayEvery(array1, (value1, index) => array2[index] === value1);
