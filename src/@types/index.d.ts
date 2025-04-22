@@ -192,6 +192,10 @@ export interface Manager {
     : TaskRunConfig | undefined;
   /// Manager.getTaskRunInfo
   getTaskRunInfo(taskRunId: Id): TaskRunInfo | undefined;
+
+  /// Manager.getTaskRunRunning
+  getTaskRunRunning(taskRunId: Id): boolean | undefined;
+
   /// Manager.delTaskRun
   delTaskRun(taskRunId: Id): Manager;
 

@@ -1020,6 +1020,53 @@
    */
   /// Manager.getTaskRunInfo
   /**
+   * The getTaskRunRunning method returns whether a task run is running yet or
+   * not.
+   *
+   * This is the same information as available in the `running` property of the
+   * object returned by the getTaskRunInfo method.
+   *
+   * If the task run Id does not exist, this method will return `undefined`.
+   * @param taskRunId The Id of the task run to get information for.
+   * @returns Whether the task run is running, or `undefined` if the task run Id
+   * does not exist.
+   * @example
+   * This example registers a task that is then scheduled to run. The info is
+   * then returned.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager().start();
+   * manager.setTask('ping', async (url) => await fetch(url));
+   * const taskRunId = manager.scheduleTaskRun('ping', 'https://example.org');
+   *
+   * console.log(manager.getTaskRunRunning(taskRunId));
+   * // -> false
+   *
+   * // ... wait 100ms (the Manager tickInterval) for task run to start
+   * console.log(manager.getTaskRunRunning(taskRunId));
+   * // -> true
+   * ```
+   * @example
+   * This example tries to return the info of a task run that does not exist.
+   * The method returns `undefined`.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   *
+   * console.log(manager.getTaskRunRunning('oops'));
+   * // -> undefined
+   * console.log(manager.getTaskRunRunning('oops', true));
+   * // -> undefined
+   * ```
+   * @category TaskRun
+   * @since v1.0.0
+   */
+  /// Manager.getTaskRunRunning
+  /**
    * The delTaskRun method deletes a scheduled task run or aborts a running one.
    * @param taskRunId The Id of the task run to delete or abort.
    * @returns A reference to the Manager.

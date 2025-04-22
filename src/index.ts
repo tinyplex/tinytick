@@ -647,6 +647,9 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       getTaskRunInfoFromTaskRun(taskRunId, taskRun),
     );
 
+  const getTaskRunRunning = (taskRunId: Id): boolean | undefined =>
+    mapGet(taskRunMap, id(taskRunId))?.[TaskRunPositions.Running];
+
   const delTaskRun = (taskRunId: Id): Manager =>
     fluent((taskRunId) => {
       delTaskRunImpl(taskRunId);
@@ -724,6 +727,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     scheduleTaskRun,
     getTaskRunConfig,
     getTaskRunInfo,
+    getTaskRunRunning,
     delTaskRun,
 
     getScheduledTaskRunIds,

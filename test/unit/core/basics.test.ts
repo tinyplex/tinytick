@@ -496,6 +496,14 @@ describe('taskRun', () => {
     });
   });
 
+  test('getTaskRunRunning', async () => {
+    manager.setTask('task1', task).start();
+    const taskRunId = manager.scheduleTaskRun('task1')!;
+    expect(manager.getTaskRunRunning(taskRunId)).toEqual(false);
+    await pause(10);
+    expect(manager.getTaskRunRunning(taskRunId)).toEqual(false);
+  });
+
   describe('getTaskRunInfo', () => {
     test('basic', () => {
       manager.setTask('task1', task);
