@@ -116,8 +116,8 @@ export type TaskRunIdsListener = (
   changedIds: ChangedIds,
 ) => void;
 
-/// TaskRunListener
-export type TaskRunListener = (
+/// TaskRunRunningListener
+export type TaskRunRunningListener = (
   manager: Manager,
   taskId: Id,
   taskRunId: Id,
@@ -216,11 +216,11 @@ export interface Manager {
   /// Manager.addRunningTaskRunIdsListener
   addRunningTaskRunIdsListener(listener: TaskRunIdsListener): Id;
 
-  /// Manager.addTaskRunListener
-  addTaskRunListener(
+  /// Manager.addTaskRunRunningListener
+  addTaskRunRunningListener(
     taskId: IdOrNull,
     taskRunId: IdOrNull,
-    listener: TaskRunListener,
+    listener: TaskRunRunningListener,
   ): Id;
 
   /// Manager.addTaskRunFailedListener

@@ -15,7 +15,7 @@ import type {
   TaskRunFailedListener,
   TaskRunIdsListener,
   TaskRunInfo,
-  TaskRunListener,
+  TaskRunRunningListener,
   TickListener,
   TimestampMs,
   createManager as createManagerDecl,
@@ -672,10 +672,10 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const addRunningTaskRunIdsListener = (listener: TaskRunIdsListener) =>
     addListener(listener, taskRunIdsListeners[TaskRunState.Running]);
 
-  const addTaskRunListener = (
+  const addTaskRunRunningListener = (
     taskId: IdOrNull,
     taskRunId: IdOrNull,
-    listener: TaskRunListener,
+    listener: TaskRunRunningListener,
   ) => addListener(listener, taskRunListeners, [taskId, taskRunId]);
 
   const addTaskRunFailedListener = (
@@ -734,7 +734,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     addDidTickListener,
     addScheduledTaskRunIdsListener,
     addRunningTaskRunIdsListener,
-    addTaskRunListener,
+    addTaskRunRunningListener,
     addTaskRunFailedListener,
     delListener,
 

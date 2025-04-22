@@ -6,7 +6,7 @@ import type {
   StatusListener,
   TaskRunFailedListener,
   TaskRunIdsListener,
-  TaskRunListener,
+  TaskRunRunningListener,
   TickListener,
 } from '../@types/index.d.ts';
 import {arrayForEach, arrayPush} from './array.ts';
@@ -35,7 +35,7 @@ type Listener =
   | StatusListener
   | TickListener
   | TaskRunIdsListener
-  | TaskRunListener
+  | TaskRunRunningListener
   | TaskRunFailedListener;
 
 type IdOrNumber = Id | number;

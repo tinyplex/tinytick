@@ -69,7 +69,7 @@ describe('ticked sequences', () => {
   describe('common sequences', () => {
     let scheduledTaskRunIdsListenerId: string;
     let runningTaskRunIdsListenerId: string;
-    let taskRunListenerId: string;
+    let taskRunRunningListenerId: string;
     let taskRunFailedListenerId: string;
 
     beforeEach(() => {
@@ -84,7 +84,7 @@ describe('ticked sequences', () => {
         (manager, changedIds) =>
           log.push({runningIds: manager.getRunningTaskRunIds()}, {changedIds}),
       );
-      taskRunListenerId = manager.addTaskRunListener(
+      taskRunRunningListenerId = manager.addTaskRunRunningListener(
         null,
         null,
         (_manager, taskId, taskRunId, running, reason) =>
@@ -101,7 +101,7 @@ describe('ticked sequences', () => {
     afterEach(() => {
       manager.delListener(scheduledTaskRunIdsListenerId);
       manager.delListener(runningTaskRunIdsListenerId);
-      manager.delListener(taskRunListenerId);
+      manager.delListener(taskRunRunningListenerId);
       manager.delListener(taskRunFailedListenerId);
     });
 
@@ -325,7 +325,7 @@ describe('ticked sequences', () => {
       throw new Error('broken2');
     });
 
-    const taskRunListenerId1 = manager.addTaskRunListener(
+    const taskRunRunningListenerId1 = manager.addTaskRunRunningListener(
       'task1',
       null,
       (_manager, taskId, taskRunId, running, reason) =>
@@ -342,7 +342,7 @@ describe('ticked sequences', () => {
     const taskRunId2 = manager.scheduleTaskRun('task2')!;
     manager.scheduleTaskRun('task2')!;
 
-    const taskRunListenerId2 = manager.addTaskRunListener(
+    const taskRunRunningListenerId2 = manager.addTaskRunRunningListener(
       null,
       taskRunId2,
       (_manager, taskId, taskRunId, running, reason) =>
@@ -372,9 +372,9 @@ describe('ticked sequences', () => {
       {didTick: 2},
     ]);
 
-    manager.delListener(taskRunListenerId1);
+    manager.delListener(taskRunRunningListenerId1);
     manager.delListener(taskRunFailedListenerId1);
-    manager.delListener(taskRunListenerId2);
+    manager.delListener(taskRunRunningListenerId2);
     manager.delListener(taskRunFailedListenerId2);
   });
 });

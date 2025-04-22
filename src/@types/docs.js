@@ -17,7 +17,7 @@
 /**
  * The IdOrNull type is a simple alias for the union of a string or `null`
  * value, where typically `null` indicates a wildcard - such as when used in the
- * Manager's addScheduledTaskRunListener method.
+ * Manager's addScheduledTaskRunRunningListener method.
  * @category Identity
  * @since v1.2.0
  */
@@ -326,8 +326,8 @@
  * usefully when it finishes.
  *
  * The enum is used to listen to just certain types of task run completions
- * (success, timeouts, or errors), and is also passed to a TaskRunListener
- * function.
+ * (success, timeouts, or errors), and is also passed to a
+ * TaskRunRunningListener function.
  * @category TaskRun
  * @since v1.2.0
  */
@@ -413,15 +413,15 @@
  */
 /// TaskRunIdsListener
 /**
- * The TaskRunListener type describes a function that is used to listen to
- * changes to a specific task run in the Manager.
+ * The TaskRunRunningListener type describes a function that is used to listen
+ * to changes to a specific task run in the Manager.
  *
- * A TaskRunListener is provided when using the addTaskRunListener method. See
- * that method for specific examples.
+ * A TaskRunRunningListener is provided when using the addTaskRunRunningListener
+ * method. See that method for specific examples.
  *
- * When called, a TaskRunListener is given a reference to the Manager, the Id of
- * the task, the Id of the task run that changed, the way in which it changed,
- * and the reason for that change.
+ * When called, a TaskRunRunningListener is given a reference to the Manager,
+ * the Id of the task, the Id of the task run that changed, the way in which it
+ * changed, and the reason for that change.
  * @param manager A reference to the Manager that changed.
  * @param taskId The Id of the task that changed.
  * @param taskRunId The Id of the task run that changed.
@@ -431,7 +431,7 @@
  * @category Listener
  * @since v1.2.0
  */
-/// TaskRunListener
+/// TaskRunRunningListener
 /**
  * The TaskRunFailedListener type describes a function that is used to listen to
  * a failing task run, whether because of timeout, error, or deletion.
@@ -440,8 +440,8 @@
  * method. See that method for specific examples.
  *
  * When called, a TaskRunFailedListener is given a reference to the Manager, the
- * Id of the task, the Id of the task run that changed, the reason it
- * failed, and a string message (in the case of an error being thrown).
+ * Id of the task, the Id of the task run that changed, the reason it failed,
+ * and a string message (in the case of an error being thrown).
  * @param manager A reference to the Manager that changed.
  * @param taskId The Id of the task that changed.
  * @param taskRunId The Id of the task run that changed.
@@ -1299,13 +1299,13 @@
    */
   /// Manager.addRunningTaskRunIdsListener
   /**
-   * The addTaskRunListener method registers a listener function with the
+   * The addTaskRunRunningListener method registers a listener function with the
    * Manager that will be called whenever the state of a relevant task run
    * changes.
    *
-   * The provided listener is a TaskRunListener function, and will be called
-   * with a reference to the Manager, the Id of the task, the Id of the task run
-   * that was started, how it changed, and the reason for the change.
+   * The provided listener is a TaskRunRunningListener function, and will be
+   * called with a reference to the Manager, the Id of the task, the Id of the
+   * task run that was started, how it changed, and the reason for the change.
    *
    * You can either listen for a run of a single task starting (by specifying
    * the task Id as the method's first parameter) or for a run of any task
@@ -1327,7 +1327,7 @@
    * const manager = createManager().start();
    * manager.setTask('ping', async () => await fetch('https://example.org'));
    *
-   * const listenerId = manager.addTaskRunListener(
+   * const listenerId = manager.addTaskRunRunningListener(
    *   'ping',
    *   null,
    *   (manager, taskId, taskRunId, running, reason) => console.log(
@@ -1348,7 +1348,7 @@
    * @category Listener
    * @since v1.2.0
    */
-  /// Manager.addTaskRunListener
+  /// Manager.addTaskRunRunningListener
   /**
    * The addTaskRunFailedListener method registers a listener function with the
    * Manager that will be called whenever a task run fails, whether because of
@@ -1443,7 +1443,7 @@
    * manager.setTask('ping', async () => await fetch('https://example.org'));
    *
    * // Add a listener to track task runs
-   * const listenerId = manager.addTaskRunListener(
+   * const listenerId = manager.addTaskRunRunningListener(
    *   'ping',
    *   null,
    *   (manager, taskId, taskRunId, running, reason) => console.log(
