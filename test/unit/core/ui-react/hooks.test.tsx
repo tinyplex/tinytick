@@ -193,7 +193,7 @@ describe('Read Hooks', () => {
     });
     expect(container.textContent).toEqual('0');
 
-    await act(async () => await pause(50));
+    await act(async () => await pause(100));
     expect(container.textContent).toEqual('1');
 
     await act(async () => await pause(200));
