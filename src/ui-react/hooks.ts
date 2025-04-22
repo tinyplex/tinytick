@@ -6,13 +6,14 @@ import {
   useRef,
   useSyncExternalStore,
 } from 'react';
-import type {Ids, Manager} from '../@types/index.d.ts';
+import type {Id, Manager} from '../@types/index.d.ts';
 import type {
   useCreateManager as useCreateManagerDecl,
   useManager as useManagerDecl,
   useRunningTaskRunIds as useRunningTaskRunIdsDecl,
   useScheduledTaskRunIds as useScheduledTaskRunIdsDecl,
   useStatus as useStatusDecl,
+  useTaskRunRunning as useTaskRunRunningDecl,
 } from '../@types/ui-react/index.d.ts';
 import {arrayIsEqual} from '../common/array.ts';
 import {isUndefined} from '../common/other.ts';
@@ -23,17 +24,16 @@ const EMPTY_ARRAY: Readonly<[]> = [];
 enum ReturnType {
   Array,
   Number,
+  Boolean,
 }
-const DEFAULTS = [[], 0];
-const IS_EQUALS: ((thing1: any, thing2: any) => boolean)[] = [
-  arrayIsEqual,
-  (thing1: any, thing2: any) => thing1 === thing2,
-];
+const DEFAULTS = [[], 0, false];
+const IS_EQUALS: ((thing1: any, thing2: any) => boolean)[] = [arrayIsEqual];
+const isEqual = (thing1: any, thing2: any) => thing1 === thing2;
 
 const useListenable = (
   listenable: string,
   returnType: ReturnType,
-  args: Readonly<Ids> = EMPTY_ARRAY,
+  args: Readonly<(Id | null)[]> = EMPTY_ARRAY,
 ): any => {
   const manager = useManager();
   const lastResult = useRef(DEFAULTS[returnType]);
@@ -41,9 +41,11 @@ const useListenable = (
     () => {
       const nextResult = isUndefined(manager)
         ? undefined
-        : ((manager as any)['get' + listenable]?.(...args) ??
-          DEFAULTS[returnType]);
-      return !IS_EQUALS[returnType](nextResult, lastResult.current)
+        : ((manager as any)['get' + listenable]?.(
+            ...args.filter((arg) => arg !== null),
+          ) ?? DEFAULTS[returnType]);
+
+      return !(IS_EQUALS[returnType] ?? isEqual)(nextResult, lastResult.current)
         ? (lastResult.current = nextResult)
         : lastResult.current;
     },
@@ -80,3 +82,7 @@ export const useScheduledTaskRunIds: typeof useScheduledTaskRunIdsDecl = () =>
 
 export const useRunningTaskRunIds: typeof useRunningTaskRunIdsDecl = () =>
   useListenable('RunningTaskRunIds', ReturnType.Array);
+
+export const useTaskRunRunning: typeof useTaskRunRunningDecl = (
+  taskRunId: Id,
+) => useListenable('TaskRunRunning', ReturnType.Boolean, [null, taskRunId]);

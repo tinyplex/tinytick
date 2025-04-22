@@ -1,6 +1,6 @@
 /// ui-react
 import {ReactElement} from 'react';
-import type {Ids, Manager, ManagerStatus} from '../index.d.ts';
+import type {Id, Ids, Manager, ManagerStatus} from '../index.d.ts';
 
 /// useCreateManager
 export function useCreateManager(
@@ -19,6 +19,9 @@ export function useScheduledTaskRunIds(): Ids | undefined;
 
 /// useRunningTaskRunIds
 export function useRunningTaskRunIds(): Ids | undefined;
+
+/// useTaskRunRunning
+export function useTaskRunRunning(taskRunId: Id): boolean | undefined;
 
 /// ProviderProps
 export type ProviderProps = {

@@ -177,7 +177,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const statusListeners: IdSet2 = mapNew();
   const tickListeners: Pair<IdSet2> = pairNewMap();
   const taskRunIdsListeners: Pair<IdSet2> = pairNewMap();
-  const taskRunListeners: IdMap2<IdSet> = mapNew();
+  const taskRunRunningListeners: IdMap2<IdSet> = mapNew();
   const taskRunFailedListeners: IdMap2<IdSet> = mapNew();
 
   const [addListener, callListeners, delListenerImpl] = getListenerFunctions(
@@ -308,7 +308,12 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     });
     collForEach(taskRunChanges, (taskChanges, taskId) =>
       collForEach(taskChanges, ([running, reason], taskRunId) =>
-        callListeners(taskRunListeners, [taskId, taskRunId], running, reason),
+        callListeners(
+          taskRunRunningListeners,
+          [taskId, taskRunId],
+          running,
+          reason,
+        ),
       ),
     );
     collClear(taskRunChanges);
@@ -386,8 +391,8 @@ export const createManager: typeof createManagerDecl = (): Manager => {
                   taskRunId,
                   TaskRunReasonValues.Succeeded,
                 );
-                callAllListeners();
                 mapSet(taskRunMap, taskRunId);
+                callAllListeners();
               }
             })
             .catch((error) => {
@@ -679,7 +684,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     taskId: IdOrNull,
     taskRunId: IdOrNull,
     listener: TaskRunRunningListener,
-  ) => addListener(listener, taskRunListeners, [taskId, taskRunId]);
+  ) => addListener(listener, taskRunRunningListeners, [taskId, taskRunId]);
 
   const addTaskRunFailedListener = (
     taskId: IdOrNull,

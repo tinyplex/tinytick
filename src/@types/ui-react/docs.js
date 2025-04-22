@@ -184,8 +184,8 @@
  */
 /// useStatus
 /**
- * The useScheduledTaskRunIds hook returns the current scheduled task run Ids
- * of the Manager provided by a Provider component.
+ * The useScheduledTaskRunIds hook returns the current scheduled task run Ids of
+ * the Manager provided by a Provider component.
  * @returns The current scheduled task run Ids of the Manager, or `undefined` if
  * called from outside an active Provider.
  * @example
@@ -286,6 +286,64 @@
  * @since v1.2.0
  */
 /// useRunningTaskRunIds
+/**
+ * The useTaskRunRunning hook returns a boolean indicating whether a specific
+ * task run is currently running in the Manager provided by a Provider
+ * component.
+ *
+ * If the task run Id does not exist or if called from outside an active
+ * Provider, this method will return `undefined`.
+ * @param taskRunId The Id of the task run to get information for.
+ * @returns Whether the task run is running, or `undefined` if the task run Id
+ * does not exist or if called from outside an active Provider.
+ * @example
+ * This example shows how to use the useTaskRunRunning hook within a
+ * component that's nested inside a Provider. Because the hook is reactive, a
+ * change to the task run's running status will rerender the component
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useTaskRunRunning} from 'tinytick/ui-react';
+ *
+ * const Pane = ({taskRunId}) => (
+ *   <span>
+ *     Task run running: {useTaskRunRunning(taskRunId) ? 'true' : 'false'}
+ *   </span>
+ * );
+ *
+ * const App = ({manager, taskRunId}) => (
+ *   <Provider manager={manager}>
+ *     <Pane taskRunId={taskRunId} />
+ *   </Provider>
+ * );
+ *
+ * const manager = createManager();
+ * manager.setTask('ping', async () => await fetch('https://example.org'));
+ *
+ * const app = document.createElement('div');
+ * const root = createRoot(app);
+ *
+ * const taskRunId = manager.scheduleTaskRun('ping');
+ * root.render(<App manager={manager} taskRunId={taskRunId} />); // !act
+ *
+ * console.log(app.innerHTML);
+ * // -> '<span>Task run running: false</span>'
+ *
+ * manager.start(); // !act
+ * // ... wait 150ms for task to start running // !act
+ * console.log(app.innerHTML);
+ * // -> '<span>Task run running: true</span>'
+ *
+ * // ... wait 100ms for task to complete // !act
+ * console.log(app.innerHTML);
+ * // -> '<span>Task run running: false</span>'
+ * ```
+ * @category Manager hooks
+ * @since v1.2.0
+ */
+/// useTaskRunRunning
 /**
  * ProviderProps props are used with the Manager component, so that a TinyTick
  * Manager can be passed into the context of an application and used throughout.

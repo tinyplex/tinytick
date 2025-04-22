@@ -1,6 +1,6 @@
 import {render} from '@testing-library/react';
 import React, {act, StrictMode} from 'react';
-import {createManager, type Manager} from 'tinytick';
+import {createManager, type Id, type Manager} from 'tinytick';
 import {
   Provider,
   useCreateManager,
@@ -8,6 +8,7 @@ import {
   useRunningTaskRunIds,
   useScheduledTaskRunIds,
   useStatus,
+  useTaskRunRunning,
 } from 'tinytick/ui-react';
 import {pause} from '../../common.ts';
 
@@ -198,6 +199,43 @@ describe('Read Hooks', () => {
 
     await act(async () => await pause(200));
     expect(container.textContent).toEqual('0');
+
+    expect(didRender).toHaveBeenCalledTimes(3);
+    unmount();
+  });
+
+  test('useTaskRunRunning, no manager', () => {
+    const Test = () => didRender(useTaskRunRunning('') ?? 'undefined');
+
+    const {container, unmount} = render(
+      <Provider>
+        <Test />
+      </Provider>,
+    );
+    expect(container.textContent).toEqual('undefined');
+    unmount();
+  });
+
+  test('useTaskRunRunning', async () => {
+    const Test = ({taskRunId}: {taskRunId: Id}) =>
+      didRender(useTaskRunRunning(taskRunId) ? 'true' : 'false');
+    manager.start();
+    manager.setTask('task1', async () => await pause(50));
+    const taskRunId = manager.scheduleTaskRun('task1')!;
+
+    const {container, unmount} = render(
+      <Provider manager={manager}>
+        <Test taskRunId={taskRunId} />
+      </Provider>,
+    );
+
+    expect(container.textContent).toEqual('false');
+
+    await act(async () => await pause(100));
+    expect(container.textContent).toEqual('true');
+
+    await act(async () => await pause(100));
+    expect(container.textContent).toEqual('false');
 
     expect(didRender).toHaveBeenCalledTimes(3);
     unmount();
