@@ -12,7 +12,9 @@ import type {
   useManager as useManagerDecl,
   useRunningTaskRunIds as useRunningTaskRunIdsDecl,
   useScheduledTaskRunIds as useScheduledTaskRunIdsDecl,
+  useStartCallback as useStartCallbackDecl,
   useStatus as useStatusDecl,
+  useStopCallback as useStopCallbackDecl,
   useTaskRunRunning as useTaskRunRunningDecl,
 } from '../@types/ui-react/index.d.ts';
 import {arrayIsEqual} from '../common/array.ts';
@@ -86,3 +88,15 @@ export const useRunningTaskRunIds: typeof useRunningTaskRunIdsDecl = () =>
 export const useTaskRunRunning: typeof useTaskRunRunningDecl = (
   taskRunId: Id,
 ) => useListenable('TaskRunRunning', ReturnType.Boolean, [null, taskRunId]);
+
+export const useStartCallback: typeof useStartCallbackDecl = () => {
+  const manager = useManager();
+  return useCallback(() => manager?.start(), [manager]);
+};
+
+export const useStopCallback: typeof useStopCallbackDecl = (
+  force?: boolean,
+) => {
+  const manager = useManager();
+  return useCallback(() => manager?.stop(force), [manager, force]);
+};

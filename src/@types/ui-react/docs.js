@@ -332,7 +332,7 @@
  * // -> '<span>Task run running: false</span>'
  *
  * manager.start(); // !act
- * // ... wait 150ms for task to start running // !act
+ * // ... wait 100ms for task to start running // !act
  * console.log(app.innerHTML);
  * // -> '<span>Task run running: true</span>'
  *
@@ -344,6 +344,107 @@
  * @since v1.2.0
  */
 /// useTaskRunRunning
+
+/**
+ * The useStartCallback hook returns a callback that can be used to start the
+ * Manager provided by a Provider component.
+ * @returns A callback that starts the Manager.
+ * @example
+ * This example shows how to use the useStartCallback hook within a component
+ * that's nested inside a Provider. The callback is used to start the Manager
+ * when the status is clicked.
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useStartCallback, useStatus} from 'tinytick/ui-react';
+ *
+ * const Pane = () => {
+ *   const handleClick = useStartCallback();
+ *   return (
+ *     <span id="span" onClick={handleClick}>
+ *       Manager status: {useStatus()}
+ *     </span>
+ *   );
+ * }
+ *
+ * const App = ({manager}) => (
+ *   <Provider manager={manager}>
+ *     <Pane />
+ *   </Provider>
+ * );
+ *
+ * const app = document.createElement('div');
+ * const manager = createManager();
+ * createRoot(app).render(<App manager={manager} />); // !act
+ * const span = app.querySelector('span');
+ *
+ * console.log(span.innerHTML);
+ * // -> 'Manager status: 0'
+ *
+ * // User clicks the <span> element:
+ * // -> span MouseEvent('click', {bubbles: true})
+ *
+ * console.log(span.innerHTML);
+ * // -> 'Manager status: 1'
+ * ```
+ * @category Manager hooks
+ * @since v1.2.0
+ */
+/// useStartCallback
+
+/**
+ * The useStopCallback hook returns a callback that can be used to stop the
+ * Manager provided by a Provider component.
+ * @param force Whether to stop the Manager immediately instead of waiting for
+ * all scheduled task runs to complete.
+ * @returns A callback that stops the Manager.
+ * @example
+ * This example shows how to use the useStopCallback hook within a component
+ * that's nested inside a Provider. The callback is used to force-stop the
+ * Manager when the status is clicked.
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useStopCallback, useStatus} from 'tinytick/ui-react';
+ *
+ * const Pane = () => {
+ *   const handleClick = useStopCallback(true);
+ *   return (
+ *     <span id="span" onClick={handleClick}>
+ *       Manager status: {useStatus()}
+ *     </span>
+ *   );
+ * }
+ *
+ * const App = ({manager}) => (
+ *   <Provider manager={manager}>
+ *     <Pane />
+ *   </Provider>
+ * );
+ *
+ * const app = document.createElement('div');
+ * const manager = createManager().start();
+ * createRoot(app).render(<App manager={manager} />); // !act
+ * const span = app.querySelector('span');
+ *
+ * console.log(span.innerHTML);
+ * // -> 'Manager status: 1'
+ *
+ * // User clicks the <span> element:
+ * // -> span MouseEvent('click', {bubbles: true})
+ *
+ * console.log(span.innerHTML);
+ * // -> 'Manager status: 0'
+ * ```
+ * @category Manager hooks
+ * @since v1.2.0
+ */
+/// useStopCallback
+
 /**
  * ProviderProps props are used with the Manager component, so that a TinyTick
  * Manager can be passed into the context of an application and used throughout.

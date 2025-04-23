@@ -21,7 +21,13 @@ export function useScheduledTaskRunIds(): Ids | undefined;
 export function useRunningTaskRunIds(): Ids | undefined;
 
 /// useTaskRunRunning
-export function useTaskRunRunning(taskRunId: Id): boolean | undefined;
+export function useTaskRunRunning(taskRunId: Id): boolean;
+
+/// useStartCallback
+export function useStartCallback(): () => Manager | undefined;
+
+/// useStopCallback
+export function useStopCallback(force?: boolean): () => Manager | undefined;
 
 /// ProviderProps
 export type ProviderProps = {

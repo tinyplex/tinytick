@@ -1,4 +1,4 @@
-import {render} from '@testing-library/react';
+import {fireEvent, render} from '@testing-library/react';
 import React, {act, StrictMode} from 'react';
 import {createManager, type Id, type Manager} from 'tinytick';
 import {
@@ -7,7 +7,9 @@ import {
   useManager,
   useRunningTaskRunIds,
   useScheduledTaskRunIds,
+  useStartCallback,
   useStatus,
+  useStopCallback,
   useTaskRunRunning,
 } from 'tinytick/ui-react';
 import {pause} from '../../common.ts';
@@ -238,6 +240,76 @@ describe('Read Hooks', () => {
     expect(container.textContent).toEqual('false');
 
     expect(didRender).toHaveBeenCalledTimes(3);
+    unmount();
+  });
+});
+
+describe('Write Hooks', () => {
+  test('useStartCallback', () => {
+    const Test = () => {
+      const handler = useStartCallback();
+      return didRender(<button onClick={handler} />);
+    };
+
+    const {getByRole, unmount} = render(
+      <Provider manager={manager}>
+        <Test />
+      </Provider>,
+    );
+
+    expect(manager.getStatus()).toEqual(0);
+
+    const button = getByRole('button');
+    fireEvent.click(button);
+
+    expect(manager.getStatus()).toEqual(1);
+    expect(didRender).toHaveBeenCalledTimes(1);
+    unmount();
+  });
+
+  test('useStopCallback', () => {
+    const Test = () => {
+      const handler = useStopCallback();
+      return didRender(<button onClick={handler} />);
+    };
+
+    const {getByRole, unmount} = render(
+      <Provider manager={manager}>
+        <Test />
+      </Provider>,
+    );
+
+    manager.start();
+    expect(manager.getStatus()).toEqual(1);
+
+    const button = getByRole('button');
+    fireEvent.click(button);
+
+    expect(manager.getStatus()).toEqual(2);
+    expect(didRender).toHaveBeenCalledTimes(1);
+    unmount();
+  });
+
+  test('useStopCallback, force', () => {
+    const Test = () => {
+      const handler = useStopCallback(true);
+      return didRender(<button onClick={handler} />);
+    };
+
+    const {getByRole, unmount} = render(
+      <Provider manager={manager}>
+        <Test />
+      </Provider>,
+    );
+
+    manager.start();
+    expect(manager.getStatus()).toEqual(1);
+
+    const button = getByRole('button');
+    fireEvent.click(button);
+
+    expect(manager.getStatus()).toEqual(0);
+    expect(didRender).toHaveBeenCalledTimes(1);
     unmount();
   });
 });
