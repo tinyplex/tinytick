@@ -230,7 +230,7 @@
  * console.log(app.innerHTML);
  * // -> '<span>Scheduled task run Ids: 2</span>'
  * ```
- * @category Manager hooks
+ * @category Task run hooks
  * @since v1.2.0
  */
 /// useScheduledTaskRunIds
@@ -286,7 +286,7 @@
  * console.log(app.innerHTML);
  * // -> '<span>Running task run Ids: 0</span>'
  * ```
- * @category Manager hooks
+ * @category Task run hooks
  * @since v1.2.0
  */
 /// useRunningTaskRunIds
@@ -345,7 +345,7 @@
  * console.log(app.innerHTML);
  * // -> '<span>Task run running: false</span>'
  * ```
- * @category Manager hooks
+ * @category Task run hooks
  * @since v1.2.0
  */
 /// useTaskRunRunning
@@ -449,6 +449,74 @@
  * @since v1.2.0
  */
 /// useStopCallback
+
+/**
+ * The useSetTask hook returns registers task in the Manager provided by a
+ * Provider component, optionally associating it with a category and/or a custom
+ * configuration.
+ *
+ * Note that this hook will unregister the task when the component is unmounted,
+ * so it is most suitable for setting up a task that is only needed within one
+ * part of an application.
+ *
+ * The task is an asynchronous function that is passed an optional string when
+ * it is scheduled. Like the setTask method, the hook simply registers it with
+ * an Id so a run can be scheduled in the future.
+ *
+ * The configuration has properties which let you indicate the duration of task
+ * runs and their retry behaviors, for example.
+ *
+ * If the hook is called on a task Id that already exists, its function,
+ * category, and configuration will be updated. When the component unmounts, the
+ * task will be removed, so it is best to use a unique Id for the task that will
+ * not conflict with tasks registered elsewhere in the application.
+ * @param taskId The Id of the task to register.
+ * @param task The task function to register.
+ * @param taskDeps An optional array of dependencies for the task function,
+ * which, if any change, result in the task being registered. Defaults to an
+ * empty array.
+ * @param categoryId The optional Id of a category to associate the task with.
+ * @param config An optional TaskRunConfig to set for all runs of this Task.
+ * @param configDeps An optional array of dependencies for the config object,
+ * which, if any change, result in the task being registered. Defaults to an
+ * empty array.
+ * @example
+ * This example shows how to use the useSetTask hook within a component that's
+ * nested inside a Provider. The hook is used to set a task in the component
+ * that is removed when the component is unmounted.
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useSetTask} from 'tinytick/ui-react';
+ *
+ * const Pane = () => {
+ *   useSetTask('ping', async () => await fetch('https://example.org'));
+ * }
+ *
+ * const App = ({manager}) => (
+ *   <Provider manager={manager}>
+ *     <Pane />
+ *   </Provider>
+ * );
+ *
+ * const app = document.createElement('div');
+ * const manager = createManager();
+ * const root = createRoot(app);
+ * root.render(<App manager={manager} />); // !act
+ *
+ * console.log(manager.getTaskIds());
+ * // -> ['ping']
+ *
+ * root.unmount(); // !act
+ * console.log(manager.getTaskIds());
+ * // -> []
+ * ```
+ * @category Task hooks
+ * @since v1.2.0
+ */
+/// useSetTask
 
 /**
  * ProviderProps props are used with the Manager component, so that a TinyTick

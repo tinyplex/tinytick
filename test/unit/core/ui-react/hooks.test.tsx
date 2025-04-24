@@ -7,6 +7,7 @@ import {
   useManager,
   useRunningTaskRunIds,
   useScheduledTaskRunIds,
+  useSetTask,
   useStartCallback,
   useStatus,
   useStopCallback,
@@ -311,5 +312,33 @@ describe('Write Hooks', () => {
     expect(manager.getStatus()).toEqual(0);
     expect(didRender).toHaveBeenCalledTimes(1);
     unmount();
+  });
+
+  test('useSetTask', () => {
+    const Test = ({duration}: {duration: number}) => {
+      useSetTask('task' + duration, async () => await pause(duration));
+      return didRender(duration);
+    };
+
+    const {rerender, unmount} = render(
+      <Provider manager={manager}>
+        <Test duration={100} />
+      </Provider>,
+    );
+
+    expect(manager.getTaskIds()).toEqual(['task100']);
+    expect(didRender).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <Provider manager={manager}>
+        <Test duration={200} />
+      </Provider>,
+    );
+
+    expect(manager.getTaskIds()).toEqual(['task200']);
+    expect(didRender).toHaveBeenCalledTimes(2);
+
+    unmount();
+    expect(manager.getTaskIds()).toEqual([]);
   });
 });

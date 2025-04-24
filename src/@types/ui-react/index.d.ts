@@ -1,6 +1,13 @@
 /// ui-react
-import {ReactElement} from 'react';
-import type {Id, Ids, Manager, ManagerStatus} from '../index.d.ts';
+import {DependencyList, ReactElement} from 'react';
+import type {
+  Id,
+  Ids,
+  Manager,
+  ManagerStatus,
+  Task,
+  TaskRunConfig,
+} from '../index.d.ts';
 
 /// useCreateManager
 export function useCreateManager(
@@ -28,6 +35,16 @@ export function useStartCallback(): () => Manager | undefined;
 
 /// useStopCallback
 export function useStopCallback(force?: boolean): () => Manager | undefined;
+
+// useSetTask
+export function useSetTask(
+  taskId: Id,
+  task: Task,
+  taskDeps?: DependencyList,
+  categoryId?: Id,
+  config?: TaskRunConfig,
+  configDeps?: DependencyList,
+): void;
 
 /// ProviderProps
 export type ProviderProps = {

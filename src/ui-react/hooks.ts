@@ -2,16 +2,18 @@ import {
   DependencyList,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
 } from 'react';
-import type {Id, Manager} from '../@types/index.d.ts';
+import type {Id, Manager, Task, TaskRunConfig} from '../@types/index.d.ts';
 import type {
   useCreateManager as useCreateManagerDecl,
   useManager as useManagerDecl,
   useRunningTaskRunIds as useRunningTaskRunIdsDecl,
   useScheduledTaskRunIds as useScheduledTaskRunIdsDecl,
+  useSetTask as useSetTaskDecl,
   useStartCallback as useStartCallbackDecl,
   useStatus as useStatusDecl,
   useStopCallback as useStopCallbackDecl,
@@ -99,4 +101,25 @@ export const useStopCallback: typeof useStopCallbackDecl = (
 ) => {
   const manager = useManager();
   return useCallback(() => manager?.stop(force), [manager, force]);
+};
+
+export const useSetTask: typeof useSetTaskDecl = (
+  taskId: Id,
+  task: Task,
+  taskDeps: DependencyList = EMPTY_ARRAY,
+  categoryId?: Id,
+  config?: TaskRunConfig,
+  configDeps: DependencyList = EMPTY_ARRAY,
+) => {
+  const manager = useManager();
+  useEffect(
+    () => {
+      manager?.setTask(taskId, task, categoryId, config);
+      return () => {
+        manager?.delTask(taskId);
+      };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [manager, taskId, ...taskDeps, categoryId, ...configDeps],
+  );
 };
