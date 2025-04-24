@@ -5,6 +5,7 @@
  * @since v1.0.0
  */
 /// tinytick
+
 /**
  * The Id type is a simple alias for a string.
  *
@@ -14,6 +15,7 @@
  * @since v1.0.0
  */
 /// Id
+
 /**
  * The IdOrNull type is a simple alias for the union of a string or `null`
  * value, where typically `null` indicates a wildcard - such as when used in the
@@ -22,6 +24,7 @@
  * @since v1.2.0
  */
 /// IdOrNull
+
 /**
  * The Ids type is a simple alias for an array of strings.
  *
@@ -31,6 +34,7 @@
  * @since v1.0.0
  */
 /// Ids
+
 /**
  * The IdAddedOrRemoved type describes a change made to an Id in a list of Ids.
  *
@@ -42,6 +46,7 @@
  * @since v1.2.0
  */
 /// IdAddedOrRemoved
+
 /**
  * The ChangedIds type describes the Ids that were added or removed from a list
  * of Ids.
@@ -52,6 +57,7 @@
  * @since v1.2.0
  */
 /// ChangedIds
+
 /**
  * The TimestampMs type is a simple alias for a number.
  *
@@ -71,6 +77,7 @@
  * @since v1.0.0
  */
 /// TimestampMs
+
 /**
  * The DurationMs type.
  *
@@ -90,6 +97,7 @@
  * @since v1.0.0
  */
 /// DurationMs
+
 /**
  * The Task type represents a task function that has been registered with the
  * Manager.
@@ -112,12 +120,14 @@
  * @since v1.0.0
  */
 /// Task
+
 /**
  * The ManagerStatus enum represents the current status of the Manager.
  * @category Manager
  * @since v1.0.0
  */
 /// ManagerStatus
+
 {
   /**
    * Indicates that the Manager is stopped.
@@ -153,6 +163,7 @@
  * @since v1.0.0
  */
 /// ManagerConfig
+
 {
   /**
    * The optional time in milliseconds after one tick completes before the next
@@ -175,6 +186,7 @@
  * @since v1.0.0
  */
 /// ManagerConfigWithDefaults
+
 {
   /**
    * The time in milliseconds after one tick completes before the next tick will
@@ -202,6 +214,7 @@
  * @since v1.0.0
  */
 /// TaskRunConfig
+
 {
   /**
    * The optional maximum time in milliseconds that a task can run for before a
@@ -237,6 +250,7 @@
  * @since v1.0.0
  */
 /// TaskRunConfigWithDefaults
+
 {
   /**
    * The maximum time in milliseconds that a task can run for before a signal is
@@ -274,6 +288,7 @@
  * @since v1.0.0
  */
 /// TaskRunInfo
+
 {
   /**
    * A reference to the Manager that is running the task.
@@ -332,6 +347,7 @@
  * @since v1.2.0
  */
 /// TaskRunReason
+
 {
   /**
    * Indicates that the task run was scheduled.
@@ -383,6 +399,7 @@
  * @since v1.2.0
  */
 /// StatusListener
+
 /**
  * The TickListener type describes a function that is used to listen to the fact
  * that the Manager is either about to tick or did just tick.
@@ -395,6 +412,7 @@
  * @since v1.2.0
  */
 /// TickListener
+
 /**
  * The TaskRunIdsListener type describes a function that is used to listen to
  * changes to task run Ids in the Manager.
@@ -412,6 +430,7 @@
  * @since v1.2.0
  */
 /// TaskRunIdsListener
+
 /**
  * The TaskRunRunningListener type describes a function that is used to listen
  * to changes to a specific task run in the Manager.
@@ -432,6 +451,7 @@
  * @since v1.2.0
  */
 /// TaskRunRunningListener
+
 /**
  * The TaskRunFailedListener type describes a function that is used to listen to
  * a failing task run, whether because of timeout, error, or deletion.
@@ -452,6 +472,7 @@
  * @since v1.2.0
  */
 /// TaskRunFailedListener
+
 /**
  * The Manager interface represents the main entry point for the TinyTick API,
  * and the object with which you register each Task, and schedule them to run.
@@ -461,6 +482,7 @@
  * @since v1.0.0
  */
 /// Manager
+
 {
   /**
    * The setManagerConfig method lets you configure the Manager as a whole.
@@ -1660,6 +1682,7 @@
    */
   /// Manager.getNow
 }
+
 /**
  * The createManager function creates a Manager, and is the main entry point
  * into the tinytick module.

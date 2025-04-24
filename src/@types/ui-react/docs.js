@@ -102,6 +102,7 @@
  * @since v1.1.0
  */
 /// useCreateManager
+
 /**
  * The useManager hook returns the Manager provided by the a Provider component.
  * @returns The current Manager, or `undefined` if called from outside an active
@@ -141,6 +142,7 @@
  * @since v1.1.0
  */
 /// useManager
+
 /**
  * The useStatus hook returns the current status of the Manager provided by a
  * Provider component.
@@ -183,6 +185,7 @@
  * @since v1.2.0
  */
 /// useStatus
+
 /**
  * The useScheduledTaskRunIds hook returns the current scheduled task run Ids of
  * the Manager provided by a Provider component.
@@ -231,6 +234,7 @@
  * @since v1.2.0
  */
 /// useScheduledTaskRunIds
+
 /**
  * The useRunningTaskRunIds hook returns the current running task run Ids of the
  * Manager provided by a Provider component.
@@ -286,6 +290,7 @@
  * @since v1.2.0
  */
 /// useRunningTaskRunIds
+
 /**
  * The useTaskRunRunning hook returns a boolean indicating whether a specific
  * task run is currently running in the Manager provided by a Provider
@@ -452,6 +457,7 @@
  * @since v1.1.0
  */
 /// ProviderProps
+
 {
   /**
    * A default single Manager object that will be available within the Provider
@@ -461,6 +467,7 @@
    */
   /// ProviderProps.manager
 }
+
 /**
  * The Provider component is used to wrap part of an application in a context
  * that provides a Manager to be used by hooks and components within.

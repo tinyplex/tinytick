@@ -138,6 +138,7 @@ export type TaskRunFailedListener = (
 export interface Manager {
   /// Manager.setManagerConfig
   setManagerConfig(config: ManagerConfig): Manager;
+
   /// Manager.getManagerConfig
   getManagerConfig<WithDefaults extends boolean>(
     withDefaults?: WithDefaults,
@@ -145,6 +146,7 @@ export interface Manager {
 
   /// Manager.setCategory
   setCategory(categoryId: Id, config: TaskRunConfig): Manager;
+
   /// Manager.getCategoryConfig
   getCategoryConfig<WithDefaults extends boolean>(
     categoryId: Id,
@@ -152,8 +154,10 @@ export interface Manager {
   ): WithDefaults extends true
     ? TaskRunConfigWithDefaults
     : TaskRunConfig | undefined;
+
   /// Manager.getCategoryIds
   getCategoryIds(): Ids;
+
   /// Manager.delCategory
   delCategory(categoryId: Id): Manager;
 
@@ -164,6 +168,7 @@ export interface Manager {
     categoryId?: Id,
     config?: TaskRunConfig,
   ): Manager;
+
   /// Manager.getTaskConfig
   getTaskConfig<WithDefaults extends boolean>(
     taskId: Id,
@@ -171,8 +176,10 @@ export interface Manager {
   ): WithDefaults extends true
     ? TaskRunConfigWithDefaults
     : TaskRunConfig | undefined;
+
   /// Manager.getTaskIds
   getTaskIds(): Ids;
+
   /// Manager.delTask
   delTask(taskId: Id): Manager;
 
@@ -183,6 +190,7 @@ export interface Manager {
     startAfter?: TimestampMs | DurationMs,
     config?: TaskRunConfig,
   ): Id | undefined;
+
   /// Manager.getTaskRunConfig
   getTaskRunConfig<WithDefaults extends boolean>(
     taskRunId: Id,
@@ -190,6 +198,7 @@ export interface Manager {
   ): WithDefaults extends true
     ? TaskRunConfigWithDefaults
     : TaskRunConfig | undefined;
+
   /// Manager.getTaskRunInfo
   getTaskRunInfo(taskRunId: Id): TaskRunInfo | undefined;
 
@@ -239,8 +248,10 @@ export interface Manager {
 
   /// Manager.start
   start(): Manager;
+
   /// Manager.stop
   stop(force?: boolean): Manager;
+
   /// Manager.getStatus
   getStatus(): ManagerStatus;
 
