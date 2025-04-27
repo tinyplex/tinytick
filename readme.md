@@ -1,4 +1,4 @@
-<link rel="preload" as="image" href="https://tinybase.org/favicon.svg?asImg"><link rel="preload" as="image" href="https://tinywidgets.org/favicon.svg?asImg"><link rel="preload" as="image" href="https://tinytick.org/favicon.svg?asImg"><section id="hero"><h2 id="a-tiny-but-very-useful-javascript-task-orchestrator">A tiny but very useful JavaScript task orchestrator.</h2></section><p><a href="https://tinytick.org/guides/releases/#v1-1"><em>NEW!</em> v1.1 release</a></p><p><span id="one-with">The one with basic React bindings</span></p><p><a class="start" href="https://tinytick.org/guides/getting-started/">Get started</a></p><p><a href="https://tinytick.org/demos/">Try the demos</a></p><p><a href="https://tinytick.org/api/tinytick/interfaces/manager/manager/">Read the docs</a></p><hr><section><h2 id="task-management-is-hard"><a href="https://tinytick.org/api/tinytick/type-aliases/task/task/"><code>Task</code></a> management is hard.</h2><p>Background tasks like fetching, syncing, and cache eviction are common in intelligent web applications. Yet managing them - with scheduling, failure handling, retries, and so on - can be a pain.</p></section><section><h2 id="so-make-it-easy">So make it easy.</h2><p>Specify your tasks imperatively, ahead of time, and then configure their schedules, timeouts, and retry sequences - and let TinyTick take care of everything for you. Oh and it&#x27;s only <em>1.8kB</em>.</p></section><hr><section><h2 id="create-and-start-a-manager-object">Create and start a <a href="https://tinytick.org/api/tinytick/interfaces/manager/manager/"><code>Manager</code></a> object.</h2><p>This is the main entry point for the TinyTick API.</p></section>
+<link rel="preload" as="image" href="https://tinybase.org/favicon.svg?asImg"><link rel="preload" as="image" href="https://tinywidgets.org/favicon.svg?asImg"><link rel="preload" as="image" href="https://tinytick.org/favicon.svg?asImg"><section id="hero"><h2 id="a-tiny-but-very-useful-javascript-task-orchestrator">A tiny but very useful JavaScript task orchestrator.</h2></section><p><a href="https://tinytick.org/guides/releases/#v1-2"><em>NEW!</em> v1.2 release</a></p><p><span id="one-with">The one with reactivity - and React!</span></p><p><a class="start" href="https://tinytick.org/guides/getting-started/">Get started</a></p><p><a href="https://tinytick.org/demos/">Try the demos</a></p><p><a href="https://tinytick.org/api/tinytick/interfaces/manager/manager/">Read the docs</a></p><hr><section><h2 id="task-management-is-hard"><a href="https://tinytick.org/api/tinytick/type-aliases/task/task/"><code>Task</code></a> management is hard.</h2><p>Background tasks like fetching, syncing, and cache eviction are common in intelligent web applications. Yet managing them - with scheduling, failure handling, retries, and so on - can be a pain.</p></section><section><h2 id="so-make-it-easy">So make it easy.</h2><p>Specify your tasks imperatively, ahead of time, and then configure their schedules, timeouts, and retry sequences - and let TinyTick take care of everything for you. Oh and it&#x27;s only <em>2.6kB</em>.</p></section><hr><section><h2 id="create-and-start-a-manager-object">Create and start a <a href="https://tinytick.org/api/tinytick/interfaces/manager/manager/"><code>Manager</code></a> object.</h2><p>This is the main entry point for the TinyTick API.</p></section>
 
 ```js
 import {createManager} from 'tinytick';
@@ -28,6 +28,24 @@ console.log(manager.getTaskIds());
 // -> ['ping']
 console.log(manager.getTaskRunInfo(taskRunId));
 // -> {taskId: 'ping', arg: 'https://example.com', ...}
+```
+
+<section><h2 id="tinytick-is-reactive">TinyTick is reactive.</h2><p>Subscribe to listeners that fire whenever critical things happen, like when a task starts, finishes, or fails.</p></section>
+
+```js
+const listenerId1 = manager.addTaskRunRunningListener(
+  'ping',
+  null,
+  () => console.log('A ping started'),
+);
+const listenerId2 = manager.addTaskRunFailedListener(
+  'ping',
+  null,
+  () => console.log('A ping failed'),
+);
+// ...
+manager.delListener(listenerId1);
+manager.delListener(listenerId2);
 ```
 
 <section><h2 id="configure-timeouts-for-your-tasks">Configure timeouts for your tasks.</h2><p>Tasks (or individual task runs) can have a timeout set, and they will be aborted if they run over. <a href="https://tinytick.org/api/tinytick/type-aliases/task/task/"><code>Task</code></a> functions are passed an <a href="https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal">AbortSignal</a> parameter so you can handle the timeout. You can pass this straight on to the <a href="https://developer.mozilla.org/en-US/docs/Web/API/RequestInit">fetch</a> call, for example.</p></section>
@@ -65,6 +83,30 @@ manager.setTask('ping', ping, 'network', {
 });
 ```
 
+<section><h2 id="integrates-with-react">Integrates with React.</h2><p>The optional <a href="https://tinytick.org/api/ui-react/functions/context-components/provider/"><code>Provider</code></a> component and a set of hooks in the <a href="https://tinytick.org/api/ui-react/"><code>ui-react</code></a> module make it easy to integrate TinyTick into your React application so that you can start tasks or visualize their progress.</p></section>
+
+```js yolo
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import {useCreateManager, useScheduleTaskRunCallback} from 'tinytick/ui-react';
+
+const App = () =>
+  <Provider manager={useCreateManager(createManager)}>
+    <Panel />
+  </Provider>
+};
+
+const Panel = () => {
+  useSetTask('ping', async () => await fetch('https://example.org'));
+  return <Button />;
+};
+
+const Button = () => {
+  const callback = useScheduleTaskRunCallback('ping');
+  return <button onClick={callback}>Ping</button>;
+};
+```
+
 <section><h2 id="see-some-worked-examples">See some worked examples.</h2><p>We are building up a set of <a href="https://tinytick.org/guides/example-use-cases/">Example Use Cases</a> guides to show you how to use TinyTick in practice. If you&#x27;re trying to access relational- or graph-like data over a network, for example, take a look at the <a href="https://tinytick.org/guides/example-use-cases/paginated-and-nested-data/">Paginated And Nested Data</a> guide for a start!</p></section>
 
 ```js yolo
@@ -77,4 +119,4 @@ manager.scheduleTaskRun('fetchParents');
 // -> 'Fetching https://api.org/parents?page=2'
 ```
 
-<section><h2 id="tiny-tested-and-documented">Tiny, tested, and documented.</h2><p>If you chose to install TinyTick in your app, you&#x27;ll only add a gzipped <em>1.8kB</em> to your app. Life is easy when you have zero dependencies!</p><p>TinyBase has <em>100.0%</em> test coverage, including the code throughout the documentation - even on this page. The guides, demos, and API examples are designed to make things as easy as possible.</p></section><div class="table"><table class="fixed"><tbody><tr><th width="30%"> </th><th>Total</th><th>Tested</th><th>Coverage</th></tr><tr><th class="right">Lines</th><td>225</td><td>225</td><td>100.0%</td></tr><tr><th class="right">Statements</th><td>257</td><td>257</td><td>100.0%</td></tr><tr><th class="right">Functions</th><td>96</td><td>96</td><td>100.0%</td></tr><tr><th class="right">Branches</th><td>87</td><td>87</td><td>100.0%</td></tr><tr><th class="right">Tests</th><td colspan="3">115</td></tr><tr><th class="right">Assertions</th><td colspan="3">456</td></tr></tbody></table></div><hr><p><a class="start" href="https://tinytick.org/guides/getting-started/">Get started</a></p><p><a href="https://tinytick.org/demos/">Try the demos</a></p><p><a href="https://tinytick.org/api/tinytick/interfaces/manager/manager/">Read the docs</a></p><hr><section id="family"><h2 id="meet-the-family">Meet the family</h2><p>TinyTick is part of a group of small libraries designed to help make rich client and local-first apps easier to build. Check out the others!</p><p><a href="https://tinybase.org" target="_blank"><img src="https://tinybase.org/favicon.svg?asImg" width="48"><br><b>TinyBase</b></a><br>A reactive data store and sync engine.</p><p><a href="https://tinywidgets.org" target="_blank"><img src="https://tinywidgets.org/favicon.svg?asImg" width="48"><br><b>TinyWidgets</b></a><br>A collection of tiny, reusable, UI components.</p><p><img src="https://tinytick.org/favicon.svg?asImg" width="48"><br><b>TinyTick</b><br>A tiny but very useful task orchestrator.</p></section>
+<section><h2 id="tiny-tested-and-documented">Tiny, tested, and documented.</h2><p>If you chose to install TinyTick in your app, you&#x27;ll only add a gzipped <em>2.6kB</em> to your app. Life is easy when you have zero dependencies!</p><p>TinyBase has <em>100.0%</em> test coverage, including the code throughout the documentation - even on this page. The guides, demos, and API examples are designed to make things as easy as possible.</p></section><div class="table"><table class="fixed"><tbody><tr><th width="30%"> </th><th>Total</th><th>Tested</th><th>Coverage</th></tr><tr><th class="right">Lines</th><td>402</td><td>402</td><td>100.0%</td></tr><tr><th class="right">Statements</th><td>454</td><td>454</td><td>100.0%</td></tr><tr><th class="right">Functions</th><td>173</td><td>173</td><td>100.0%</td></tr><tr><th class="right">Branches</th><td>140</td><td>140</td><td>100.0%</td></tr><tr><th class="right">Tests</th><td colspan="3">163</td></tr><tr><th class="right">Assertions</th><td colspan="3">585</td></tr></tbody></table></div><hr><p><a class="start" href="https://tinytick.org/guides/getting-started/">Get started</a></p><p><a href="https://tinytick.org/demos/">Try the demos</a></p><p><a href="https://tinytick.org/api/tinytick/interfaces/manager/manager/">Read the docs</a></p><hr><section id="family"><h2 id="meet-the-family">Meet the family</h2><p>TinyTick is part of a group of small libraries designed to help make rich client and local-first apps easier to build. Check out the others!</p><p><a href="https://tinybase.org" target="_blank"><img src="https://tinybase.org/favicon.svg?asImg" width="48"><br><b>TinyBase</b></a><br>A reactive data store and sync engine.</p><p><a href="https://tinywidgets.org" target="_blank"><img src="https://tinywidgets.org/favicon.svg?asImg" width="48"><br><b>TinyWidgets</b></a><br>A collection of tiny, reusable, UI components.</p><p><img src="https://tinytick.org/favicon.svg?asImg" width="48"><br><b>TinyTick</b><br>A tiny but very useful task orchestrator.</p></section>
