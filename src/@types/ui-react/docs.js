@@ -559,7 +559,7 @@
  * import {Provider, useScheduleTaskRun} from 'tinytick/ui-react';
  *
  * const Pane = () => {
- *   const taskRunId = useScheduleTaskRun('log');
+ *   useScheduleTaskRun('log');
  *   return null;
  * };
  * const App = ({manager}) => (
