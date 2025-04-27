@@ -30,7 +30,7 @@ console.log(manager.getTaskRunInfo(taskRunId));
 // -> {taskId: 'ping', arg: 'https://example.com', ...}
 ```
 
-<section><h2 id="tinytick-is-reactive">TinyTick is reactive.</h2><p>Subscribe to listeners that fire whenever critical things happen, like when a task starts, finishes, or fails.</p></section>
+<section><h2 id="tinytick-is-reactive">TinyTick is reactive.</h2><p>Subscribe to listeners that fire whenever critical things happen, like when a task starts, finishes, or fails. It uses the same API as TinyBase, so if you are familiar with listeners in that library, you&#x27;ll feel right at home!</p></section>
 
 ```js
 const listenerId1 = manager.addTaskRunRunningListener(

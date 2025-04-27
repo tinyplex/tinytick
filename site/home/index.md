@@ -80,7 +80,8 @@ console.log(manager.getTaskRunInfo(taskRunId));
 > ## TinyTick is reactive.
 >
 > Subscribe to listeners that fire whenever critical things happen, like when a
-> task starts, finishes, or fails.
+> task starts, finishes, or fails. It uses the same API as TinyBase, so if you
+> are familiar with listeners in that library, you'll feel right at home!
 
 ```js
 const listenerId1 = manager.addTaskRunRunningListener(
