@@ -44,7 +44,35 @@ of hooks to benefit from the Manager's reactivity. These include:
 
 In all cases, these hooks operate on the Manager registered in the Provider
 component so that one Manager can be used consistently throughout the
-application.
+application, something like this:
+
+```tsx yolo
+import {
+  Provider,
+  useCreateManager,
+  useScheduleTaskRunCallback,
+  useSetTask,
+} from 'tinytick/ui-react';
+
+const App = () => (
+  <Provider manager={useCreateManager(createManager)}>
+    <Panel />
+  </Provider>
+);
+
+const Panel = () => {
+  useSetTask('ping', async () => await fetch('https://example.org'));
+  return <Button />;
+};
+
+const Button = () => {
+  const callback = useScheduleTaskRunCallback('ping');
+  return <button onClick={callback}>Ping</button>;
+};
+```
+
+More information and examples for these React features is in the ui-react module
+API documentation.
 
 Have fun and let us know how it goes!
 

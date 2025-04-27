@@ -152,19 +152,25 @@ manager.setTask('ping', ping, 'network', {
 > it easy to integrate TinyTick into your React application so that you can
 > start tasks or visualize their progress.
 
-```js yolo
-import React from 'react';
-import {createRoot} from 'react-dom/client';
-import {useCreateManager, useScheduleTaskRunCallback} from 'tinytick/ui-react';
+```jsx yolo
+import {
+  Provider,
+  useCreateManager,
+  useScheduleTaskRunCallback,
+  useSetTask,
+} from 'tinytick/ui-react';
 
-const App = () =>
+const App = () => (
   <Provider manager={useCreateManager(createManager)}>
     <Panel />
   </Provider>
-};
+);
 
 const Panel = () => {
-  useSetTask('ping', async () => await fetch('https://example.org'));
+  useSetTask(
+    'ping',
+    async () => await fetch('https://example.org'),
+  );
   return <Button />;
 };
 
