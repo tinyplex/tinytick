@@ -8,7 +8,7 @@
 
 <a href='/guides/releases/#v1-2'><em>NEW!</em> v1.2 release</a>
 
-<span id="one-with">The one with React!</span>
+<span id="one-with">The one with reactivity - and React!</span>
 
 <a class='start' href='/guides/getting-started/'>Get started</a>
 
@@ -75,6 +75,27 @@ console.log(manager.getTaskIds());
 // -> ['ping']
 console.log(manager.getTaskRunInfo(taskRunId));
 // -> {taskId: 'ping', arg: 'https://example.com', ...}
+```
+
+> ## TinyTick is reactive.
+>
+> Subscribe to listeners that fire whenever critical things happen, like when a
+> task starts, finishes, or fails.
+
+```js
+const listenerId1 = manager.addTaskRunRunningListener(
+  'ping',
+  null,
+  () => console.log('A ping started'),
+);
+const listenerId2 = manager.addTaskRunFailedListener(
+  'ping',
+  null,
+  () => console.log('A ping failed'),
+);
+// ...
+manager.delListener(listenerId1);
+manager.delListener(listenerId2);
 ```
 
 > ## Configure timeouts for your tasks.
