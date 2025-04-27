@@ -879,12 +879,13 @@
    * This method returns a unique Id for the scheduled task run. However, if the
    * Manager is in the stopping state, new task runs can not be scheduled, and
    * in that case, the method will return `undefined`.
-   * @param taskId The Id of the task to run, or `undefined` if unsuccessful.
+   * @param taskId The Id of the task to run.
    * @param arg An optional string argument to pass to the Task.
    * @param startAfter A timestamp at, or duration after which, the task should
    * run.
    * @param config An optional TaskRunConfig to set for this run.
-   * @returns A new unique Id of the scheduled task run.
+   * @returns A new unique Id of the scheduled task run, or `undefined` if
+   * unsuccessful.
    * @example
    * This example registers a task that is then scheduled to run.
    *
