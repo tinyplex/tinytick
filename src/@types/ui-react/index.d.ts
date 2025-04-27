@@ -1,12 +1,14 @@
 /// ui-react
 import {DependencyList, ReactElement} from 'react';
 import type {
+  DurationMs,
   Id,
   Ids,
   Manager,
   ManagerStatus,
   Task,
   TaskRunConfig,
+  TimestampMs,
 } from '../index.d.ts';
 
 /// useCreateManager
@@ -36,7 +38,7 @@ export function useStartCallback(): () => Manager | undefined;
 /// useStopCallback
 export function useStopCallback(force?: boolean): () => Manager | undefined;
 
-// useSetTask
+/// useSetTask
 export function useSetTask(
   taskId: Id,
   task: Task,
@@ -45,6 +47,15 @@ export function useSetTask(
   config?: TaskRunConfig,
   configDeps?: DependencyList,
 ): void;
+
+/// useScheduleTaskRunCallback
+export function useScheduleTaskRunCallback(
+  taskId: Id,
+  arg?: string,
+  startAfter?: TimestampMs | DurationMs,
+  config?: TaskRunConfig,
+  configDeps?: DependencyList,
+): () => Id | undefined;
 
 /// ProviderProps
 export type ProviderProps = {

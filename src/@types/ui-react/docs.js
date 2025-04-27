@@ -519,6 +519,70 @@
 /// useSetTask
 
 /**
+ * The useScheduleTaskRunCallback hook returns a function that can be used to
+ * schedule a specific task in the Manager provided by a Provider component.
+ *
+ * The hook returns a callback. When called, the task will be executed with the
+ * optional string argument provided, and can be configured to start at a
+ * specific time (TimestampMs), or after a specific delay (DurationMs).
+ *
+ * You can also provide a custom TaskRunConfig which lets you indicate the
+ * duration of the task run and its retry behaviors, for example.
+ *
+ * The callback will return a unique Id for the scheduled task run. However, if
+ * the Manager is in the stopping state, new task runs can not be scheduled, and
+ * in that case, the method will return `undefined`.
+ * @param taskId The Id of the task to run.
+ * @param arg An optional string argument to pass to the Task.
+ * @param startAfter A timestamp at, or duration after which, the task should
+ * run.
+ * @param config An optional TaskRunConfig to set for this run.
+ * @param configDeps An optional array of dependencies for the config object,
+ * which, if any change, result in the callback being regenerated. Defaults to
+ * an empty array.
+ * @returns A callback that will return the new unique Id of the scheduled task
+ * run, or `undefined` if unsuccessful.
+ * @example
+ * This example shows how to use the useScheduleTaskRunCallback hook within a
+ * component that's nested inside a Provider. The hook is used to create a
+ * callback that will schedule a task in response to a click event.
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useScheduleTaskRunCallback} from 'tinytick/ui-react';
+ *
+ * const Pane = () => {
+ *   const handleClick = useScheduleTaskRunCallback('log');
+ *   return (<span id="span" onClick={handleClick}>Log</span>);
+ * }
+ * const App = ({manager}) => (
+ *   <Provider manager={manager}>
+ *     <Pane />
+ *   </Provider>
+ * );
+ *
+ * const manager = createManager().start();
+ * manager.setTask('log', async () => console.log('Task ran'));
+ *
+ * const app = document.createElement('div');
+ * const root = createRoot(app);
+ * root.render(<App manager={manager} />); // !act
+ * const span = app.querySelector('span');
+ *
+ * // User clicks the <span> element:
+ * // -> span MouseEvent('click', {bubbles: true})
+ *
+ * // ... wait 100ms for task to start running // !act
+ * // -> 'Task ran'
+ * ```
+ * @category Task hooks
+ * @since v1.2.0
+ */
+/// useScheduleTaskRunCallback
+
+/**
  * ProviderProps props are used with the Manager component, so that a TinyTick
  * Manager can be passed into the context of an application and used throughout.
  * @category Props

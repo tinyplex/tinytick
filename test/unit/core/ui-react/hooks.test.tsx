@@ -7,6 +7,7 @@ import {
   useManager,
   useRunningTaskRunIds,
   useScheduledTaskRunIds,
+  useScheduleTaskRunCallback,
   useSetTask,
   useStartCallback,
   useStatus,
@@ -340,5 +341,27 @@ describe('Write Hooks', () => {
 
     unmount();
     expect(manager.getTaskIds()).toEqual([]);
+  });
+
+  test('useScheduleTaskRunCallback', () => {
+    const Test = ({taskId}: {taskId: Id}) => {
+      const handler = useScheduleTaskRunCallback(taskId);
+      return didRender(<button onClick={handler} />);
+    };
+
+    const {getByRole, unmount} = render(
+      <Provider manager={manager}>
+        <Test taskId="task1" />
+      </Provider>,
+    );
+
+    expect(manager.getScheduledTaskRunIds().length).toEqual(0);
+
+    const button = getByRole('button');
+    fireEvent.click(button);
+
+    expect(manager.getScheduledTaskRunIds().length).toEqual(1);
+    expect(didRender).toHaveBeenCalledTimes(1);
+    unmount();
   });
 });

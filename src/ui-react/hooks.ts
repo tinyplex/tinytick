@@ -7,12 +7,20 @@ import {
   useRef,
   useSyncExternalStore,
 } from 'react';
-import type {Id, Manager, Task, TaskRunConfig} from '../@types/index.d.ts';
+import type {
+  DurationMs,
+  Id,
+  Manager,
+  Task,
+  TaskRunConfig,
+  TimestampMs,
+} from '../@types/index.d.ts';
 import type {
   useCreateManager as useCreateManagerDecl,
   useManager as useManagerDecl,
   useRunningTaskRunIds as useRunningTaskRunIdsDecl,
   useScheduledTaskRunIds as useScheduledTaskRunIdsDecl,
+  useScheduleTaskRunCallback as useScheduleTaskRunCallbackDecl,
   useSetTask as useSetTaskDecl,
   useStartCallback as useStartCallbackDecl,
   useStatus as useStatusDecl,
@@ -123,3 +131,19 @@ export const useSetTask: typeof useSetTaskDecl = (
     [manager, taskId, ...taskDeps, categoryId, ...configDeps],
   );
 };
+
+export const useScheduleTaskRunCallback: typeof useScheduleTaskRunCallbackDecl =
+  (
+    taskId: Id,
+    arg?: string,
+    startAfter?: TimestampMs | DurationMs,
+    config?: TaskRunConfig,
+    configDeps: DependencyList = EMPTY_ARRAY,
+  ) => {
+    const manager = useManager();
+    return useCallback(
+      () => manager?.scheduleTaskRun(taskId, arg, startAfter, config),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [manager, taskId, arg, startAfter, ...configDeps],
+    );
+  };
