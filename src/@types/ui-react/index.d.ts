@@ -48,6 +48,15 @@ export function useSetTask(
   configDeps?: DependencyList,
 ): void;
 
+/// useScheduleTaskRun
+export function useScheduleTaskRun(
+  taskId: Id,
+  arg?: string,
+  startAfter?: TimestampMs | DurationMs,
+  config?: TaskRunConfig,
+  configDeps?: DependencyList,
+): Id | undefined;
+
 /// useScheduleTaskRunCallback
 export function useScheduleTaskRunCallback(
   taskId: Id,

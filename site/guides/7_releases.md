@@ -40,7 +40,9 @@ of hooks to benefit from the Manager's reactivity. These include:
 - The useStartCallback hook and useStopCallback to get callbacks that can start
   and stop the Manager.
 - The useSetTask hook to register a task in the Manager.
-- The useScheduleTaskRun hook to schedule a task run in the Manager.
+- The useScheduleTaskRun hook to schedule a task run in the Manager, and the
+  useScheduleTaskRunCallback hook to get a callback that can be used to do so
+  later.
 
 In all cases, these hooks operate on the Manager registered in the Provider
 component so that one Manager can be used consistently throughout the

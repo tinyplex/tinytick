@@ -21,6 +21,7 @@ import type {
   useRunningTaskRunIds as useRunningTaskRunIdsDecl,
   useScheduledTaskRunIds as useScheduledTaskRunIdsDecl,
   useScheduleTaskRunCallback as useScheduleTaskRunCallbackDecl,
+  useScheduleTaskRun as useScheduleTaskRunDecl,
   useSetTask as useSetTaskDecl,
   useStartCallback as useStartCallbackDecl,
   useStatus as useStatusDecl,
@@ -130,6 +131,23 @@ export const useSetTask: typeof useSetTaskDecl = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [manager, taskId, ...taskDeps, categoryId, ...configDeps],
   );
+};
+
+export const useScheduleTaskRun: typeof useScheduleTaskRunDecl = (
+  taskId: Id,
+  arg?: string,
+  startAfter?: TimestampMs | DurationMs,
+  config?: TaskRunConfig,
+  configDeps: DependencyList = EMPTY_ARRAY,
+) => {
+  const callback = useScheduleTaskRunCallback(
+    taskId,
+    arg,
+    startAfter,
+    config,
+    configDeps,
+  );
+  return useMemo(callback, [callback]);
 };
 
 export const useScheduleTaskRunCallback: typeof useScheduleTaskRunCallbackDecl =
