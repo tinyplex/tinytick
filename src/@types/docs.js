@@ -1209,11 +1209,9 @@
    * import {createManager} from 'tinytick';
    *
    * const manager = createManager();
-   * const listenerId = manager.addStatusListener(
-   *   (manager, status) => {
-   *     console.log(`Manager status changed to: ${status}`);
-   *   },
-   * );
+   * const listenerId = manager.addStatusListener((manager, status) => {
+   *   console.log(`Manager status changed to: ${status}`);
+   * });
    *
    * manager.start();
    * // -> 'Manager status changed to: 1'
@@ -1245,8 +1243,8 @@
    * import {createManager} from 'tinytick';
    *
    * const manager = createManager();
-   * const listenerId = manager.addWillTickListener(
-   *   () => console.log('Manager will tick'),
+   * const listenerId = manager.addWillTickListener(() =>
+   *   console.log('Manager will tick'),
    * );
    *
    * manager.start();
@@ -1278,8 +1276,8 @@
    * import {createManager} from 'tinytick';
    *
    * const manager = createManager();
-   * const listenerId = manager.addDidTickListener(
-   *   () => console.log('Manager did tick'),
+   * const listenerId = manager.addDidTickListener(() =>
+   *   console.log('Manager did tick'),
    * );
    *
    * manager.start();
@@ -1314,17 +1312,13 @@
    * const manager = createManager().start();
    * manager.setTask('ping', async () => await fetch('https://example.org'));
    *
-   * const listenerId = manager.addScheduledTaskRunIdsListener(
-   *   (manager) => {
-   *     console.log(
-   *       manager.getScheduledTaskRunIds().length + ' scheduled Ids',
-   *     );
-   *   },
-   * );
+   * const listenerId = manager.addScheduledTaskRunIdsListener((manager) => {
+   *   console.log(manager.getScheduledTaskRunIds().length + ' scheduled Ids');
+   * });
    *
-   * const taskRunId1 = manager.scheduleTaskRun('ping', '', 200);
+   * manager.scheduleTaskRun('ping', '', 200);
    * // -> '1 scheduled Ids'
-   * const taskRunId2 = manager.scheduleTaskRun('ping', '', 400);
+   * manager.scheduleTaskRun('ping', '', 400);
    * // -> '2 scheduled Ids'
    *
    * manager.delListener(listenerId);
@@ -1351,9 +1345,8 @@
    * const manager = createManager().start();
    * manager.setTask('ping', async () => await fetch('https://example.org'));
    *
-   * const listenerId = manager.addRunningTaskRunIdsListener(
-   *   (manager) =>
-   *     console.log(manager.getRunningTaskRunIds().length + ' running Ids'),
+   * const listenerId = manager.addRunningTaskRunIdsListener((manager) =>
+   *   console.log(manager.getRunningTaskRunIds().length + ' running Ids'),
    * );
    *
    * manager.scheduleTaskRun('ping');
@@ -1392,7 +1385,7 @@
    * run of the 'ping' task run.
    *
    * ```js
-   * import {createManager, TaskRunReason} from 'tinytick';
+   * import {createManager} from 'tinytick';
    *
    * const manager = createManager().start();
    * manager.setTask('ping', async () => await fetch('https://example.org'));
@@ -1400,12 +1393,13 @@
    * const listenerId = manager.addTaskRunRunningListener(
    *   'ping',
    *   null,
-   *   (manager, taskId, taskRunId, running, reason) => console.log(
-   *     `Task '${taskId}'; running: ${running}, reason: ${reason}`,
-   *   ),
+   *   (manager, taskId, taskRunId, running, reason) =>
+   *     console.log(
+   *       `Task '${taskId}'; running: ${running}, reason: ${reason}`,
+   *     ),
    * );
    *
-   * const taskRunId = manager.scheduleTaskRun('ping');
+   * manager.scheduleTaskRun('ping');
    * // -> "Task 'ping'; running: false, reason: 0"
    *
    * // ... wait 100ms for task to start
@@ -1444,22 +1438,25 @@
    * the 'ping' task.
    *
    * ```js
-   * import {createManager, TaskRunReason} from 'tinytick';
+   * import {createManager} from 'tinytick';
    *
    * const manager = createManager().start();
-   * manager.setTask('ping', async () => { throw new Error('Network error'); });
+   * manager.setTask('ping', async () => {
+   *   throw new Error('Network error');
+   * });
    *
    * const listenerId = manager.addTaskRunFailedListener(
    *   'ping',
    *   null,
-   *   (manager, taskId, taskRunId, reason, message) => console.log(
-   *     `Task '${taskId}' failed with reason: ${reason}, message: ${message}`,
-   *   ),
+   *   (manager, taskId, taskRunId, reason, message) =>
+   *     console.log(
+   *       `Task '${taskId}' failed with reason: ${reason}, ${message}`,
+   *     ),
    * );
    *
-   * const taskRunId = manager.scheduleTaskRun('ping');
+   * manager.scheduleTaskRun('ping');
    * // ... wait 100ms for task to start and fail
-   * // -> "Task 'ping' failed with reason: 4, message: Network error"
+   * // -> "Task 'ping' failed with reason: 4, Network error"
    *
    * manager.delListener(listenerId);
    * ```
@@ -1470,8 +1467,9 @@
    * import {createManager} from 'tinytick';
    *
    * const manager = createManager().start();
-   * manager.setTask('takesTwoSeconds',
-   *   async () => await new Promise(resolve => setTimeout(resolve, 2000)),
+   * manager.setTask(
+   *   'takesTwoSeconds',
+   *   async () => await new Promise((resolve) => setTimeout(resolve, 2000)),
    *   undefined,
    *   {maxDuration: 50},
    * );
@@ -1479,12 +1477,11 @@
    * const listenerId = manager.addTaskRunFailedListener(
    *   'takesTwoSeconds',
    *   null,
-   *   (manager, taskId, taskRunId, reason, message) => console.log(
-   *     `Task '${taskId}' timed out (reason: ${reason})`,
-   *   ),
+   *   (manager, taskId, taskRunId, reason) =>
+   *     console.log(`Task '${taskId}' timed out (reason: ${reason})`),
    * );
    *
-   * const taskRunId = manager.scheduleTaskRun('takesTwoSeconds');
+   * manager.scheduleTaskRun('takesTwoSeconds');
    * // ... wait 250ms for task to start and time out
    * // -> "Task 'takesTwoSeconds' timed out (reason: 3)",
    *
@@ -1516,9 +1513,10 @@
    * const listenerId = manager.addTaskRunRunningListener(
    *   'ping',
    *   null,
-   *   (manager, taskId, taskRunId, running, reason) => console.log(
-   *     `Task '${taskId}'; running: ${running}, reason: ${reason}`,
-   *   ),
+   *   (manager, taskId, taskRunId, running, reason) =>
+   *     console.log(
+   *       `Task '${taskId}'; running: ${running}, reason: ${reason}`,
+   *     ),
    * );
    *
    * // Schedule a task run
@@ -1640,7 +1638,7 @@
    * through different states.
    *
    * ```js
-   * import {createManager, ManagerStatus} from 'tinytick';
+   * import {createManager} from 'tinytick';
    *
    * const manager = createManager();
    * console.log(manager.getStatus());

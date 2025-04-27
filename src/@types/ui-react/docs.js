@@ -159,7 +159,7 @@
  * import {createManager} from 'tinytick';
  * import {Provider, useStatus} from 'tinytick/ui-react';
  *
- * const Pane = () => (<span>Status: {useStatus()}</span>);
+ * const Pane = () => <span>Status: {useStatus()}</span>;
  *
  * const App = ({manager}) => (
  *   <Provider manager={manager}>
@@ -262,8 +262,9 @@
  * );
  *
  * const manager = createManager().start();
- * manager.setTask('takes200ms',
- *   async () => await new Promise(resolve => setTimeout(resolve, 200)),
+ * manager.setTask(
+ *   'takes200ms',
+ *   async () => await new Promise((resolve) => setTimeout(resolve, 200)),
  * );
  *
  * const app = document.createElement('div');
@@ -372,7 +373,7 @@
  *       Manager status: {useStatus()}
  *     </span>
  *   );
- * }
+ * };
  *
  * const App = ({manager}) => (
  *   <Provider manager={manager}>
@@ -423,7 +424,7 @@
  *       Manager status: {useStatus()}
  *     </span>
  *   );
- * }
+ * };
  *
  * const App = ({manager}) => (
  *   <Provider manager={manager}>
@@ -493,7 +494,7 @@
  *
  * const Pane = () => {
  *   useSetTask('ping', async () => await fetch('https://example.org'));
- * }
+ * };
  *
  * const App = ({manager}) => (
  *   <Provider manager={manager}>
@@ -555,8 +556,12 @@
  *
  * const Pane = () => {
  *   const handleClick = useScheduleTaskRunCallback('log');
- *   return (<span id="span" onClick={handleClick}>Log</span>);
- * }
+ *   return (
+ *     <span id="span" onClick={handleClick}>
+ *       Log
+ *     </span>
+ *   );
+ * };
  * const App = ({manager}) => (
  *   <Provider manager={manager}>
  *     <Pane />
@@ -570,6 +575,9 @@
  * const root = createRoot(app);
  * root.render(<App manager={manager} />); // !act
  * const span = app.querySelector('span');
+ *
+ * console.log(span.innerHTML);
+ * // -> 'Log'
  *
  * // User clicks the <span> element:
  * // -> span MouseEvent('click', {bubbles: true})
@@ -623,7 +631,7 @@
  *     </Provider>
  *   );
  * };
- * const Pane = () => (<span>Status: {useManager().getStatus()}</span>);
+ * const Pane = () => <span>Status: {useManager().getStatus()}</span>;
  *
  * const app = document.createElement('div');
  * const root = createRoot(app);

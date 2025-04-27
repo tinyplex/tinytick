@@ -6,9 +6,9 @@
   </h2>
 </section>
 
-<a href='/guides/releases/#v1-1'><em>NEW!</em> v1.1 release</a>
+<a href='/guides/releases/#v1-2'><em>NEW!</em> v1.2 release</a>
 
-<span id="one-with">The one with basic React bindings</span>
+<span id="one-with">The one with React!</span>
 
 <a class='start' href='/guides/getting-started/'>Get started</a>
 
@@ -122,6 +122,34 @@ manager.setCategory('network', {
 manager.setTask('ping', ping, 'network', {
   maxRetries: 5,
 });
+```
+
+> ## Integrates with React.
+>
+> The optional Provider component and a set of hooks in the ui-react module make
+> it easy to integrate TinyTick into your React application so that you can
+> start tasks or visualize their progress.
+
+```js yolo
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import {useCreateManager, useScheduleTaskRunCallback} from 'tinytick/ui-react';
+
+const App = () =>
+  <Provider manager={useCreateManager(createManager)}>
+    <Panel />
+  </Provider>
+};
+
+const Panel = () => {
+  useSetTask('ping', async () => await fetch('https://example.org'));
+  return <Button />;
+};
+
+const Button = () => {
+  const callback = useScheduleTaskRunCallback('ping');
+  return <button onClick={callback}>Ping</button>;
+};
 ```
 
 > ## See some worked examples.
