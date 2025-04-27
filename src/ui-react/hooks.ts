@@ -2,7 +2,7 @@ import {
   DependencyList,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -112,7 +112,7 @@ export const useSetTask: typeof useSetTaskDecl = (
   configDeps: DependencyList = EMPTY_ARRAY,
 ) => {
   const manager = useManager();
-  useEffect(
+  useLayoutEffect(
     () => {
       manager?.setTask(taskId, task, categoryId, config);
       return () => {
