@@ -166,7 +166,7 @@ Firstly the getTaskRunConfig method returns the configuration for a task run:
 const taskRunId2 = manager.scheduleTaskRun('ping', 'https://example.org');
 
 console.log(manager.getTaskRunConfig(taskRunId2, true));
-// -> {maxDuration: 1000, maxRetries: 0, retryDelay: 1000}
+// -> {maxDuration: 1000, maxRetries: 0, retryDelay: 1000, repeatDelay: null}
 ```
 
 The `true` argument to getTaskRunConfig ensures you see the inherited and

@@ -49,7 +49,7 @@ And for a given task, we can retrieve timeout and retry configuration:
 
 ```js
 console.log(manager.getTaskConfig('ping', true));
-// -> {maxDuration: 1000, maxRetries: 0, retryDelay: 1000}
+// -> {maxDuration: 1000, maxRetries: 0, retryDelay: 1000, repeatDelay: null}
 ```
 
 The `true` argument to getTaskConfig ensures you see the inherited and default
@@ -107,7 +107,7 @@ manager.setTask('ping', async (url) => await fetch(url), '', {
 });
 
 console.log(manager.getTaskConfig('ping', true));
-// -> {maxDuration: 1000, maxRetries: 3, retryDelay: 5000}
+// -> {maxDuration: 1000, maxRetries: 3, retryDelay: 5000, repeatDelay: 60000}
 ```
 
 This configuration can be overridden when the task is scheduled to run. In this
@@ -140,9 +140,9 @@ manager.setTask(
 );
 
 console.log(manager.getTaskConfig('post', true));
-// -> {maxDuration: 2000, maxRetries: 5, retryDelay: 3000}
+// -> {maxDuration: 2000, maxRetries: 5, retryDelay: 3000, repeatDelay: null}
 console.log(manager.getTaskConfig('head', true));
-// -> {maxDuration: 2000, maxRetries: 5, retryDelay: 3000}
+// -> {maxDuration: 2000, maxRetries: 5, retryDelay: 3000, repeatDelay: null}
 ```
 
 ## De-registering a task

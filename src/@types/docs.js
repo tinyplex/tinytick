@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /**
  * The tinytick module.
  * @packageDocumentation
@@ -641,7 +642,7 @@
    * console.log(manager.getCategoryConfig('network'));
    * // -> {maxDuration: 5000}
    * console.log(manager.getCategoryConfig('network', true));
-   * // -> {maxDuration: 5000, maxRetries: 0, retryDelay: 1000}
+   * // -> {maxDuration: 5000, maxRetries: 0, retryDelay: 1000, repeatDelay: null}
    * ```
    * @example
    * This example tries to get the configuration of a category that does not
@@ -753,7 +754,7 @@
    * );
    *
    * console.log(manager.getTaskConfig('ping', true));
-   * // -> {maxDuration: 1000, maxRetries: 3, retryDelay: 1000}
+   * // -> {maxDuration: 1000, maxRetries: 3, retryDelay: 1000, repeatDelay: null}
    * ```
    * @example
    * This example registers a task called `ping` that fetches content from a
@@ -772,7 +773,7 @@
    * );
    *
    * console.log(manager.getTaskConfig('ping', true));
-   * // -> {maxDuration: 5000, maxRetries: 0, retryDelay: 1000}
+   * // -> {maxDuration: 5000, maxRetries: 0, retryDelay: 1000, repeatDelay: null}
    * ```
    * @category Task
    * @since v1.0.0
@@ -808,7 +809,7 @@
    * );
    *
    * console.log(manager.getTaskConfig('ping', true));
-   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 1000}
+   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 1000, repeatDelay: null}
    * ```
    * @example
    * This example tries to return the configuration of a task that does not
@@ -914,7 +915,7 @@
    * // -> 1
    *
    * console.log(manager.getTaskRunConfig(taskRunId, true));
-   * // -> {maxDuration: 1000, maxRetries: 0, retryDelay: 1000}
+   * // -> {maxDuration: 1000, maxRetries: 0, retryDelay: 1000, repeatDelay: null}
    * ```
    * @example
    * This example registers a task that takes a string parameter and that is
@@ -952,7 +953,7 @@
    * const taskRunId = manager.scheduleTaskRun('ping', '', 0, {retryDelay: 10});
    *
    * console.log(manager.getTaskRunConfig(taskRunId, true));
-   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 10}
+   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 10, repeatDelay: null}
    * ```
    * @category TaskRun
    * @since v1.0.0
@@ -991,7 +992,7 @@
    * console.log(manager.getTaskRunConfig(taskRunId));
    * // -> {retryDelay: 10}
    * console.log(manager.getTaskRunConfig(taskRunId, true));
-   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 10}
+   * // -> {maxDuration: 5000, maxRetries: 3, retryDelay: 10, repeatDelay: null}
    * ```
    * @example
    * This example tries to return the configuration of a task run that does not
