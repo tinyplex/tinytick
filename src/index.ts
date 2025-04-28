@@ -108,9 +108,9 @@ type TaskRun = [
   running: boolean,
   nextTimestamp: TimestampMs,
   abortController?: AbortController,
-  duration?: DurationMs,
+  maxDuration?: DurationMs,
   retries?: number,
-  delays?: number[],
+  retryDelays?: number[],
 ];
 const enum TaskRunPositions {
   TaskId = 0,
@@ -121,9 +121,9 @@ const enum TaskRunPositions {
   Running = 5,
   NextTimestamp = 6,
   AbortController = 7,
-  Duration = 8,
+  MaxDuration = 8,
   Retries = 9,
-  Delays = 10,
+  RetryDelays = 10,
 }
 
 const TICK_INTERVAL = 'tickInterval';
@@ -352,13 +352,13 @@ export const createManager: typeof createManagerDecl = (): Manager => {
       ifNotUndefined(
         mapGet(taskMap, taskId),
         ([task]) => {
-          if (isUndefined(taskRun[TaskRunPositions.Duration])) {
+          if (isUndefined(taskRun[TaskRunPositions.MaxDuration])) {
             const config = getTaskRunConfig(taskRunId, true);
             const retryDelay = config[RETRY_DELAY];
             updateTaskRun(taskRun, {
-              [TaskRunPositions.Duration]: config[MAX_DURATION],
+              [TaskRunPositions.MaxDuration]: config[MAX_DURATION],
               [TaskRunPositions.Retries]: config[MAX_RETRIES],
-              [TaskRunPositions.Delays]: isString(retryDelay)
+              [TaskRunPositions.RetryDelays]: isString(retryDelay)
                 ? arrayMap(arraySplit(retryDelay, ','), (number) =>
                     parseInt(number),
                   )
@@ -366,7 +366,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
             });
           }
 
-          const finishTimestamp = now + taskRun[TaskRunPositions.Duration]!;
+          const finishTimestamp = now + taskRun[TaskRunPositions.MaxDuration]!;
           const abortController = new AbortController();
           updateTaskRun(taskRun, {
             [TaskRunPositions.NextTimestamp]: finishTimestamp,
@@ -461,7 +461,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     reason: TaskRunReasonValues,
   ): void => {
     if (taskRun[TaskRunPositions.Retries]!-- > 0) {
-      const delays = taskRun[TaskRunPositions.Delays]!;
+      const delays = taskRun[TaskRunPositions.RetryDelays]!;
       const delay = size(delays) > 1 ? delays.shift() : delays[0];
       const startTimestamp = now + delay!;
       updateTaskRun(taskRun, {
