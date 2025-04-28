@@ -111,6 +111,7 @@ type TaskRun = [
   maxDuration?: DurationMs,
   retries?: number,
   retryDelays?: number[],
+  repeatDelay?: DurationMs,
 ];
 const enum TaskRunPositions {
   TaskId = 0,
@@ -124,6 +125,7 @@ const enum TaskRunPositions {
   MaxDuration = 8,
   Retries = 9,
   RetryDelays = 10,
+  RepeatDelay = 11,
 }
 
 const TICK_INTERVAL = 'tickInterval';
@@ -363,6 +365,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
                     parseInt(number),
                   )
                 : [retryDelay],
+              [TaskRunPositions.RepeatDelay]: config[REPEAT_DELAY],
             });
           }
 
@@ -396,6 +399,16 @@ export const createManager: typeof createManagerDecl = (): Manager => {
                 );
                 mapSet(taskRunMap, taskRunId);
                 callAllListeners();
+                ifNotUndefined(
+                  taskRun[TaskRunPositions.RepeatDelay],
+                  (repeatDelay) =>
+                    scheduleTaskRun(
+                      taskId,
+                      taskRun[TaskRunPositions.Arg],
+                      repeatDelay,
+                      taskRun[TaskRunPositions.Config],
+                    ),
+                );
               }
             })
             .catch((error) => {

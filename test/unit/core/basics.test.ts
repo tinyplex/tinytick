@@ -833,7 +833,7 @@ describe('ticks', () => {
     expect(manager.getScheduledTaskRunIds()).toEqual([taskRunId1]);
   });
 
-  test('started once, then ends', async () => {
+  test('started once, succeeds', async () => {
     manager.setTask('task1', async () => await pause(25));
     const taskRunId = manager.scheduleTaskRun('task1');
     expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
@@ -853,6 +853,40 @@ describe('ticks', () => {
     expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
     expect(manager.getScheduledTaskRunIds()).toEqual([]);
     expect(manager.getRunningTaskRunIds()).toEqual([]);
+    manager.stop();
+  });
+
+  test('started once, succeeds, repeats', async () => {
+    manager.setTask('task1', async () => await pause(25));
+    const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
+      repeatDelay: 20,
+    });
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    manager.start();
+    await pause(5);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(false);
+    expect(manager.getScheduledTaskRunIds()).toEqual([taskRunId]);
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getScheduledTaskRunIds().length).toEqual(0);
+    expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)?.running).toEqual(true);
+    expect(manager.getScheduledTaskRunIds().length).toEqual(0);
+    expect(manager.getRunningTaskRunIds()).toEqual([taskRunId]);
+    await pause(10);
+    expect(manager.getTaskRunInfo(taskRunId!)).toBeUndefined();
+    expect(manager.getScheduledTaskRunIds().length).toEqual(1);
+    expect(manager.getRunningTaskRunIds().length).toEqual(0);
+    await pause(10);
+    expect(manager.getScheduledTaskRunIds().length).toEqual(1);
+    expect(manager.getRunningTaskRunIds().length).toEqual(0);
+    await pause(20);
+    expect(manager.getScheduledTaskRunIds().length).toEqual(0);
+    expect(manager.getRunningTaskRunIds().length).toEqual(1);
+    await pause(30);
+    expect(manager.getScheduledTaskRunIds().length).toEqual(1);
+    expect(manager.getRunningTaskRunIds().length).toEqual(0);
     manager.stop();
   });
 
