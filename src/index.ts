@@ -130,6 +130,7 @@ const TICK_INTERVAL = 'tickInterval';
 const MAX_DURATION = 'maxDuration';
 const MAX_RETRIES = 'maxRetries';
 const RETRY_DELAY = 'retryDelay';
+const REPEAT_DELAY = 'repeatDelay';
 
 const DEFAULT_MANAGER_CONFIG: ManagerConfigWithDefaults = {
   [TICK_INTERVAL]: 100,
@@ -139,6 +140,7 @@ const DEFAULT_TASK_RUN_CONFIG: TaskRunConfigWithDefaults = {
   [MAX_DURATION]: 1000,
   [MAX_RETRIES]: 0,
   [RETRY_DELAY]: 1000,
+  [REPEAT_DELAY]: null,
 };
 
 const RETRY_PATTERN = /^(\d*\.?\d+)(, ?\d*\.?\d+)*$/;
@@ -152,6 +154,7 @@ const taskRunConfigValidators: {[id: string]: (child: any) => boolean} = {
   [MAX_RETRIES]: isPositiveNumber,
   [RETRY_DELAY]: (child: any) =>
     isPositiveNumber(child) || (isString(child) && RETRY_PATTERN.test(child)),
+  [REPEAT_DELAY]: (child: any) => isPositiveNumber(child) || child === null,
 };
 
 const validatedTestRunConfig = (config: TaskRunConfig): TaskRunConfig =>

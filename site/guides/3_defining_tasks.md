@@ -91,14 +91,19 @@ options:
   if it fails. The default is 0.
 - `retryDelay` (number): The time in milliseconds to wait before retrying the
   task. The default is 1000ms.
+- `repeatDelay` (number): The time in milliseconds to wait before repeating the
+  task if a run was successful. The default is `null`, which means the task will
+  not be repeated.
 
 For example, if you wanted a task that would retry three times over 15 seconds
-if it failed, you would register it accordingly:
+if it failed, or run again after a minute if successful, you would register it
+accordingly:
 
 ```js
 manager.setTask('ping', async (url) => await fetch(url), '', {
   maxRetries: 3,
   retryDelay: 5000,
+  repeatDelay: 60000,
 });
 
 console.log(manager.getTaskConfig('ping', true));

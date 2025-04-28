@@ -238,6 +238,13 @@
    * @since v1.0.0
    */
   /// TaskRunConfig.retryDelay
+  /**
+   * An optional duration between task run repeats in milliseconds, if they are
+   * successful. This defaults to null, meaning the task runs do not repeat.
+   * @category TaskRun
+   * @since v1.2.2
+   */
+  /// TaskRunConfig.repeatDelay
 }
 
 /**
@@ -274,6 +281,13 @@
    * @since v1.0.0
    */
   /// TaskRunConfigWithDefaults.retryDelay
+  /**
+   * An duration between task run repeats in milliseconds, if they are
+   * successful. This defaults to null, meaning the task runs do not repeat.
+   * @category TaskRun
+   * @since v1.2.2
+   */
+  /// TaskRunConfigWithDefaults.repeatDelay
 }
 
 /**

@@ -58,6 +58,8 @@ export type TaskRunConfig = {
   readonly maxRetries?: number;
   /// TaskRunConfig.retryDelay
   readonly retryDelay?: DurationMs | string;
+  /// TaskRunConfig.repeatDelay
+  readonly repeatDelay?: DurationMs | null;
 };
 
 /// TaskRunConfigWithDefaults
@@ -68,6 +70,8 @@ export type TaskRunConfigWithDefaults = {
   readonly maxRetries: number;
   /// TaskRunConfigWithDefaults.retryDelay
   readonly retryDelay: DurationMs | string;
+  /// TaskRunConfigWithDefaults.repeatDelay
+  readonly repeatDelay: DurationMs | null;
 };
 
 /// TaskRunInfo
