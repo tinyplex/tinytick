@@ -439,7 +439,7 @@
  * When called, a TaskRunIdsListener is given a reference to the Manager and an
  * object listing all the Ids that have been added or removed from the list.
  * @param manager A reference to the Manager that changed.
- * @param idChanges An object listing all the Ids that have been added or
+ * @param changedIds An object listing all the Ids that have been added or
  * removed from the list.
  * @category Listener
  * @since v1.2.0
