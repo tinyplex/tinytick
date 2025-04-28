@@ -173,13 +173,15 @@ var TICK_INTERVAL = "tickInterval";
 var MAX_DURATION = "maxDuration";
 var MAX_RETRIES = "maxRetries";
 var RETRY_DELAY = "retryDelay";
+var REPEAT_DELAY = "repeatDelay";
 var DEFAULT_MANAGER_CONFIG = {
   [TICK_INTERVAL]: 100
 };
 var DEFAULT_TASK_RUN_CONFIG = {
   [MAX_DURATION]: 1e3,
   [MAX_RETRIES]: 0,
-  [RETRY_DELAY]: 1e3
+  [RETRY_DELAY]: 1e3,
+  [REPEAT_DELAY]: null
 };
 var RETRY_PATTERN = /^(\d*\.?\d+)(, ?\d*\.?\d+)*$/;
 var managerConfigValidators = {
@@ -188,7 +190,8 @@ var managerConfigValidators = {
 var taskRunConfigValidators = {
   [MAX_DURATION]: isPositiveNumber,
   [MAX_RETRIES]: isPositiveNumber,
-  [RETRY_DELAY]: (child) => isPositiveNumber(child) || isString(child) && RETRY_PATTERN.test(child)
+  [RETRY_DELAY]: (child) => isPositiveNumber(child) || isString(child) && RETRY_PATTERN.test(child),
+  [REPEAT_DELAY]: (child) => isPositiveNumber(child) || child === null
 };
 var validatedTestRunConfig = (config) => objValidate(config, (child, id2) => taskRunConfigValidators[id2]?.(child)) ? config : {};
 var abortTaskRun = (taskRun) => taskRun[
@@ -341,14 +344,14 @@ var createManager = () => {
         ([task]) => {
           if (isUndefined(taskRun[
             8
-            /* Duration */
+            /* MaxDuration */
           ])) {
             const config2 = getTaskRunConfig(taskRunId, true);
             const retryDelay = config2[RETRY_DELAY];
             updateTaskRun(taskRun, {
               [
                 8
-                /* Duration */
+                /* MaxDuration */
               ]: config2[MAX_DURATION],
               [
                 9
@@ -356,16 +359,20 @@ var createManager = () => {
               ]: config2[MAX_RETRIES],
               [
                 10
-                /* Delays */
+                /* RetryDelays */
               ]: isString(retryDelay) ? arrayMap(
                 arraySplit(retryDelay, ","),
                 (number) => parseInt(number)
-              ) : [retryDelay]
+              ) : [retryDelay],
+              [
+                11
+                /* RepeatDelay */
+              ]: config2[REPEAT_DELAY]
             });
           }
           const finishTimestamp = now + taskRun[
             8
-            /* Duration */
+            /* MaxDuration */
           ];
           const abortController = new AbortController();
           updateTaskRun(taskRun, {
@@ -409,6 +416,24 @@ var createManager = () => {
               );
               mapSet(taskRunMap, taskRunId);
               callAllListeners();
+              ifNotUndefined(
+                taskRun[
+                  11
+                  /* RepeatDelay */
+                ],
+                (repeatDelay) => scheduleTaskRun(
+                  taskId,
+                  taskRun[
+                    1
+                    /* Arg */
+                  ],
+                  repeatDelay,
+                  taskRun[
+                    3
+                    /* Config */
+                  ]
+                )
+              );
             }
           }).catch((error) => {
             removeTaskRunPointer(
@@ -477,7 +502,7 @@ var createManager = () => {
     ]-- > 0) {
       const delays = taskRun[
         10
-        /* Delays */
+        /* RetryDelays */
       ];
       const delay = size(delays) > 1 ? delays.shift() : delays[0];
       const startTimestamp = now + delay;

@@ -13,7 +13,7 @@ manager<span class="punctuation">.</span><span class="function"><a href="/api/ti
 <span class="punctuation">)</span><span class="punctuation">;</span>
 
 console<span class="punctuation">.</span><span class="function">log</span><span class="punctuation">(</span>manager<span class="punctuation">.</span><span class="function"><a href="/api/tinytick/interfaces/manager/manager/methods/task/gettaskconfig/">getTaskConfig</a></span><span class="punctuation">(</span><span class="string">'ping'</span><span class="punctuation">,</span> <span class="boolean">true</span><span class="punctuation">)</span><span class="punctuation">)</span><span class="punctuation">;</span>
-<span class="comment">// -> {maxDuration: 5000, maxRetries: 3, retryDelay: 1000}</span>
+<span class="comment">// -> {maxDuration: 5000, maxRetries: 3, retryDelay: 1000, repeatDelay: null}</span>
 </code></pre><p>This example tries to return the configuration of a task that does not exist. The method returns <code>undefined</code>.</p><pre><code><span class="keyword">import</span> <span class="punctuation">{</span>createManager<span class="punctuation">}</span> <span class="keyword">from</span> <span class="string">'tinytick'</span><span class="punctuation">;</span>
 
 <span class="keyword">const</span> manager <span class="operator">=</span> <span class="function"><a href="/api/tinytick/functions/creation/createmanager/">createManager</a></span><span class="punctuation">(</span><span class="punctuation">)</span><span class="punctuation">;</span>
