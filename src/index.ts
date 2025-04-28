@@ -371,6 +371,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
           const finishTimestamp = now + taskRun[TaskRunPositions.MaxDuration]!;
           const abortController = new AbortController();
+          const {signal} = abortController;
           updateTaskRun(taskRun, {
             [TaskRunPositions.NextTimestamp]: finishTimestamp,
             [TaskRunPositions.Running]: true,
@@ -386,11 +387,14 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
           task(
             taskRun[TaskRunPositions.Arg],
-            abortController.signal,
+            signal,
             getTaskRunInfoFromTaskRun(taskRunId, taskRun),
           )
             .then(() => {
-              if (taskRun[TaskRunPositions.Running]) {
+              if (
+                taskRun[TaskRunPositions.Running] &&
+                signal.aborted === false
+              ) {
                 removeTaskRunPointer(
                   TaskRunState.Running,
                   taskId,
