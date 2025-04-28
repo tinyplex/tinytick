@@ -297,32 +297,22 @@ var createManager = () => {
         collClear(taskRunIdsChanged);
       }
     });
-    collForEach(
-      taskRunChanges,
-      (taskChanges, taskId) => collForEach(
-        taskChanges,
-        ([running, reason], taskRunId) => callListeners(
-          taskRunRunningListeners,
-          [taskId, taskRunId],
-          running,
-          reason
-        )
-      )
+    arrayForEach(
+      [
+        [taskRunChanges, taskRunRunningListeners],
+        [taskRunFailures, taskRunFailedListeners]
+      ],
+      ([eventsByTaskId, listeners]) => {
+        collForEach(
+          eventsByTaskId,
+          (events, taskId) => collForEach(
+            events,
+            (args, taskRunId) => callListeners(listeners, [taskId, taskRunId], ...args)
+          )
+        );
+        collClear(eventsByTaskId);
+      }
     );
-    collClear(taskRunChanges);
-    collForEach(
-      taskRunFailures,
-      (taskFailures, taskId) => collForEach(
-        taskFailures,
-        ([reason, message], taskRunId) => callListeners(
-          taskRunFailedListeners,
-          [taskId, taskRunId],
-          reason,
-          message
-        )
-      )
-    );
-    collClear(taskRunFailures);
   };
   const tick = () => {
     const now = getNow();
@@ -375,6 +365,7 @@ var createManager = () => {
             /* MaxDuration */
           ];
           const abortController = new AbortController();
+          const { signal } = abortController;
           updateTaskRun(taskRun, {
             [
               6
@@ -401,13 +392,13 @@ var createManager = () => {
               1
               /* Arg */
             ],
-            abortController.signal,
+            signal,
             getTaskRunInfoFromTaskRun(taskRunId, taskRun)
           ).then(() => {
             if (taskRun[
               5
               /* Running */
-            ]) {
+            ] && signal.aborted === false) {
               removeTaskRunPointer(
                 1,
                 taskId,
