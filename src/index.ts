@@ -311,28 +311,21 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         collClear(taskRunIdsChanged);
       }
     });
-    collForEach(taskRunChanges, (taskChanges, taskId) =>
-      collForEach(taskChanges, ([running, reason], taskRunId) =>
-        callListeners(
-          taskRunRunningListeners,
-          [taskId, taskRunId],
-          running,
-          reason,
-        ),
-      ),
+
+    arrayForEach(
+      [
+        [taskRunChanges, taskRunRunningListeners],
+        [taskRunFailures, taskRunFailedListeners],
+      ] as [IdMap2<[arg1: any, arg2: any]>, IdMap2<IdSet>][],
+      ([eventsByTaskId, listeners]) => {
+        collForEach(eventsByTaskId, (events, taskId) =>
+          collForEach(events, (args, taskRunId) =>
+            callListeners(listeners, [taskId, taskRunId], ...args),
+          ),
+        );
+        collClear(eventsByTaskId);
+      },
     );
-    collClear(taskRunChanges);
-    collForEach(taskRunFailures, (taskFailures, taskId) =>
-      collForEach(taskFailures, ([reason, message], taskRunId) =>
-        callListeners(
-          taskRunFailedListeners,
-          [taskId, taskRunId],
-          reason,
-          message,
-        ),
-      ),
-    );
-    collClear(taskRunFailures);
   };
 
   const tick = () => {
