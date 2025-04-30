@@ -643,6 +643,24 @@ var createManager = () => {
     5
     /* Running */
   ];
+  const untilTaskRunDone = (taskRunId) => new Promise(
+    (resolve) => ifNotUndefined(
+      mapGet(taskRunMap, taskRunId),
+      ([taskId]) => {
+        const listenerId = addTaskRunRunningListener(
+          taskId,
+          taskRunId,
+          (_1, _2, _3, running) => {
+            if (isUndefined(running)) {
+              delListener(listenerId);
+              resolve();
+            }
+          }
+        );
+      },
+      resolve
+    )
+  );
   const delTaskRun = (taskRunId) => fluent((taskRunId2) => {
     delTaskRunImpl(taskRunId2);
     callAllListeners();
@@ -709,6 +727,7 @@ var createManager = () => {
     getTaskRunConfig,
     getTaskRunInfo,
     getTaskRunRunning,
+    untilTaskRunDone,
     delTaskRun,
     getScheduledTaskRunIds,
     getRunningTaskRunIds,
