@@ -668,6 +668,26 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   const getTaskRunRunning = (taskRunId: Id): boolean | undefined =>
     mapGet(taskRunMap, id(taskRunId))?.[TaskRunPositions.Running];
 
+  const untilTaskRunDone = (taskRunId: Id): Promise<void> =>
+    new Promise((resolve) =>
+      ifNotUndefined(
+        mapGet(taskRunMap, taskRunId),
+        ([taskId]) => {
+          const listenerId = addTaskRunRunningListener(
+            taskId,
+            taskRunId,
+            (_1, _2, _3, running) => {
+              if (isUndefined(running)) {
+                delListener(listenerId);
+                resolve();
+              }
+            },
+          );
+        },
+        resolve,
+      ),
+    );
+
   const delTaskRun = (taskRunId: Id): Manager =>
     fluent((taskRunId) => {
       delTaskRunImpl(taskRunId);
@@ -746,6 +766,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     getTaskRunConfig,
     getTaskRunInfo,
     getTaskRunRunning,
+    untilTaskRunDone,
     delTaskRun,
 
     getScheduledTaskRunIds,

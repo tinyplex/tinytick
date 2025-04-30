@@ -209,6 +209,9 @@ export interface Manager {
   /// Manager.getTaskRunRunning
   getTaskRunRunning(taskRunId: Id): boolean | undefined;
 
+  /// Manager.untilTaskRunDone
+  untilTaskRunDone(taskRunId: Id): Promise<void>;
+
   /// Manager.delTaskRun
   delTaskRun(taskRunId: Id): Manager;
 

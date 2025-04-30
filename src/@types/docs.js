@@ -1105,6 +1105,38 @@
    */
   /// Manager.getTaskRunRunning
   /**
+   * The untilTaskRunDone method returns a Promise that resolves when a task run
+   * has finished running, regardless of whether it was successful or not.
+   *
+   * This is useful if you want to have a parent task that will keep running
+   * until its child tasks have concluded.
+   *
+   * In this context, 'done' means that the test run succeeded, deleted or
+   * failed (and, if relevant, all retries have been attempted). If a task is
+   * configured to 'repeat', future iterations are not included and the promise
+   * will resolve after the first is done.
+   * @param taskRunId The Id of the task run to await.
+   * @returns A promise that will resolve when the task run finishes.
+   * @example
+   * This example demonstrates using untilTaskRunDone to wait for a task to
+   * complete before continuing execution.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager().start();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * const taskRunId = manager.scheduleTaskRun('ping');
+   * await manager.untilTaskRunDone(taskRunId);
+   *
+   * // Continue execution
+   * ```
+   * @category TaskRun
+   * @since v1.2.4
+   */
+  /// Manager.untilTaskRunDone
+  /**
    * The delTaskRun method deletes a scheduled task run or aborts a running one.
    * @param taskRunId The Id of the task run to delete or abort.
    * @returns A reference to the Manager.
