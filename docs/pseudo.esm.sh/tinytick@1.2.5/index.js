@@ -131,16 +131,16 @@ var object = Object;
 var getPrototypeOf = (obj) => object.getPrototypeOf(obj);
 var objFrozen = object.isFrozen;
 var objEntries = object.entries;
+var objDel = (obj, id2) => {
+  delete obj[id2];
+  return obj;
+};
 var isObject = (obj) => !isUndefined(obj) && ifNotUndefined(
   getPrototypeOf(obj),
   (objPrototype) => objPrototype == object.prototype || isUndefined(getPrototypeOf(objPrototype)),
   /* istanbul ignore next */
   () => true
 );
-var objDel = (obj, id2) => {
-  delete obj[id2];
-  return obj;
-};
 var objFreeze = object.freeze;
 var objForEach = (obj, cb) => arrayForEach(objEntries(obj), ([id2, value]) => cb(value, id2));
 var objMerge = (...objs) => object.assign({}, ...objs);
@@ -602,14 +602,22 @@ var createManager = () => {
   );
   const getTaskIds = () => mapKeys(taskMap);
   const delTask = (taskId) => fluent((taskId2) => mapSet(taskMap, taskId2), taskId);
-  const scheduleTaskRun = (taskId, arg, startAfter = 0, config2 = {}) => {
+  const scheduleTaskRun = (taskIdOrArgs, arg, startAfter = 0, config2 = {}) => {
     if (status == 2) {
       return void 0;
+    }
+    if (isObject(taskIdOrArgs)) {
+      return scheduleTaskRun(
+        taskIdOrArgs.taskId,
+        taskIdOrArgs.arg,
+        taskIdOrArgs.startAfter,
+        taskIdOrArgs.config
+      );
     }
     const taskRunId = getUniqueId();
     const startTimestamp = normalizeTimestamp(startAfter);
     mapSet(taskRunMap, taskRunId, [
-      id(taskId),
+      id(taskIdOrArgs),
       arg,
       startTimestamp,
       validatedTestRunConfig(config2),
@@ -619,7 +627,7 @@ var createManager = () => {
     ]);
     insertTaskRunPointer(
       0,
-      id(taskId),
+      id(taskIdOrArgs),
       taskRunId,
       startTimestamp,
       0
