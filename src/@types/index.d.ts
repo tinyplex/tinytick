@@ -195,6 +195,14 @@ export interface Manager {
     config?: TaskRunConfig,
   ): Id | undefined;
 
+  /// Manager.scheduleTaskRun.2
+  scheduleTaskRun(args: {
+    taskId: Id;
+    arg?: string;
+    startAfter?: TimestampMs | DurationMs;
+    config?: TaskRunConfig;
+  }): Id | undefined;
+
   /// Manager.getTaskRunConfig
   getTaskRunConfig<WithDefaults extends boolean>(
     taskRunId: Id,

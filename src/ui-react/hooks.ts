@@ -29,6 +29,7 @@ import type {
   useTaskRunRunning as useTaskRunRunningDecl,
 } from '../@types/ui-react/index.d.ts';
 import {arrayIsEqual} from '../common/array.ts';
+import {isObject} from '../common/obj.ts';
 import {isUndefined} from '../common/other.ts';
 import {Context} from './context.ts';
 
@@ -77,6 +78,28 @@ const useListenable = (
 const addAndDelListener = (thing: any, listenable: string, ...args: any[]) => {
   const listenerId = thing?.['add' + listenable + 'Listener']?.(...args);
   return () => thing?.delListener?.(listenerId);
+};
+
+const useScheduleTaskRunImpl = (
+  args: [taskId: Id, arg?: string, startAfter?: TimestampMs | DurationMs],
+  config?: TaskRunConfig,
+  configDeps: DependencyList = EMPTY_ARRAY,
+) => {
+  const callback = useScheduleTaskRunCallbackImpl(args, config, configDeps);
+  return useMemo(callback, [callback]);
+};
+
+const useScheduleTaskRunCallbackImpl = (
+  args: [taskId: Id, arg?: string, startAfter?: TimestampMs | DurationMs],
+  config?: TaskRunConfig,
+  configDeps: DependencyList = EMPTY_ARRAY,
+) => {
+  const manager = useManager();
+  return useCallback(
+    () => manager?.scheduleTaskRun(...args, config),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [manager, ...args, ...configDeps],
+  );
 };
 
 export const useCreateManager: typeof useCreateManagerDecl = (
@@ -134,34 +157,50 @@ export const useSetTask: typeof useSetTaskDecl = (
 };
 
 export const useScheduleTaskRun: typeof useScheduleTaskRunDecl = (
-  taskId: Id,
-  arg?: string,
+  taskIdOrArgs:
+    | Id
+    | {
+        taskId?: Id;
+        arg?: string;
+        startAfter?: TimestampMs | DurationMs;
+        config?: TaskRunConfig;
+      },
+  argOrConfigDeps?: string | DependencyList,
   startAfter?: TimestampMs | DurationMs,
   config?: TaskRunConfig,
-  configDeps: DependencyList = EMPTY_ARRAY,
-) => {
-  const callback = useScheduleTaskRunCallback(
-    taskId,
-    arg,
-    startAfter,
-    config,
-    configDeps,
+  configDeps?: DependencyList,
+) =>
+  (useScheduleTaskRunImpl as any)(
+    ...(isObject(taskIdOrArgs)
+      ? [
+          [taskIdOrArgs.taskId, taskIdOrArgs.arg, taskIdOrArgs.startAfter],
+          taskIdOrArgs.config,
+          argOrConfigDeps,
+        ]
+      : [[taskIdOrArgs, argOrConfigDeps, startAfter], config, configDeps]),
   );
-  return useMemo(callback, [callback]);
-};
 
 export const useScheduleTaskRunCallback: typeof useScheduleTaskRunCallbackDecl =
   (
-    taskId: Id,
-    arg?: string,
+    taskIdOrArgs:
+      | Id
+      | {
+          taskId?: Id;
+          arg?: string;
+          startAfter?: TimestampMs | DurationMs;
+          config?: TaskRunConfig;
+        },
+    argOrConfigDeps?: string | DependencyList,
     startAfter?: TimestampMs | DurationMs,
     config?: TaskRunConfig,
-    configDeps: DependencyList = EMPTY_ARRAY,
-  ) => {
-    const manager = useManager();
-    return useCallback(
-      () => manager?.scheduleTaskRun(taskId, arg, startAfter, config),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [manager, taskId, arg, startAfter, ...configDeps],
+    configDeps?: DependencyList,
+  ) =>
+    (useScheduleTaskRunCallbackImpl as any)(
+      ...(isObject(taskIdOrArgs)
+        ? [
+            [taskIdOrArgs.taskId, taskIdOrArgs.arg, taskIdOrArgs.startAfter],
+            taskIdOrArgs.config,
+            argOrConfigDeps,
+          ]
+        : [[taskIdOrArgs, argOrConfigDeps, startAfter], config, configDeps]),
     );
-  };

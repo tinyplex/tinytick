@@ -41,6 +41,7 @@ import {
   mapToObj,
 } from './common/map.ts';
 import {
+  isObject,
   objFilterUndefined,
   objForEach,
   objFreeze,
@@ -616,7 +617,14 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     fluent((taskId) => mapSet(taskMap, taskId), taskId);
 
   const scheduleTaskRun = (
-    taskId: Id,
+    taskIdOrArgs:
+      | Id
+      | {
+          taskId: Id;
+          arg?: string;
+          startAfter?: TimestampMs | DurationMs;
+          config?: TaskRunConfig;
+        },
     arg?: string,
     startAfter: TimestampMs | DurationMs = 0,
     config: TaskRunConfig = {},
@@ -624,10 +632,18 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     if (status == ManagerStatusValues.Stopping) {
       return undefined;
     }
+    if (isObject(taskIdOrArgs)) {
+      return scheduleTaskRun(
+        taskIdOrArgs.taskId,
+        taskIdOrArgs.arg,
+        taskIdOrArgs.startAfter,
+        taskIdOrArgs.config,
+      );
+    }
     const taskRunId = getUniqueId();
     const startTimestamp = normalizeTimestamp(startAfter);
     mapSet(taskRunMap, taskRunId, [
-      id(taskId),
+      id(taskIdOrArgs),
       arg,
       startTimestamp,
       validatedTestRunConfig(config),
@@ -637,7 +653,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     ]);
     insertTaskRunPointer(
       TaskRunState.Scheduled,
-      id(taskId),
+      id(taskIdOrArgs),
       taskRunId,
       startTimestamp,
       TaskRunReasonValues.Scheduled,

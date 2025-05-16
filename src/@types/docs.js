@@ -960,6 +960,35 @@
    */
   /// Manager.scheduleTaskRun
   /**
+   * When called with an object as the first argument, the scheduleTaskRun
+   * method destructures it to make it easier to skip optional parameters.
+   * @param args An object containing the Id of the task to run, an optional
+   * string argument to pass to the Task, an optional timestamp at, or duration
+   * after which, the task should run; and an optional TaskRunConfig to set for
+   * this run.
+   * @returns A new unique Id of the scheduled task run, or `undefined` if
+   * unsuccessful.
+   * @example
+   * This example registers a task that is then scheduled to run.
+   *
+   * ```js
+   * import {createManager} from 'tinytick';
+   *
+   * const manager = createManager();
+   * manager.setTask('ping', async () => await fetch('https://example.org'));
+   *
+   * const taskRunId = manager.scheduleTaskRun({taskId: 'ping', startAfter: 1});
+   * console.log(manager.getScheduledTaskRunIds().length);
+   * // -> 1
+   *
+   * console.log(manager.getTaskRunInfo(taskRunId).taskId);
+   * // -> 'ping'
+   * ```
+   * @category TaskRun
+   * @since v1.2.5
+   */
+  /// Manager.scheduleTaskRun.2
+  /**
    * The getTaskRunConfig method returns the configuration of a task run.
    *
    * You can either return just the configuration you have set for this run, or

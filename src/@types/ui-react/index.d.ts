@@ -57,12 +57,34 @@ export function useScheduleTaskRun(
   configDeps?: DependencyList,
 ): Id | undefined;
 
+/// useScheduleTaskRun.2
+export function useScheduleTaskRun(
+  args: {
+    taskId: Id;
+    arg?: string;
+    startAfter?: TimestampMs | DurationMs;
+    config?: TaskRunConfig;
+  },
+  configDeps?: DependencyList,
+): Id | undefined;
+
 /// useScheduleTaskRunCallback
 export function useScheduleTaskRunCallback(
   taskId: Id,
   arg?: string,
   startAfter?: TimestampMs | DurationMs,
   config?: TaskRunConfig,
+  configDeps?: DependencyList,
+): () => Id | undefined;
+
+/// useScheduleTaskRunCallback.2
+export function useScheduleTaskRunCallback(
+  args: {
+    taskId: Id;
+    arg?: string;
+    startAfter?: TimestampMs | DurationMs;
+    config?: TaskRunConfig;
+  },
   configDeps?: DependencyList,
 ): () => Id | undefined;
 

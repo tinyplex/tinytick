@@ -369,9 +369,56 @@ describe('Write Hooks', () => {
     unmount();
   });
 
+  test('useScheduleTaskRun, object arg', () => {
+    const Test = ({taskId, _i}: {taskId: Id; _i: number}) => {
+      useScheduleTaskRun({taskId});
+      return didRender(null);
+    };
+
+    expect(manager.getScheduledTaskRunIds().length).toEqual(0);
+
+    const {rerender, unmount} = render(
+      <Provider manager={manager}>
+        <Test taskId="task1" _i={0} />
+      </Provider>,
+    );
+
+    rerender(
+      <Provider manager={manager}>
+        <Test taskId="task1" _i={1} />
+      </Provider>,
+    );
+
+    expect(manager.getScheduledTaskRunIds().length).toEqual(1);
+    expect(didRender).toHaveBeenCalledTimes(2);
+    unmount();
+  });
+
   test('useScheduleTaskRunCallback', () => {
     const Test = ({taskId}: {taskId: Id}) => {
       const handler = useScheduleTaskRunCallback(taskId);
+      return didRender(<button onClick={handler} />);
+    };
+
+    const {getByRole, unmount} = render(
+      <Provider manager={manager}>
+        <Test taskId="task1" />
+      </Provider>,
+    );
+
+    expect(manager.getScheduledTaskRunIds().length).toEqual(0);
+
+    const button = getByRole('button');
+    fireEvent.click(button);
+
+    expect(manager.getScheduledTaskRunIds().length).toEqual(1);
+    expect(didRender).toHaveBeenCalledTimes(1);
+    unmount();
+  });
+
+  test('useScheduleTaskRunCallback, object arg', () => {
+    const Test = ({taskId}: {taskId: Id}) => {
+      const handler = useScheduleTaskRunCallback({taskId});
       return didRender(<button onClick={handler} />);
     };
 

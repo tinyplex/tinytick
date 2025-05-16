@@ -329,6 +329,12 @@ describe('taskRun', () => {
       expect(taskRunId).toBeDefined();
     });
 
+    test('basic, object arg', () => {
+      manager.setTask('task1', task);
+      const taskRunId = manager.scheduleTaskRun({taskId: 'task1'});
+      expect(taskRunId).toBeDefined();
+    });
+
     test('with config', () => {
       manager.setTask('task1', task);
       const taskRunId = manager.scheduleTaskRun('task1', undefined, 0, {
@@ -336,6 +342,25 @@ describe('taskRun', () => {
         maxRetries: 5,
         retryDelay: 1000,
         repeatDelay: 60000,
+      })!;
+      expect(manager.getTaskRunConfig(taskRunId)).toEqual({
+        maxDuration: 5000,
+        maxRetries: 5,
+        retryDelay: 1000,
+        repeatDelay: 60000,
+      });
+    });
+
+    test('with config, object arg', () => {
+      manager.setTask('task1', task);
+      const taskRunId = manager.scheduleTaskRun({
+        taskId: 'task1',
+        config: {
+          maxDuration: 5000,
+          maxRetries: 5,
+          retryDelay: 1000,
+          repeatDelay: 60000,
+        },
       })!;
       expect(manager.getTaskRunConfig(taskRunId)).toEqual({
         maxDuration: 5000,

@@ -10,7 +10,14 @@ const objFrozen = object.isFrozen;
 
 const objEntries = object.entries;
 
-const isObject = (obj: unknown): boolean =>
+const objDel = <Value>(obj: IdObj<Value>, id: Id): IdObj<Value> => {
+  delete obj[id];
+  return obj;
+};
+
+export type IdObj<Value> = {[id: string]: Value};
+
+export const isObject = (obj: unknown): obj is IdObj<unknown> =>
   !isUndefined(obj) &&
   (ifNotUndefined(
     getPrototypeOf(obj),
@@ -20,13 +27,6 @@ const isObject = (obj: unknown): boolean =>
     /*! istanbul ignore next */
     () => true,
   ) as boolean);
-
-const objDel = <Value>(obj: IdObj<Value>, id: Id): IdObj<Value> => {
-  delete obj[id];
-  return obj;
-};
-
-export type IdObj<Value> = {[id: string]: Value};
 
 export const objFreeze = object.freeze;
 

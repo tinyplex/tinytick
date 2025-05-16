@@ -582,6 +582,53 @@
  * @since v1.2.1
  */
 /// useScheduleTaskRun
+/**
+ * When called with an object as the first argument, the useScheduleTaskRun
+ * hook destructures it to make it easier to skip optional parameters.
+ * @param args An object containing the Id of the task to run, an optional
+ * string argument to pass to the Task, an optional timestamp at, or duration
+ * after which, the task should run; and an optional TaskRunConfig to set for
+ * this run.
+ * @param configDeps An optional array of dependencies for the config object,
+ * which, if any change, result in the task being scheduled again. Defaults to
+ * an empty array.
+ * @returns The new unique Id of the scheduled task run, or `undefined` if
+ * unsuccessful.
+ * @example
+ * This example shows how to use the useScheduleTaskRun hook within a
+ * component that's nested inside a Provider. The hook is used to create a
+ * callback that will schedule a task in response to a click event.
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useScheduleTaskRun} from 'tinytick/ui-react';
+ *
+ * const Pane = () => {
+ *   useScheduleTaskRun({taskId: 'log'});
+ *   return null;
+ * };
+ * const App = ({manager}) => (
+ *   <Provider manager={manager}>
+ *     <Pane />
+ *   </Provider>
+ * );
+ *
+ * const manager = createManager().start();
+ * manager.setTask('log', async () => console.log('Task ran'));
+ *
+ * const app = document.createElement('div');
+ * const root = createRoot(app);
+ * root.render(<App manager={manager} />); // !act
+ *
+ * // ... wait 100ms for task to start running // !act
+ * // -> 'Task ran'
+ * ```
+ * @category Task run hooks
+ * @since v1.2.5
+ */
+/// useScheduleTaskRun.2
 
 /**
  * The useScheduleTaskRunCallback hook returns a function that can be used to
@@ -653,6 +700,65 @@
  * @since v1.2.0
  */
 /// useScheduleTaskRunCallback
+/**
+ * When called with an object as the first argument, the
+ * useScheduleTaskRunCallback hook destructures it to make it easier to skip
+ * optional parameters.
+ * @param args An object containing the Id of the task to run, an optional
+ * string argument to pass to the Task, an optional timestamp at, or duration
+ * after which, the task should run; and an optional TaskRunConfig to set for
+ * this run.
+ * @param configDeps An optional array of dependencies for the config object,
+ * which, if any change, result in the callback being regenerated. Defaults to
+ * an empty array.
+ * @returns A callback that will return the new unique Id of the scheduled task
+ * run, or `undefined` if unsuccessful.
+ * @example
+ * This example shows how to use the useScheduleTaskRunCallback hook within a
+ * component that's nested inside a Provider. The hook is used to create a
+ * callback that will schedule a task in response to a click event.
+ *
+ * ```jsx
+ * import React from 'react';
+ * import {createRoot} from 'react-dom/client';
+ * import {createManager} from 'tinytick';
+ * import {Provider, useScheduleTaskRunCallback} from 'tinytick/ui-react';
+ *
+ * const Pane = () => {
+ *   const handleClick = useScheduleTaskRunCallback({taskId: 'log'});
+ *   return (
+ *     <span id="span" onClick={handleClick}>
+ *       Log
+ *     </span>
+ *   );
+ * };
+ * const App = ({manager}) => (
+ *   <Provider manager={manager}>
+ *     <Pane />
+ *   </Provider>
+ * );
+ *
+ * const manager = createManager().start();
+ * manager.setTask('log', async () => console.log('Task ran'));
+ *
+ * const app = document.createElement('div');
+ * const root = createRoot(app);
+ * root.render(<App manager={manager} />); // !act
+ * const span = app.querySelector('span');
+ *
+ * console.log(span.innerHTML);
+ * // -> 'Log'
+ *
+ * // User clicks the <span> element:
+ * // -> span MouseEvent('click', {bubbles: true})
+ *
+ * // ... wait 100ms for task to start running // !act
+ * // -> 'Task ran'
+ * ```
+ * @category Task run hooks
+ * @since v1.2.5
+ */
+/// useScheduleTaskRunCallback.2
 
 /**
  * ProviderProps props are used with the Manager component, so that a TinyTick
