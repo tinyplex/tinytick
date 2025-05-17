@@ -15,7 +15,10 @@ var MILLISECONDS_IN_YEAR = 31536e6;
 var encode = (num) => ENCODE[num & MASK6];
 var isPositiveNumber = (thing) => getTypeOf(thing) == "number" && thing >= 0;
 var isUndefined = (thing) => thing == void 0;
-var ifNotUndefined = (value, then, otherwise) => isUndefined(value) ? otherwise?.() : then(value);
+var ifNotUndefined = (value, then, otherwise) => (
+  /* istanbul ignore next */
+  isUndefined(value) ? otherwise?.() : then(value)
+);
 var size = (arrayOrString) => arrayOrString.length;
 var test = (regex, subject) => regex.test(subject);
 var isEmpty = (arrayOrString) => size(arrayOrString) == 0;
@@ -754,6 +757,10 @@ var createManager = () => {
   };
   return objFreeze(manager);
 };
+var getManagerStatusText = (status) => status == 0 ? "stopped" : status == 1 ? "running" : status == 2 ? "stopping" : EMPTY_STRING;
+var getTaskRunReasonText = (reason) => reason == 0 ? "scheduled" : reason == 1 ? "started" : reason == 2 ? "succeeded" : reason == 3 ? "timed out" : reason == 4 ? "errored" : reason == 5 ? "deleted" : EMPTY_STRING;
 export {
-  createManager
+  createManager,
+  getManagerStatusText,
+  getTaskRunReasonText
 };
