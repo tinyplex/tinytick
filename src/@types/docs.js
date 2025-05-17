@@ -1846,10 +1846,12 @@
  *   'ping',
  *   null,
  *   (manager, taskId, taskRunId, running, reason) =>
- *     console.log(`Task '${taskId}' changed; ${getTaskRunReasonText(reason)}`),
+ *     console.log(
+ *       `Task '${taskId}' changed; ${getTaskRunReasonText(reason)}`,
+ *     ),
  * );
  *
- * const taskRunId = manager.scheduleTaskRun('ping');
+ * manager.scheduleTaskRun('ping');
  * // -> "Task 'ping' changed; scheduled"
  * // ... wait 100ms for task to start
  * // -> "Task 'ping' changed; started"
