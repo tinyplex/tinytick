@@ -1,4 +1,9 @@
-import {type Manager, createManager, getTaskRunReasonText} from 'tinytick';
+import {
+  type Manager,
+  createManager,
+  getManagerStatusText,
+  getTaskRunReasonText,
+} from 'tinytick';
 import {pause} from '../common.ts';
 
 let manager: Manager;
@@ -758,6 +763,14 @@ describe('taskRun', () => {
 });
 
 describe('utilities', () => {
+  test('getManagerStatusText', () => {
+    expect(getManagerStatusText(0)).toEqual('stopped');
+    expect(getManagerStatusText(1)).toEqual('running');
+    expect(getManagerStatusText(2)).toEqual('stopping');
+    // @ts-expect-error invalid status
+    expect(getManagerStatusText(3)).toEqual('');
+  });
+
   test('getTaskRunReasonText', () => {
     expect(getTaskRunReasonText(0)).toEqual('scheduled');
     expect(getTaskRunReasonText(1)).toEqual('started');

@@ -128,7 +128,6 @@
  * @since v1.0.0
  */
 /// ManagerStatus
-
 {
   /**
    * Indicates that the Manager is stopped.
@@ -150,6 +149,7 @@
    */
   /// ManagerStatus.Stopping
 }
+
 /**
  * The ManagerConfig type represents a configuration you can provide for the
  * Manager as a whole.
@@ -1791,6 +1791,36 @@
  * @since v1.0.0
  */
 /// createManager
+
+/**
+ * The getManagerStatusText function returns a string describing the current
+ * status of the Manager.
+ *
+ * It is designed to be used for logging and diagnostic reasons with the
+ * `status` parameter of StatusListener or the return value of the getStatus
+ * method.
+ * @param status The status of the Manager.
+ * @returns A string describing the status.
+ * @example
+ * This example gets text describing the current status of the Manager.
+ *
+ * ```js
+ * import {createManager, getManagerStatusText} from 'tinytick';
+ *
+ * const manager = createManager();
+ * console.log(getManagerStatusText(manager.getStatus()));
+ * // -> 'stopped'
+ * manager.start();
+ * console.log(getManagerStatusText(manager.getStatus()));
+ * // -> 'running'
+ * manager.stop();
+ * console.log(getManagerStatusText(manager.getStatus()));
+ * // -> 'stopping'
+ * ```
+ * @category Utility
+ * @since v1.2.6
+ */
+/// getManagerStatusText
 
 /**
  * The getTaskRunReasonText function returns a string describing the reason for

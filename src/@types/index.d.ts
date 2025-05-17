@@ -277,5 +277,8 @@ export interface Manager {
 /// createManager
 export function createManager(): Manager;
 
+/// getManagerStatusText
+export function getManagerStatusText(status: ManagerStatus): string;
+
 /// getTaskRunReasonText
 export function getTaskRunReasonText(reason: TaskRunReason): string;

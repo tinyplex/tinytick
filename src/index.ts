@@ -807,6 +807,15 @@ export const createManager: typeof createManagerDecl = (): Manager => {
   return objFreeze(manager);
 };
 
+export const getManagerStatusText = (status: ManagerStatusValues) =>
+  status == ManagerStatusValues.Stopped
+    ? 'stopped'
+    : status == ManagerStatusValues.Running
+      ? 'running'
+      : status == ManagerStatusValues.Stopping
+        ? 'stopping'
+        : EMPTY_STRING;
+
 export const getTaskRunReasonText = (reason: TaskRunReasonValues) =>
   reason == TaskRunReasonValues.Scheduled
     ? 'scheduled'
