@@ -1,4 +1,4 @@
-import {type Manager, createManager} from 'tinytick';
+import {type Manager, createManager, getTaskRunReasonText} from 'tinytick';
 import {pause} from '../common.ts';
 
 let manager: Manager;
@@ -754,5 +754,18 @@ describe('taskRun', () => {
       expect(manager.getScheduledTaskRunIds()).toEqual([]);
       await pause(10);
     });
+  });
+});
+
+describe('utilities', () => {
+  test('getTaskRunReasonText', () => {
+    expect(getTaskRunReasonText(0)).toEqual('scheduled');
+    expect(getTaskRunReasonText(1)).toEqual('started');
+    expect(getTaskRunReasonText(2)).toEqual('succeeded');
+    expect(getTaskRunReasonText(3)).toEqual('timed out');
+    expect(getTaskRunReasonText(4)).toEqual('errored');
+    expect(getTaskRunReasonText(5)).toEqual('deleted');
+    // @ts-expect-error invalid reason
+    expect(getTaskRunReasonText(6)).toEqual('');
   });
 });

@@ -1791,3 +1791,44 @@
  * @since v1.0.0
  */
 /// createManager
+
+/**
+ * The getTaskRunReasonText function returns a string describing the reason for
+ * a task run changing state.
+ *
+ * It is designed to be used for logging and diagnostic reasons with the
+ * `reason` parameter of listeners like TaskRunRunningListener and
+ * TaskRunFailedListener.
+ * @param reason The reason for the task run changing state.
+ * @returns A string describing the reason.
+ * @example
+ * This example registers a task run listener and then uses the
+ * getTaskRunReasonText function to get a string describing the reason for the
+ * task run changing state.
+ *
+ * ```js
+ * import {createManager, getTaskRunReasonText} from 'tinytick';
+ *
+ * const manager = createManager().start();
+ * manager.setTask('ping', async () => await fetch('https://example.org'));
+ *
+ * const listenerId = manager.addTaskRunRunningListener(
+ *   'ping',
+ *   null,
+ *   (manager, taskId, taskRunId, running, reason) =>
+ *     console.log(`Task '${taskId}' changed; ${getTaskRunReasonText(reason)}`),
+ * );
+ *
+ * const taskRunId = manager.scheduleTaskRun('ping');
+ * // -> "Task 'ping' changed; scheduled"
+ * // ... wait 100ms for task to start
+ * // -> "Task 'ping' changed; started"
+ * // ... wait 100ms for task to complete
+ * // -> "Task 'ping' changed; succeeded"
+ *
+ * manager.delListener(listenerId);
+ * ```
+ * @category Utility
+ * @since v1.2.6
+ */
+/// getTaskRunReasonText

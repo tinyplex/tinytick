@@ -276,3 +276,6 @@ export interface Manager {
 
 /// createManager
 export function createManager(): Manager;
+
+/// getTaskRunReasonText
+export function getTaskRunReasonText(reason: TaskRunReason): string;

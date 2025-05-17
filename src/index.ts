@@ -806,3 +806,18 @@ export const createManager: typeof createManagerDecl = (): Manager => {
 
   return objFreeze(manager);
 };
+
+export const getTaskRunReasonText = (reason: TaskRunReasonValues) =>
+  reason == TaskRunReasonValues.Scheduled
+    ? 'scheduled'
+    : reason == TaskRunReasonValues.Started
+      ? 'started'
+      : reason == TaskRunReasonValues.Succeeded
+        ? 'succeeded'
+        : reason == TaskRunReasonValues.TimedOut
+          ? 'timed out'
+          : reason == TaskRunReasonValues.Errored
+            ? 'errored'
+            : reason == TaskRunReasonValues.Deleted
+              ? 'deleted'
+              : EMPTY_STRING;
