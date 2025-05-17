@@ -24,7 +24,9 @@ export const ifNotUndefined = <Value, Return>(
   value: Value | null | undefined,
   then: (value: Value) => Return,
   otherwise?: () => Return,
-): Return | undefined => (isUndefined(value) ? otherwise?.() : then(value));
+): Return | undefined =>
+  /*! istanbul ignore next */
+  isUndefined(value) ? otherwise?.() : then(value);
 
 export const isArray = (thing: unknown): thing is any[] => Array.isArray(thing);
 
