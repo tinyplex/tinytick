@@ -536,7 +536,8 @@
  *
  * The task run will be scheduled once when the component is first rendered, and
  * will be only scheduled again if any of the arguments or configDeps
- * dependencies change.
+ * dependencies change. If they do, any previously scheduled task run will be
+ * deleted.
  * @param taskId The Id of the task to run.
  * @param arg An optional string argument to pass to the Task.
  * @param startAfter A timestamp at, or duration after which, the task should

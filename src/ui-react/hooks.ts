@@ -30,7 +30,7 @@ import type {
 } from '../@types/ui-react/index.d.ts';
 import {arrayIsEqual} from '../common/array.ts';
 import {isObject} from '../common/obj.ts';
-import {isUndefined} from '../common/other.ts';
+import {ifNotUndefined, isUndefined} from '../common/other.ts';
 import {Context} from './context.ts';
 
 const EMPTY_ARRAY: Readonly<[]> = [];
@@ -85,8 +85,18 @@ const useScheduleTaskRunImpl = (
   config?: TaskRunConfig,
   configDeps: DependencyList = EMPTY_ARRAY,
 ) => {
-  const callback = useScheduleTaskRunCallbackImpl(args, config, configDeps);
-  return useMemo(callback, [callback]);
+  const manager = useManager();
+  useLayoutEffect(
+    () =>
+      ifNotUndefined(
+        manager?.scheduleTaskRun(...args, config),
+        (taskRunId) => () => {
+          manager?.delTaskRun(taskRunId);
+        },
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [manager, ...args, ...configDeps],
+  );
 };
 
 const useScheduleTaskRunCallbackImpl = (

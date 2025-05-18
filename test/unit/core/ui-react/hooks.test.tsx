@@ -345,8 +345,8 @@ describe('Write Hooks', () => {
   });
 
   test('useScheduleTaskRun', () => {
-    const Test = ({taskId, _i}: {taskId: Id; _i: number}) => {
-      useScheduleTaskRun(taskId);
+    const Test = ({taskId, arg}: {taskId: Id; arg: string}) => {
+      useScheduleTaskRun(taskId, arg);
       return didRender(null);
     };
 
@@ -354,24 +354,27 @@ describe('Write Hooks', () => {
 
     const {rerender, unmount} = render(
       <Provider manager={manager}>
-        <Test taskId="task1" _i={0} />
+        <Test taskId="task1" arg="0" />
       </Provider>,
     );
+    expect(manager.getScheduledTaskRunIds().length).toEqual(1);
 
     rerender(
       <Provider manager={manager}>
-        <Test taskId="task1" _i={1} />
+        <Test taskId="task1" arg="1" />
       </Provider>,
     );
 
     expect(manager.getScheduledTaskRunIds().length).toEqual(1);
     expect(didRender).toHaveBeenCalledTimes(2);
     unmount();
+
+    expect(manager.getScheduledTaskRunIds().length).toEqual(0);
   });
 
   test('useScheduleTaskRun, object arg', () => {
-    const Test = ({taskId, _i}: {taskId: Id; _i: number}) => {
-      useScheduleTaskRun({taskId});
+    const Test = ({taskId, arg}: {taskId: Id; arg: string}) => {
+      useScheduleTaskRun({taskId, arg});
       return didRender(null);
     };
 
@@ -379,19 +382,22 @@ describe('Write Hooks', () => {
 
     const {rerender, unmount} = render(
       <Provider manager={manager}>
-        <Test taskId="task1" _i={0} />
+        <Test taskId="task1" arg="0" />
       </Provider>,
     );
+    expect(manager.getScheduledTaskRunIds().length).toEqual(1);
 
     rerender(
       <Provider manager={manager}>
-        <Test taskId="task1" _i={1} />
+        <Test taskId="task1" arg="1" />
       </Provider>,
     );
 
     expect(manager.getScheduledTaskRunIds().length).toEqual(1);
     expect(didRender).toHaveBeenCalledTimes(2);
     unmount();
+
+    expect(manager.getScheduledTaskRunIds().length).toEqual(0);
   });
 
   test('useScheduleTaskRunCallback', () => {
