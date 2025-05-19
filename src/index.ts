@@ -405,6 +405,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
                       taskRun[TaskRunPositions.Arg],
                       repeatDelay,
                       taskRun[TaskRunPositions.Config],
+                      taskRunId,
                     ),
                 );
               }
@@ -628,6 +629,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
     arg?: string,
     startAfter: TimestampMs | DurationMs = 0,
     config: TaskRunConfig = {},
+    repeatTestRunId?: Id,
   ): Id | undefined => {
     if (status == ManagerStatusValues.Stopping) {
       return undefined;
@@ -640,7 +642,7 @@ export const createManager: typeof createManagerDecl = (): Manager => {
         taskIdOrArgs.config,
       );
     }
-    const taskRunId = getUniqueId();
+    const taskRunId = repeatTestRunId ?? getUniqueId();
     const startTimestamp = normalizeTimestamp(startAfter);
     mapSet(taskRunMap, taskRunId, [
       id(taskIdOrArgs),
