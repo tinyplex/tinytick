@@ -1,13 +1,8 @@
 import prettier from '@prettier/sync';
 import type {NoPropComponent} from 'tinydocs';
-import {useBaseUrl, usePageNode} from 'tinydocs';
-
-const SCRIPTS_REGEX = /<script.*?<\/script>/gms;
-const SRC_REGEX = /(?<=src=['"]).*?(?=['"])/gms;
+import {usePageNode} from 'tinydocs';
 
 export const ExecutablePen: NoPropComponent = (): any => {
-  const baseUrl = useBaseUrl();
-
   const {name: title, summary: description, executables} = usePageNode();
   if (executables == null) {
     return null;
@@ -18,9 +13,7 @@ export const ExecutablePen: NoPropComponent = (): any => {
   const pen = {
     title,
     description,
-    html: prettier
-      .format(html.replace(SCRIPTS_REGEX, '').trim(), {parser: 'html'})
-      .trim(),
+    html: prettier.format(html, {parser: 'html'}).trim(),
     css: prettier.format(less, {parser: 'less'}).trim(),
     js: prettier
       .format(tsx, {
@@ -32,9 +25,6 @@ export const ExecutablePen: NoPropComponent = (): any => {
       .trim(),
     css_pre_processor: 'less',
     js_pre_processor: 'typescript',
-    js_external: (html.match(SCRIPTS_REGEX)?.join('')?.match(SRC_REGEX) ?? [])
-      .map((script) => `${baseUrl}${script}`)
-      .join(';'),
     editors: '012',
     tags: ['tinytick'],
   };
