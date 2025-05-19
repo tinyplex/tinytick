@@ -425,7 +425,8 @@ var createManager = () => {
                   taskRun[
                     3
                     /* Config */
-                  ]
+                  ],
+                  taskRunId
                 )
               );
             }
@@ -605,7 +606,7 @@ var createManager = () => {
   );
   const getTaskIds = () => mapKeys(taskMap);
   const delTask = (taskId) => fluent((taskId2) => mapSet(taskMap, taskId2), taskId);
-  const scheduleTaskRun = (taskIdOrArgs, arg, startAfter = 0, config2 = {}) => {
+  const scheduleTaskRun = (taskIdOrArgs, arg, startAfter = 0, config2 = {}, repeatTestRunId) => {
     if (status == 2) {
       return void 0;
     }
@@ -617,7 +618,7 @@ var createManager = () => {
         taskIdOrArgs.config
       );
     }
-    const taskRunId = getUniqueId();
+    const taskRunId = repeatTestRunId ?? getUniqueId();
     const startTimestamp = normalizeTimestamp(startAfter);
     mapSet(taskRunMap, taskRunId, [
       id(taskIdOrArgs),
