@@ -1,6 +1,8 @@
 import type {NavNode} from '../../ui/NavJson.tsx';
 import {thisVersion} from '../version.ts';
 
+const SITE = 'TinyTick';
+
 export const doc = document;
 
 export const versionLoad = () => {
@@ -44,28 +46,19 @@ export const createElement = (
 };
 
 export const addClass = (element: HTMLElement, add: string): void =>
-  editClass(element, add, (classes, position) =>
-    position == -1 ? classes.push(add) : null,
-  );
+  element.classList.add(add);
 
 export const hasClass = (element: HTMLElement, has: string): boolean =>
-  (element.className ?? '').split(' ').includes(has);
+  element.classList.contains(has);
 
 export const delClass = (element: HTMLElement, del: string): void =>
-  editClass(element, del, (classes, position) =>
-    position != -1 ? classes.splice(position, 1) : null,
-  );
+  element.classList.remove(del);
 
 export const toggleClass = (
   element: HTMLElement,
   toggle: string,
   added: () => void,
-): void =>
-  editClass(element, toggle, (classes, position) =>
-    position != -1
-      ? classes.splice(position, 1)
-      : classes.push(toggle) && added(),
-  );
+) => (element.classList.toggle(toggle) ? added() : 0);
 
 export const go = (href: string, updateUrl = true): void => {
   const nav = getNav();
@@ -169,7 +162,7 @@ const updateNav = (
   }
   if (current) {
     addClass(li, 'current');
-    doc.title = `${name} | TinyTick`;
+    doc.title = `${name} | ${SITE}`;
     const liRect = li.getBoundingClientRect();
     const navRect = nav.getBoundingClientRect();
     if (liRect.top < navRect.top) {
@@ -181,14 +174,4 @@ const updateNav = (
       );
     }
   }
-};
-
-const editClass = (
-  element: HTMLElement,
-  edit: string,
-  callback: (classes: string[], position: number) => void,
-): void => {
-  const classes = (element.className ?? '').split(' ');
-  callback(classes, classes.indexOf(edit));
-  element.className = classes.join(' ');
 };

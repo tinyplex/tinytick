@@ -10,7 +10,7 @@ import {
   queryElement,
 } from './common.ts';
 
-export const searchLoad = (isHome: boolean) => {
+export const searchLoad = (isHome = false) => {
   addEventListener('load', () => {
     const nav: HTMLElement = query('body > header > nav');
     if (nav == null) {
@@ -90,7 +90,7 @@ export const searchLoad = (isHome: boolean) => {
       const newResults =
         rowIds.length == 0
           ? [noResults]
-          : rowIds.map((path) => {
+          : rowIds.map((path, i) => {
               const result = createElement('li');
               const {n, s} = store.getRow('p', path) as {n: string; s: string};
               highlighted(createElement('b', result), n, value);
@@ -99,6 +99,9 @@ export const searchLoad = (isHome: boolean) => {
               result.addEventListener('mousedown', () =>
                 isHome ? (location.href = path) : go(path),
               );
+              if (i == 0) {
+                addClass(result, 'hover');
+              }
               return result;
             });
 
