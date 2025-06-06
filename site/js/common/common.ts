@@ -1,7 +1,7 @@
 import type {NavNode} from '../../ui/NavJson.tsx';
 import {thisVersion} from '../version.ts';
 
-const SITE = 'TinyTick';
+const SITE = 'TinyBase';
 
 export const doc = document;
 
@@ -19,6 +19,8 @@ export const getNav = (): HTMLElement => (nav ??= query('body > main > nav'));
 let article: HTMLElement | null = null;
 export const getArticle = (): HTMLElement =>
   (article ??= query('body > main > article'));
+
+export const preventDefault = (event: Event): void => event.preventDefault();
 
 export const query = (query: string): HTMLElement =>
   doc.querySelector(query) as HTMLElement;

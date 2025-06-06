@@ -1,14 +1,17 @@
 import {createIndexes} from 'tinybase/indexes';
-import {createStore, type GetCell} from 'tinybase/store';
+import {createStore} from 'tinybase/store';
 import {
   addClass,
   createElement,
   delClass,
   doc,
   go,
+  preventDefault,
   query,
   queryElement,
 } from './common.ts';
+
+const SHORT_WORDS = ['id', 'ids', 'add', 'api', 'del', 'get', 'set', 'use'];
 
 export const searchLoad = (isHome = false) => {
   addEventListener('load', () => {
@@ -35,36 +38,39 @@ export const searchLoad = (isHome = false) => {
     indexes.setIndexDefinition(
       'p',
       'p',
-      // Put in slices based on prefixes of words
-      (getCell, path) => {
+      // Put in slices based on prefixes of tokens
+      (getCell) => {
         const slices: string[] = [];
-        getWords(getCell, path).forEach((word) => {
+        (getCell('t') as string).split(' ').forEach((word) => {
           for (let i = 0; i < word.length; i++) {
             slices.push(word.slice(0, i + 1));
           }
         });
         return slices;
       },
-      // Rank will be based on content
-      (getCell, path) => getWords(getCell, path).join(' '),
+      't',
       undefined,
       // Rank by the density of early location of the slice in the text
-      (words1, words2, sliceId) =>
-        getWeighting(words2, sliceId) - getWeighting(words1, sliceId),
+      (tokens1, tokens2, sliceId) =>
+        getWeighting(tokens2 as string, sliceId) -
+        getWeighting(tokens1 as string, sliceId),
     );
 
-    // Tokenize text for each path, name, and summary
-    const getWords = (getCell: GetCell, path: string): string[] =>
-      [
-        ...path.split(/\/|-|_/),
-        ...(getCell('n') + ' ' + getCell('s')).toLowerCase().split(' '),
-      ].filter((word) => word.length > 3);
-
-    // Load search store and enable input
+    // Load search store, hydrate 't' tokens cell, and enable input
     fetch('/pages.json')
       .then((response) => response.json())
       .then((json) => {
-        store.setContent(json);
+        store.transaction(() => {
+          store.setContent(json);
+          store.forEachRow('p', (path) => {
+            const {n, s} = store.getRow('p', path) as {n: string; s: string};
+            const tokens = new Set<string>();
+            tokenize(path, tokens, true);
+            tokenize(n, tokens);
+            tokenize(s, tokens);
+            store.setCell('p', path, 't', [...tokens.values()].join(' '));
+          });
+        });
         bindUI();
       });
 
@@ -84,17 +90,34 @@ export const searchLoad = (isHome = false) => {
 
     // Populate results
     const populateResults = () => {
-      const value = input.value.toLowerCase();
-      const rowIds = indexes.getSliceRowIds('p', value).slice(0, 10);
+      const queryWords = input.value.toLowerCase().split(/[^a-z0-9]+/);
+      const pathWeights: {[path: string]: number} = {};
+      queryWords.forEach((queryWord) =>
+        indexes
+          .getSliceRowIds('p', queryWord)
+          .slice(0, 10)
+          .forEach(
+            (path) =>
+              (pathWeights[path] =
+                (pathWeights[path] ?? 0) +
+                getWeighting(
+                  store.getCell('p', path, 't') as string,
+                  queryWord,
+                )),
+          ),
+      );
+      const paths = Object.keys(pathWeights)
+        .sort((a, b) => pathWeights[b] - pathWeights[a])
+        .slice(0, 10);
 
       const newResults =
-        rowIds.length == 0
+        paths.length == 0
           ? [noResults]
-          : rowIds.map((path, i) => {
+          : paths.map((path, i) => {
               const result = createElement('li');
               const {n, s} = store.getRow('p', path) as {n: string; s: string};
-              highlighted(createElement('b', result), n, value);
-              highlighted(createElement('span', result), s, value);
+              highlighted(createElement('b', result), n, queryWords[0]);
+              highlighted(createElement('span', result), s, queryWords[0]);
               result.title = s; // Show full summary on hover
               result.addEventListener('mousedown', () =>
                 isHome ? (location.href = path) : go(path),
@@ -117,13 +140,13 @@ export const searchLoad = (isHome = false) => {
             case 'Escape':
               return input.blur();
             case 'ArrowDown':
-              event.preventDefault();
+              preventDefault(event);
               return moveHover(
                 hovered,
                 hovered?.nextSibling ?? results.firstChild,
               );
             case 'ArrowUp':
-              event.preventDefault();
+              preventDefault(event);
               return moveHover(
                 hovered,
                 hovered?.previousSibling ?? results.lastChild,
@@ -133,6 +156,7 @@ export const searchLoad = (isHome = false) => {
           }
         } else if (event.code == 'KeyK' && event.metaKey) {
           input.focus();
+          preventDefault(event);
         }
       });
   });
@@ -167,13 +191,27 @@ const moveHover = (current: any, next: any) => {
   }
 };
 
-const getWeighting = (str: string, substr: string) => {
-  const length = str.length;
-  let weight = 0;
-  let position = str.indexOf(substr);
-  while (position !== -1) {
-    weight += (length - position) / length;
-    position = str.indexOf(substr, position + 1);
+// Tokenize a string into words, optionally reversing the order
+const tokenize = (string: string, tokens: Set<string>, reverse?: boolean) => {
+  const words = string.replaceAll(/[^a-zA-Z0-9]/g, ' ').split(/\s+/);
+  if (reverse) {
+    words.reverse();
   }
-  return weight;
+  words.forEach((word) => {
+    [word, ...word.replaceAll(/([a-z])([A-Z])/g, '$1 $2').split(' ')].forEach(
+      (wordPart) => {
+        const token = wordPart.toLowerCase();
+        if (token.length > 3 || SHORT_WORDS.includes(token)) {
+          tokens.add(token);
+        }
+      },
+    );
+  });
+};
+
+// Get the weighting of a word in a string based on its position
+const getWeighting = (tokens: string, word: string) => {
+  const length = tokens.length;
+  const position = tokens.indexOf(word);
+  return position === -1 ? 0 : (length - position) / length;
 };
